@@ -158,7 +158,14 @@
       {% endif %}
       {% if author.zhihu %}
       <li><a href="https://www.zhihu.com/people/{{ author.zhihu }}"><i class="fab fa-fw fa-zhihu icon-pad-right" aria-hidden="true"></i>Zhihu</a></li>
-      {% endif %}      
+      {% endif %}
+      {% if author.chess_com %}
+        <li><a href="https://www.chess.com/member/{{ author.chess_com }}"><i class="fas fa-fw fa-chess" aria-hidden="true"></i> Chess.com</a></li>
+      {% endif %}
+
+      {% if author.lichess %}
+        <li><a href="https://lichess.org/@/{{ author.lichess }}"><i class="fas fa-fw fa-chess-knight" aria-hidden="true"></i> Lichess</a></li>
+      {% endif %}
     </ul>
   </div>
 </div>
