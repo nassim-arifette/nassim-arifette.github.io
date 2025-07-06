@@ -2,7 +2,7 @@
 title: "Verification Neural Network (Ongoing work)"
 excerpt: "Master's thesis on abstraction-based verification of ReLU neural networks using zones and tropical geometry"
 collection: portfolio
-#permalink: /projects/masters-thesis
+permalink: /portfolio/m1-ter-verification/
 date: 2024-03-26
 ---
 
