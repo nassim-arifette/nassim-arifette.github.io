@@ -1,5 +1,5 @@
 ---
-title: "Verification Neural Network"
+title: "Verification Neural Network (Ongoing work)"
 excerpt: "Master's thesis on abstraction-based verification of ReLU neural networks using zones and tropical geometry"
 collection: portfolio
 #permalink: /projects/masters-thesis
@@ -46,7 +46,7 @@ This verification methodology addresses safety concerns in autonomous vehicles w
 
 ### Resources
 
-**[Download PDF](/files/verification-neural-network-thesis.pdf){: .btn .btn--primary}**
+**[Download PDF](/files/Verification_Neural_Network.pdf){: .btn .btn--primary}**
 
 ### Keywords
 Neural Network Verification, Abstraction-Based Verification, ReLU Networks, Tropical Geometry, Zone Analysis, Robustness, Safety-Critical AI
