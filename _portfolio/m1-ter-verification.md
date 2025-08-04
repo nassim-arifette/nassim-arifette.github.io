@@ -5,6 +5,9 @@ collection: portfolio
 permalink: /portfolio/m1-ter-verification/
 date: 2024-03-26
 ---
+**Report** 
+
+**[Report](/files/Verification_Neural_Network.pdf){: .btn .btn--primary}**
 
 ## Verification Neural Network
 
@@ -44,9 +47,6 @@ Both theoretical frameworks are implemented in Julia, providing practical tools 
 
 This verification methodology addresses safety concerns in autonomous vehicles where incorrect decisions could be fatal, medical diagnostic systems where misclassification affects patient care, and financial systems where algorithmic errors have economic consequences. The mathematical guarantees provided by these methods enable the deployment of neural networks in safety-critical applications with increased confidence.
 
-### Resources
-
-**[Download PDF](/files/Verification_Neural_Network.pdf){: .btn .btn--primary}**
 
 ### Keywords
 Neural Network Verification, Abstraction-Based Verification, ReLU Networks, Tropical Geometry, Zone Analysis, Robustness, Safety-Critical AI

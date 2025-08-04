@@ -9,7 +9,7 @@ redirect_from:
 
 {% include base_path %}
 
-<a href="{{ base_path }}/files/CV_Nassim_Arifette_en.pdf" class="btn btn--primary">PDF version of my resume</a>
+<a href="{{ base_path }}/files/CV_Nassim_Arifette.pdf" class="btn btn--primary">PDF version of my resume</a>
 
 Education
 ======
