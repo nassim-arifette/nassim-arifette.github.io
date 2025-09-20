@@ -72,8 +72,6 @@ Ce travail présente une méthode pour intégrer, **pendant l’entraînement d�
 
 - **Convergence** : entraînement limité à 20 époques.  
 - **Un seul dataset** : généralisation non évaluée sur d’autres alignements.  
-- **Reproductibilité** : code et données originales non publiés mais hyperparamètres détaillés.
-
 ---
 
 ## Recommandations pratiques

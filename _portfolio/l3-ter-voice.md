@@ -1,141 +1,70 @@
 ---
 title: "Voiced/Unvoiced Classification in Speech (TER Report)"
-excerpt: "Deep-learning vs. classic spectral features for frame-level voiced/unvoiced detection; experiments with MFCCs and Mel spectrograms on Paris-Saclay speech data."
+excerpt: "I pitted MFCCs against Mel spectrograms for frame-level voiced/unvoiced detection. On small data, compact cepstra beat pretty pictures."
 collection: portfolio
 permalink: /portfolio/ter-voiced-unvoiced/
 date: 2023-05-03
 ---
 
 **My TER Report (PDF):**  
-**[Download the report](/files/ter_report_voiced_unvoiced.pdf){: .btn .btn--primary}**  
+**[Download the report](/files/ter_report_voiced_unvoiced.pdf){: .btn .btn--primary}**
 
-# Voiced/Unvoiced Classification: MFCC vs Mel Spectrogram CNNs
+# Voiced/Unvoiced, Told as a Short Story
 
-**Institution**: Université Paris-Saclay  
-**Program**: TER (Travaux d’Étude et de Recherche)  
-**Author**: Nassim Arifette  
-**Mentor(s)**: Marc Evrard; with input from Albert Rillard and Saulo Santos  
-**Period**: May 2023
+When you say “zebra,” the **/z/** rides on vibrating vocal folds (voiced) while the **/s/** in “snake” is all hiss (unvoiced). Lots of tools—pitch trackers, ASR, TTS—work better if we can flip a tiny frame-level switch: **voiced or unvoiced**.  
 
-## Project Overview
+For my TER, I set myself a practical question:
 
-This work studies **frame-level voiced/unvoiced (V/UV) classification** in speech, comparing **MFCCs** against **Mel spectrograms** as inputs to a **Convolutional Neural Network (CNN)**.  
-We evaluate **32/64/128 Mel bands** vs **20 MFCC coefficients**, using **7-fold file-level cross-validation** on recordings from **three speakers**.
+> **With modest data and a small CNN, is it smarter to feed the model compact MFCCs or full Mel spectrograms?**
 
-Why it matters: V/UV is a foundational step for **pitch (F0) tracking**, **ASR**, **TTS**, and **speaker analysis**. Accurate V/UV improves downstream reliability by avoiding false F0 in unvoiced regions and stabilizing pitch tracking in voiced segments.
+I had **three speakers** recorded at **16 kHz**. I chopped audio into **25 ms frames** (10 ms hop), and built input windows of ~**0.5 s** (50 frames). To avoid any train/val bleed, I used **7-fold cross-validation by file** (no file ever split).
 
 ---
 
-## Research Context & Motivation
+## Why I Thought Mel Might Win (…and Why It Didn’t)
 
-- **Voiced** sounds exhibit **periodic** vocal-fold vibration and measurable F0; **unvoiced** are **aperiodic** (e.g., fricatives like /s/).
-- Traditional features (energy, **ZCR**, autocorrelation) can be brittle to noise or breathy phonation.
-- **MFCCs** capture spectral envelope cues aligned with voicing; **Mel spectrograms** preserve fine harmonic patterns that CNNs can learn—if data/model capacity suffice.
+Mel spectrograms are like a high-res photo of time-frequency structure; they keep fine **harmonic patterns** that seem perfect for detecting voicing. MFCCs, meanwhile, compress the spectrum down to a handful of coefficients—a tidy **spectral envelope**.
 
----
+I tried both in the **same lightweight CNN** (two conv blocks → max-pool → dropout → dense). I tuned learning rate and dropout a bit (Adam, early stopping). Nothing fancy on purpose: I wanted to see which **representation** helps most when the model and data are small.
 
-## Data & Features
+**Results (validation, mean over 7 file-level folds):**
 
-- **Speakers**: 3  
-- **Frame analysis**: **25 ms** Hann window, **10 ms** hop, **16 kHz** sampling  
-- **Labeling**: Frame-level V/UV; windows labeled by **center frame**  
-- **Sliding window context**: **50 frames** (≈500 ms), **50% overlap**  
-- **Feature sets**:
-  - **MFCC (20 coeffs, no C₀)**, lifter 22, per-utterance **CMVN**
-  - **Mel spectrograms** with **32/64/128** bands (0–8 kHz), log-compressed in **dB** (10·log₁₀)
-- **Auxiliary cues in source dataset**: HNR, CPPS, intensity, spectral emphasis; used in analysis/discussion
+| Input                 | Acc. ↑ | Balanced Acc. ↑ |
+|----------------------|:------:|:----------------:|
+| **MFCC (20 coeffs)** | **≈85%** | **≈85%**         |
+| Mel-32               | ≈81%   | ≈81%             |
+| Mel-64               | ≈81%   | ≈81%             |
+| Mel-128              | ≈82%   | ≈81%             |
 
-> **CV protocol**: **7-fold, by file** (never splitting a file). With only 3 speakers, this assesses **within-speaker** generalization; **speaker-disjoint** evaluation is left for future work.
+**MFCCs won by ~3–4 points.** Increasing Mel bands raised **training** accuracy but didn’t lift **validation**—a neat example of **overfitting** when you add dimensionality without adding data or model capacity.
 
 ---
 
-## Methods
+## What I Learned
 
-- **Architecture**: 2× Conv(3×3, ReLU) → MaxPool(2×2) → Dropout(0.4) → Flatten → Dense(128, ReLU) → Dense(1, Sigmoid)
-- **Threshold**: 0.5 (tuning on a dev set could improve F1/BA)
-- **Optimization**: Adam (1e−4), **Binary Cross-Entropy**, batch 32, **Early Stopping** (patience 5)
-- **Tuning**: Keras Tuner **Hyperband** over dropout {0, .2, .4, .6}, LR {1e−3, 1e−4}, label smoothing {0, .1}
-- **Reproducibility**: Fixed random seed; train/val windows never cross files
-
----
-
-## Key Quantitative Findings
-
-**Validation performance (mean over 7 file-level folds):**
-
-| Feature Set | Val. Acc. ↑ | Val. Loss ↓ | Balanced Acc. ↑ |
-|---|---:|---:|---:|
-| **MFCC (20)** | **85.2** | **0.40** | **84.8** |
-| Mel-32 | 81.3 | 0.41 | 80.9 |
-| Mel-64 | 81.5 | 0.42 | 81.1 |
-| Mel-128 | 81.8 | 0.43 | 81.4 |
-
-**Highlights**
-- **MFCCs outperform Mel spectrograms by ~3–4 pp** on validation accuracy and balanced accuracy.
-- Increasing Mel bands **raises training accuracy** but **does not improve validation** → **overfitting increases** with dimensionality.
-- With this dataset size and simple CNN, **MFCCs** offer a more compact, voicing-aligned representation.
-
-> **Balanced Accuracy (BA)** = average of per-class recalls (voiced & unvoiced).
+- **Small data loves compact features.** MFCCs funnel the cues that matter for voicing (periodicity/spectral envelope) into a size the CNN can actually digest.  
+- **Boundaries are hard.** Frames at voiced↔unvoiced transitions confused the model most; soft labels or ignoring ±1–2 frames could help.  
+- **Typical mistakes made sense.** Strong high-frequency **/s/** sometimes looked “voiced”; breathy/low-HNR vowels sometimes looked “unvoiced.” Adding **HNR/CPPS** features would likely reduce both errors.  
+- **Protocol matters.** File-level CV avoids leakage across segments of the same file, but it’s still **within-speaker**. A future **leave-one-speaker-out** pass would test cross-speaker generalization properly.
 
 ---
 
-## Qualitative Insights
+## If I Had Another Week
 
-- **Error patterns**: Unvoiced **/s/** often flagged as voiced (strong HF energy); breathy/whispered vowels sometimes flagged unvoiced (low HNR).  
-  HNR/CPPS help *explain* these cases by quantifying periodicity.
-- **Boundaries**: V/UV transition frames are hardest; **soft labels** or **excluding ±1–2 frames** could help.
-- **Protocol clarity**: File-level CV avoids file leakage but **not** speaker leakage; expand to **LOSO** for cross-speaker claims.
-
----
-
-## Limitations
-
-- **3 speakers** → limited generalization; no **speaker-disjoint** CV
-- **Class imbalance** (voiced > unvoiced) unaddressed (no class weighting)
-- **Baselines** absent: no direct comparison to **energy+ZCR** or **autocorrelation** rules
-- **Metrics**: Accuracy-centric; add **precision/recall**, **F1**, **ROC/PR-AUC**, confusion matrices
+- Add **Δ/ΔΔ** to MFCCs and/or combine MFCC + **HNR/CPPS**.  
+- Use a slightly richer head (BatchNorm, **global average pooling**, tiny L2).  
+- Try **threshold tuning** (0.5 isn’t sacred) for better F1 or balanced accuracy.  
+- Do **speaker-disjoint** evaluation and light **augmentation** (time masking, mild noise).
 
 ---
 
-## Practical Recommendations
+## Takeaway
 
-- **Small data** or simple CNNs: prefer **MFCCs** (compact, voicing-aligned)
-- **Mel spectrograms** may need **more data**, **richer CNNs**, and **regularization** (batch norm, L2, augmentation) to realize benefits
-- Tune **decision threshold** on a dev set for task-specific trade-offs (F1 vs. BA)
+If you’re building a **frame-level voiced/unvoiced** switch with **limited data and a small CNN**, start with **MFCCs**. They’re the right abstraction at the right scale. Mel spectrograms can surpass them—but usually when you also scale **data**, **model**, and **regularization**.
 
 ---
 
-## Potential Improvements (Future Work)
+**Tech stack:** Python, TensorFlow/Keras, scikit-learn, librosa · 25 ms / 10 ms · 16 kHz  
+**People:** TER @ Université Paris-Saclay · Mentor: Marc Evrard · With input from Albert Rillard & Saulo Santos
 
-1. **Modeling**: LSTMs / GRUs; **Transformers** (HuBERT, wav2vec 2.0) for richer temporal context  
-2. **Regularization**: BatchNorm after convs; small **L2**; **global average pooling** instead of flatten  
-3. **Features**: Add **Δ / ΔΔ** to MFCCs; combine **MFCC + HNR + CPPS**  
-4. **Augmentation**: **Time masking**, **additive noise**, small **time warps**  
-5. **Evaluation**: **LOSO** or more speakers; robust thresholding; error analyses by phoneme class  
-6. **Baselines**: Energy+ZCR and autocorrelation heuristics for context
-
----
-
-## Technical Notes
-
-- **Stack**: Python, TensorFlow/Keras, Keras Tuner, scikit-learn, librosa  
-- **Signal params**: 25 ms / 10 ms, 16 kHz, Mel range 0–8 kHz, log-**dB** compression  
-- **Training**: Early stopping; fixed seed; windows never cross files
-
----
-
-## References (selection from report)
-
-- Hillenbrand et al., **Acoustic correlates of breathy voice**  
-- Slaney, **Auditory Toolbox** (Mel filterbank)  
-- Kingma & Ba, **Adam**  
-- Hsu et al., **HuBERT**; Baevski et al., **wav2vec 2.0**
-
----
-
-### Keywords
-Voiced/Unvoiced Detection, MFCC, Mel Spectrogram, CNN, Speech Processing, Pitch Tracking, HNR, CPPS, Cross-Validation, Overfitting
-
----
-
-*This TER report provides a careful, reproducible comparison of MFCCs and Mel spectrograms for V/UV detection, and outlines a pragmatic roadmap for scaling beyond small datasets and simple architectures.*
+**[Read the full report (PDF)](/files/ter_report_voiced_unvoiced.pdf){: .btn .btn--primary}**
