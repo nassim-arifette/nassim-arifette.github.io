@@ -1,0 +1,23 @@
+# Node / Next.js
+node_modules
+.next
+.turbo
+.vercel
+out
+
+# Contentlayer
+.contentlayer
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.DS_Store
+.idea
+*.swp
+*.swo
+*.log
+
