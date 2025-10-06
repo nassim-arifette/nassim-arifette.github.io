@@ -9,19 +9,29 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Use Node 20 (Contentlayer is stable here)
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
+
+      # 👇 Install pnpm (this is what was missing)
       - uses: pnpm/action-setup@v4
         with:
           version: 9
-      # Configure basePath and site URL for GitHub Pages
+          run_install: false
+
+      # Auto-configure URLs for user vs project repo
       - name: Configure URLs for GitHub Pages
         run: |
           OWNER="${{ github.repository_owner }}"
@@ -33,9 +43,15 @@ jobs:
             echo "NEXT_PUBLIC_BASE_PATH=/${REPO_NAME}" >> $GITHUB_ENV
             echo "NEXT_PUBLIC_SITE_URL=https://${OWNER}.github.io/${REPO_NAME}" >> $GITHUB_ENV
           fi
-      - run: pnpm install --frozen-lockfile || pnpm install
-      - run: pnpm run build && pnpm run export
-      - uses: actions/upload-pages-artifact@v3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build & export
+        run: pnpm run build && pnpm run export
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
 
