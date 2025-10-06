@@ -22,14 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-
-      # Install pnpm via Corepack
-      - name: Enable Corepack (pnpm)
-        run: corepack enable && corepack prepare pnpm@9 --activate
-
-      # sanity check: make the error obvious if pnpm isn't on PATH
-      - run: pnpm --version
+          cache: npm
 
       - name: Configure URLs for GitHub Pages
         run: |
@@ -44,10 +37,15 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Build & export
-        run: pnpm run build && pnpm run export
+        run: npm run build && npm run export
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
