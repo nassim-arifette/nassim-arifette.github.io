@@ -19,19 +19,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Use Node 20 (Contentlayer is stable here)
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
-      # 👇 Install pnpm (this is what was missing)
+      # ✅ Install pnpm (must be BEFORE any "pnpm" run)
       - uses: pnpm/action-setup@v4
         with:
           version: 9
           run_install: false
 
-      # Auto-configure URLs for user vs project repo
       - name: Configure URLs for GitHub Pages
         run: |
           OWNER="${{ github.repository_owner }}"
