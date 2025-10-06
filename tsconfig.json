@@ -25,9 +25,6 @@
         "./.contentlayer/generated"
       ]
     },
-    "types": [
-      "contentlayer/generated"
-    ],
     "incremental": true,
     "plugins": [
       {
