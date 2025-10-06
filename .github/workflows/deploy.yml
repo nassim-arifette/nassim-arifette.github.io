@@ -1,0 +1,65 @@
+name: Deploy Next.js to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      # Install pnpm via Corepack
+      - name: Enable Corepack (pnpm)
+        run: corepack enable && corepack prepare pnpm@9 --activate
+
+      # sanity check: make the error obvious if pnpm isn't on PATH
+      - run: pnpm --version
+
+      - name: Configure URLs for GitHub Pages
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          if [[ "$REPO_NAME" == "$OWNER.github.io" ]]; then
+            echo "NEXT_PUBLIC_BASE_PATH=" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SITE_URL=https://${OWNER}.github.io" >> $GITHUB_ENV
+          else
+            echo "NEXT_PUBLIC_BASE_PATH=/${REPO_NAME}" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SITE_URL=https://${OWNER}.github.io/${REPO_NAME}" >> $GITHUB_ENV
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build & export
+        run: pnpm run build && pnpm run export
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
