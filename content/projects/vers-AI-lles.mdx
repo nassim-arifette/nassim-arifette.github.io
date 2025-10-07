@@ -1,11 +1,77 @@
 ---
-title: "An Agent that guides inside the Chateau de Versailles"
+title: "Versailles Concierge — Les 4 MousquetAIres"
 date: "2025-10-07"
-description: "An hackathon proejct where we had to build a chatbot that guide people inside the Chateau de Versailles"
-tags: ["LLM","RAG","Chatbot","MCP"]
+description: "A multilingual AI concierge that turns open questions into concrete day plans across the Versailles estate."
+tags: ["LLM","RAG","Chatbot","MCP","React","FastAPI","LangChain","LangGraph"]
 featured: true
 links: { github: "https://github.com/EpsilonFO/Vers-AI-lles", website: "https://vers-ai-lles.vercel.app/" }
 ---
 
-Short overview, challenges, results, and links.
+*“Where should I start? Will it rain? Can I still see the fountains?”*  
+During the Datacraft × Château de Versailles hackathon, we kept hearing these questions from visitors and staff alike. **Versailles Concierge** is the assistant we built to answer them—politely, quickly, and in their own language—then turn those answers into a **live, navigable plan**.  
+➡️ **Live demo:** [vers-ai-lles.vercel.app](https://vers-ai-lles.vercel.app/)
 
+## Why we built it
+
+Versailles is magical *and* massive: timed tickets, long queues, 800 ha to cross, shifting weather, and crowd spikes that can derail even a careful itinerary. Our goal felt obvious once we walked the grounds:
+
+- **Welcome anyone, in their language**, with fast, grounded answers.  
+- **Transform a chat into a plan**—timeline, map, and route options.  
+- **Adapt in real time** to weather, timing, and where the visitor actually is.
+
+A small personal note: the “aha” moment came when a staff member asked us, in passing, *“If it rains after 3pm, would you reorder the day for a family with a stroller?”* That single constraint captured the whole product: **context-aware guidance** that respects the reality on site.
+
+## What visitors see
+
+Our main interface (`web/`) is a Vite + React SPA tuned for kiosks and phones:
+
+- **Conversational chat** with pre-seeded prompts and bilingual copy in `constants/translations`.
+- **Plan board** that turns the agent’s payload into a crisp timeline of highlights and notes.
+- **Interactive map** (Leaflet) for curated routes, point-to-point directions, or a multi-stop demo.
+- **“Meta” hints** (weather, likely crowding) via a `MetaSummary` that blends live APIs with time-of-day heuristics.
+- **Local persistence** for session state, language, history, and last itinerary.
+
+We first validated flows in a **Streamlit** prototype (`frontend/`), then ported the experience to React once the pieces felt right.
+
+## The concierge under the hood
+
+The backend (`backend/app.py`) is **FastAPI** orchestrating a **LangChain + LangGraph** agent:
+
+- Chat runs on **`mistral-medium`** with structured tool calls and scoped memory.
+- A **LangGraph state machine** (`backend/setup_graph.py`) routes between Q&A, plan creation, and tool execution.
+- Memory is **per session**, so the assistant actually remembers visitor context.
+- Clean endpoints: `/` (full agent), `/chat` (stateless), and `/tools/*` for weather, routing, GPS sharing, and plan recalculation.
+
+### Knowledge & tools that stay grounded
+
+- A **curated corpus** (`backend/data/tips_embedded.json`), embedded with `mistral-embed` and retrieved by cosine similarity.
+- **Model Context Protocol** bridges (`mcp_servers/`) for OpenWeather / Open-Meteo and OpenStreetMap + OSRM routing.  
+  The LLM asks; the bridges fetch; the agent composes a safe, auditable reply.
+- `/tools/recalc_plan` can **rebuild an itinerary on the fly**—merging shared GPS, default waypoints, and constraints—then returns GeoJSON + human-readable steps.
+
+## Shipping fast without chaos
+
+- `docker-compose.yaml` spins up FastAPI, MCP servers, and optional Streamlit in one go.
+- **Environment variables** (see `README.md`) centralize keys for Mistral, weather, and maps.
+- We kept **clear boundaries**: Python backend, React web app, and MCP micro-services each with their own deps and hot-reload loops.
+
+## The 48-hour sprint (the human side)
+
+1. **Walk the journey** with Versailles staff; collect the pivotal questions and choke points.  
+2. **Prototype in Streamlit** to test tone and flow; harden the UX in React once it clicked.  
+3. **Assemble the agent** with stateful tool-calling, RAG, and multilingual prompts that degrade gracefully when data is missing.  
+4. **Wire weather & routing MCPs** so “Should I start with the gardens?” yields actionable, timed advice.  
+5. **Demo end-to-end**: day plans, live routes, and contextual tips—in English or French—from a single chat window.
+
+Honestly, the best part was the corridor testing: a guard asked us for a path that avoided stairs at closing time; a family wanted to front-load the gardens before a forecasted shower; a couple had only 90 minutes. Each mini-story nudged the product toward **practical, empathetic decisions**—and away from generic chat.
+
+## Deployed demo
+
+- **Frontend**: Vercel — [vers-ai-lles.vercel.app](https://vers-ai-lles.vercel.app/)  
+- **Backend**: Render (FastAPI + MCP services)
+
+The public demo showcases how the assistant plans, explains trade-offs (“rain at 15:00, do gardens first”), and updates routes as conditions change.
+
+---
+
+If you’ve ever stood under the gilded gates wondering *“what’s the smartest next step right now?”*—this is our answer. Built in two days, shaped by real conversations, and ready to guide the next visitor who asks.
