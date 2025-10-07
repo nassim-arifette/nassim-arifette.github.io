@@ -1,4 +1,5 @@
 import * as React from 'react'
+import Link from 'next/link'
 
 export const mdxComponents = {
   h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -22,9 +23,38 @@ export const mdxComponents = {
   blockquote: (props: React.HTMLAttributes<HTMLQuoteElement>) => (
     <blockquote className="mt-6 border-l-2 pl-6 italic text-muted-foreground" {...props} />
   ),
-  a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a className="font-medium underline underline-offset-4" {...props} />
-  ),
+  a: ({
+    href = '',
+    className = '',
+    children,
+    rel: _rel,
+    target: _target,
+    ...rest
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    const linkClassName = className
+      ? `font-medium underline underline-offset-4 ${className}`
+      : 'font-medium underline underline-offset-4'
+    const isExternal =
+      href.startsWith('http://') ||
+      href.startsWith('https://') ||
+      href.startsWith('mailto:') ||
+      href.startsWith('tel:')
+    const safeHref = href || '#'
+
+    if (isExternal) {
+      return (
+        <a href={safeHref} target="_blank" rel="noopener noreferrer" className={linkClassName} {...rest}>
+          {children}
+        </a>
+      )
+    }
+
+    return (
+      <Link href={safeHref} className={linkClassName} {...rest}>
+        {children}
+      </Link>
+    )
+  },
   pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
     <pre className="my-6 overflow-x-auto rounded-lg border bg-muted p-4" {...props} />
   ),
@@ -32,4 +62,3 @@ export const mdxComponents = {
     <code className="rounded bg-muted px-1 py-0.5" {...props} />
   ),
 }
-

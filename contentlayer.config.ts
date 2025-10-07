@@ -1,13 +1,46 @@
 import { defineDocumentType, makeSource } from 'contentlayer/source-files'
 import rehypePrettyCode from 'rehype-pretty-code'
 import remarkGfm from 'remark-gfm'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 const rehypePrettyCodePlugin: any = rehypePrettyCode
 const prettyCodeOptions = {
-  // Use VS Code default themes for better contrast
+  // Force the dark theme in both modes so syntax colors stay readable on black
   theme: {
-    light: 'light-plus',
+    light: 'dark-plus',
     dark: 'dark-plus',
   },
+}
+
+// Allow pretty-code data attributes (and inline styles) while keeping sanitation tight
+const sanitizeSchema = structuredClone(defaultSchema)
+sanitizeSchema.attributes ??= {}
+const extraAttributes = [
+  ['className'],
+  ['data-theme'],
+  ['data-line'],
+  ['data-highlighted-line'],
+  ['data-rehype-pretty-code-fragment'],
+  ['data-language'],
+] as const
+
+for (const tag of ['pre', 'code', 'span', 'div'] as const) {
+  const tagAttributes = sanitizeSchema.attributes[tag] ?? []
+  for (const attr of extraAttributes) {
+    const alreadyAllowed = tagAttributes.some((existing) =>
+      Array.isArray(existing) && Array.isArray(attr)
+        ? existing[0] === attr[0]
+        : existing === attr
+    )
+    if (!alreadyAllowed) {
+      tagAttributes.push(attr as any)
+    }
+  }
+  if (tag === 'span') {
+    if (!tagAttributes.includes('style' as any)) {
+      tagAttributes.push('style' as any)
+    }
+  }
+  sanitizeSchema.attributes[tag] = tagAttributes
 }
 
 const Post = defineDocumentType(() => ({
@@ -58,6 +91,7 @@ export default makeSource({
         rehypePrettyCodePlugin,
         prettyCodeOptions,
       ],
+      [rehypeSanitize, sanitizeSchema],
     ],
   },
 })
