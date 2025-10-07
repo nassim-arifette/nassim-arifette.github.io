@@ -26,11 +26,13 @@ const extraAttributes = [
 for (const tag of ['pre', 'code', 'span', 'div'] as const) {
   const tagAttributes = sanitizeSchema.attributes[tag] ?? []
   for (const attr of extraAttributes) {
-    const alreadyAllowed = tagAttributes.some((existing) =>
-      Array.isArray(existing) && Array.isArray(attr)
-        ? existing[0] === attr[0]
-        : existing === attr
-    )
+    const attrName = Array.isArray(attr) ? attr[0] : attr
+    const alreadyAllowed = tagAttributes.some((existing) => {
+      if (Array.isArray(existing)) {
+        return existing[0] === attrName
+      }
+      return existing === attrName
+    })
     if (!alreadyAllowed) {
       tagAttributes.push(attr as any)
     }
