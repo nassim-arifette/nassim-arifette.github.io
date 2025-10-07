@@ -13,6 +13,7 @@ interface PageProps {
 
 const linkConfig = {
   github: { label: 'GitHub', Icon: Github },
+  website: { label: 'Website', Icon: ExternalLink },
   demo: { label: 'Demo', Icon: ExternalLink },
   paper: { label: 'Paper', Icon: FileText },
   pdf: { label: 'PDF', Icon: FileDown },
