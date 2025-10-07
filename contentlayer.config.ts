@@ -35,7 +35,7 @@ const Project = defineDocumentType(() => ({
     title: { type: 'string', required: true },
     date: { type: 'date', required: true },
     description: { type: 'string', required: true },
-    links: { type: 'json', required: false }, // { github, demo, paper, pdf }
+    links: { type: 'json', required: false }, // { github, website, demo, paper, pdf }
     tags: { type: 'list', of: { type: 'string' } },
     featured: { type: 'boolean', default: false },
   },
