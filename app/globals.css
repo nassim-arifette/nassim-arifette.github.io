@@ -100,6 +100,14 @@
   overflow-x: auto;
 }
 
+html:not(.dark) [data-rehype-pretty-code-fragment] pre {
+  --shiki-color-background: #000000;
+  --shiki-color-text: #f8fafc;
+  background: #000000 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Code lines */
 [data-rehype-pretty-code-fragment] [data-line] {
   padding-inline: 0.25rem;
