@@ -12,10 +12,6 @@ export default function OtherPage() {
           <h2 className="font-medium">Chess</h2>
           <p className="text-sm text-muted-foreground">I enjoy tactics and rapid games.</p>
         </div>
-        <div className="rounded-lg border p-5 bg-card">
-          <h2 className="font-medium">Music</h2>
-          <p className="text-sm text-muted-foreground">Curating playlists and occasional guitar.</p>
-        </div>
       </div>
     </div>
   )

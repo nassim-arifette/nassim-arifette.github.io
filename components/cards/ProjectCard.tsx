@@ -3,10 +3,14 @@ import { Github, ExternalLink, FileText, FileDown } from 'lucide-react'
 import type { Project } from 'contentlayer/generated'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/mdx'
+import { getPreviewText } from '@/lib/preview'
 
-type Links = { github?: string; demo?: string; paper?: string; pdf?: string }
+type Links = { github?: string; demo?: string; paper?: string; pdf?: string; website?: string }
 
-type ProjectCardProject = Pick<Project, 'title' | 'date' | 'description' | 'tags' | 'links' | 'slug' | 'url'> & {
+type ProjectCardProject = Pick<
+  Project,
+  'title' | 'date' | 'description' | 'tags' | 'links' | 'slug' | 'url' | 'body'
+> & {
   links?: Links
 }
 
@@ -16,6 +20,14 @@ type ProjectCardProps = {
 }
 
 export function ProjectCard({ project, idAnchor }: ProjectCardProps) {
+  const preview = getPreviewText(project.body?.raw, project.description)
+  const hasLinks =
+    project.links?.github ||
+    project.links?.website ||
+    project.links?.demo ||
+    project.links?.paper ||
+    project.links?.pdf
+
   return (
     <article
       id={idAnchor ? project.slug : undefined}
@@ -47,7 +59,7 @@ export function ProjectCard({ project, idAnchor }: ProjectCardProps) {
         ) : null}
       </div>
 
-      {(project.links?.github || project.links?.demo || project.links?.paper || project.links?.pdf) && (
+      {hasLinks && (
         <div className="relative z-20 mt-4 flex items-center gap-3 text-sm">
           {project.links?.github && (
             <a
@@ -57,6 +69,16 @@ export function ProjectCard({ project, idAnchor }: ProjectCardProps) {
               className="inline-flex items-center gap-1 transition-colors hover:text-foreground hover:underline"
             >
               <Github size={16} /> GitHub
+            </a>
+          )}
+          {project.links?.website && (
+            <a
+              href={project.links.website}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 transition-colors hover:text-foreground hover:underline"
+            >
+              <ExternalLink size={16} /> Website
             </a>
           )}
           {project.links?.demo && (
@@ -89,6 +111,15 @@ export function ProjectCard({ project, idAnchor }: ProjectCardProps) {
               <FileDown size={16} /> PDF
             </a>
           )}
+        </div>
+      )}
+
+      {preview && (
+        <div className="pointer-events-none absolute inset-0 z-20 translate-y-2 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+          <div className="flex h-full flex-col justify-between rounded-lg border border-border/80 bg-background/95 p-5 text-sm text-muted-foreground shadow-lg backdrop-blur">
+            <p className="max-h-40 overflow-hidden">{preview}</p>
+            <span className="mt-4 text-xs font-medium text-foreground/70">View project →</span>
+          </div>
         </div>
       )}
     </article>
