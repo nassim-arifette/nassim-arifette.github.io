@@ -63,8 +63,7 @@ export default function HomePage() {
       <section className="space-y-4">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Hi, I’m Nassim Arifette.</h1>
         <p className="text-muted-foreground max-w-2xl">
-          I build research-grade ML systems for computer vision, 3D, and medical imaging — with an emphasis on reproducibility,
-          reliable training infrastructure, and practical impact. Explore selected projects and notes below.
+          Graduate student in Artificial Intelligence at École Normale Supérieure Paris-Saclay M2 MVA. I am passionate about machine learning, computer vision, 3D, and medical imaging. I specialize in building reproducible research-grade systems with a focus on open science, reliable training infrastructure, and practical impact.
         </p>
         <div className="flex gap-3">
           <Link href="/projects" className="inline-flex items-center rounded-md bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90">

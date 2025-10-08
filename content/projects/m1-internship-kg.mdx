@@ -1,0 +1,131 @@
+---
+title: "Knowledge Graph Entity Alignment (Master's Internship)"
+date: "2024-07-31"
+description: "Comparative analysis of deep learning approaches for entity alignment in knowledge graphs (YAGO/Wikidata/DBpedia) at LISN, Univ. Paris-Saclay."
+tags: ["Knowledge Graphs","Entity Alignment","KGE","TransE","TransH","DistMult","ComplEx","ConvE","PyTorch","CUDA","Semantic Web"]
+links: { pdf: "/m1_report_internship_thesis_kg.pdf" }
+---
+
+**My Master's Internship Report:**  
+
+# Knowledge Graph Entity Alignment: A Comparative Deep Learning Analysis
+
+**Institution**: LISN – Laboratory for Interdisciplinary Numerical Sciences, University of Paris-Saclay  
+**Degree**: Master’s Internship  
+**Dates**: June–July 2024  
+**Author**: Nassim Arifette  
+**Supervisors**: Dr. Fatiha Saïs, Olivier Inizan
+
+---
+
+## Project Overview
+
+During a 2-month internship at **LISN (Univ. Paris-Saclay)**, I conducted an in-depth, head-to-head comparison of **knowledge graph embedding (KGE)** models for **entity alignment** on a real-world, tri-source dataset integrating **YAGO, Wikidata, and DBpedia**. I evaluated representative **translational (TransE, TransH)**, **bilinear (DistMult, ComplEx)**, and **convolutional (ConvE)** approaches within a unified experimental framework.
+
+---
+
+## Research Context & Motivation
+
+Multiple public KGs overlap but diverge in schema, language, and graph structure, creating the need to **identify entries that refer to the same real-world entity** (entity alignment). This work addresses that need by comparing KGE families not only on **ranking accuracy** but also on **semantic preservation**—how well embeddings retain graph-structural meaning crucial for reliable alignment.
+
+---
+
+## Data & Experimental Setting
+
+- **Integrated KG (entertainment domain)**: **47,303 RDF triples**, **5,807 entities**, **16 relations** (≈**0.14%** density; highly sparse).  
+- **Splits**: 80% train / 10% validation / 10% test; **filtered evaluation** protocol for link prediction.  
+- **Hardware/Framework**: PyTorch 1.13, CUDA 11.7, NVIDIA V100, 5 seeds for robustness.
+
+---
+
+## Models Evaluated
+
+- **Translational**: TransE, TransH  
+- **Bilinear**: DistMult, ComplEx  
+- **Convolutional**: ConvE (2D CNN over entity–relation reshaped embeddings)
+
+---
+
+## Key Quantitative Findings
+
+**Link Prediction (mean ± std across 5 runs)**  
+
+| Model    | MRR ↑        | Hits@1 ↑     | Hits@10 ↑    |
+|----------|---------------|--------------|--------------|
+| TransE   | 0.312 ± 0.008 | 0.198 ± 0.007| 0.523 ± 0.011|
+| TransH   | 0.328 ± 0.007 | 0.216 ± 0.008| 0.542 ± 0.010|
+| DistMult | 0.295 ± 0.009 | 0.183 ± 0.006| 0.498 ± 0.012|
+| ComplEx  | 0.334 ± 0.008 | 0.227 ± 0.007| 0.551 ± 0.011|
+| **ConvE**| **0.381 ± 0.006** | **0.278 ± 0.006** | **0.604 ± 0.009** |
+
+
+**Highlights**
+- **ConvE** achieves **22% relative MRR improvement** over TransE (0.381 vs 0.312).  
+- Clear **accuracy–efficiency trade-off**: ConvE is most accurate; TransE is the most computationally efficient.
+
+**Computational Efficiency (indicative)**  
+- Time/epoch (s): TransE **12.3** → ConvE **38.6**; peak GPU ≈ **1.2GB** (TransE) to **4.7GB** (ConvE).  
+- “Time per 0.01 MRR” quantifies cost–benefit; ConvE costs ~**20.26s** per +0.01 MRR vs TransE ~**7.88s**.
+
+---
+
+## Entity Alignment & Semantic Preservation
+
+Beyond ranking, I evaluated **alignment quality** (cosine similarity NN retrieval) and **semantic fidelity** (correlation between 1-hop Jaccard similarity and embedding cosine similarity).  
+- **Alignment**: ConvE achieves the best P@1/R@1/F1@1 and top-K performance among evaluated models.  
+- **Semantic Preservation**: ConvE exhibits the **strongest correlation** (*r* ≈ **0.72**) between graph-structural similarity and embedding similarity (vs DistMult ≈ **0.41**), showing that **high link-prediction accuracy does not always imply semantically faithful embeddings**.
+
+---
+
+## Practical Recommendations
+
+- **For web-scale efficiency**: Start with **TransE**; consider **TransH** if many complex relations justify extra cost.  
+- **For maximum precision**: Choose **ConvE** when higher computational budget is acceptable.  
+- **Avoid** **DistMult** on asymmetric relations (e.g., *directedBy*, *parentOf*).
+
+---
+
+## Methodology Snapshot
+
+- Unified training/evaluation framework with **negative sampling**, consistent **filtered metrics** (MR, MRR, Hits@K), and **early stopping** on validation MRR.  
+- **Relation-type analysis** shows ConvE’s advantage on **many-to-many** (N–N) relations (e.g., *acted_in*).
+
+---
+
+## Research Impact
+
+- **Scientific**: Demonstrates a clear **expressiveness hierarchy** (DistMult < TransE < TransH < ComplEx ≪ ConvE) and evidences the **semantic preservation paradox**—ranking gains don’t always translate to faithful semantics.  
+- **Practical**: Offers **actionable guidelines** for model selection under accuracy/efficiency constraints; potential **15–20% reduction** in manual curation time for downstream data integration when using stronger models.
+
+---
+
+## Technical Implementation
+
+- **Stack**: PyTorch 1.13, CUDA 11.7; Intel Xeon Gold 6248R; NVIDIA V100; 256GB RAM; **5 random seeds** for robustness.  
+- **Reproducibility**: Documented preprocessing, splits, and seed settings; modular code layout for data, models, and evaluation.
+
+**Illustrative Project Structure**
+```
+entity_alignment/
+├── data/ # loader.py, preprocessor.py, sampler.py
+├── models/ # transe.py, transh.py, distmult.py, complex.py, conve.py
+├── evaluation/ # metrics.py, evaluator.py
+└── main.py
+```
+
+---
+
+## Personal Learning Outcomes
+
+- **Technical**: Deep learning for graph data; fair benchmarking; significance-aware evaluation.  
+- **Research**: Designing controlled experiments; connecting empirical results to theory; **semantic fidelity** analysis beyond standard metrics.
+
+---
+
+## Future Directions
+
+- Evaluate on **web-scale** KGs; include **RotatE** and **GNN-based** methods;  
+- Develop **semantic-aware objectives** to explicitly preserve graph structure;  
+- Extend cross-lingual alignment and robustness analyses.
+
+---

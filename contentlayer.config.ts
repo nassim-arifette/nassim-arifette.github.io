@@ -1,6 +1,8 @@
 import { defineDocumentType, makeSource } from 'contentlayer/source-files'
 import rehypePrettyCode from 'rehype-pretty-code'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 const rehypePrettyCodePlugin: any = rehypePrettyCode
 const prettyCodeOptions = {
@@ -21,6 +23,8 @@ const extraAttributes = [
   ['data-highlighted-line'],
   ['data-rehype-pretty-code-fragment'],
   ['data-language'],
+  ['aria-hidden'],
+  ['role'],
 ] as const
 
 for (const tag of ['pre', 'code', 'span', 'div'] as const) {
@@ -40,6 +44,66 @@ for (const tag of ['pre', 'code', 'span', 'div'] as const) {
   if (tag === 'span') {
     if (!tagAttributes.includes('style' as any)) {
       tagAttributes.push('style' as any)
+    }
+  }
+  sanitizeSchema.attributes[tag] = tagAttributes
+}
+
+const mathMLTags = [
+  'math',
+  'annotation',
+  'semantics',
+  'mrow',
+  'mi',
+  'mn',
+  'mo',
+  'msup',
+  'msub',
+  'msubsup',
+  'mfrac',
+  'msqrt',
+  'mroot',
+  'mstyle',
+  'mspace',
+  'mtext',
+  'mtable',
+  'mtr',
+  'mtd',
+  'mpadded',
+  'mphantom',
+  'menclose',
+  'mover',
+  'munder',
+  'munderover',
+] as const
+
+sanitizeSchema.tagNames ??= []
+for (const tag of mathMLTags) {
+  if (!sanitizeSchema.tagNames.includes(tag)) {
+    sanitizeSchema.tagNames.push(tag)
+  }
+  const tagAttributes = sanitizeSchema.attributes[tag] ?? []
+  const mathAttributes = ['className', 'style'] as const
+  for (const attr of mathAttributes) {
+    if (!tagAttributes.includes(attr as any)) {
+      tagAttributes.push(attr as any)
+    }
+  }
+  if (tag === 'math') {
+    for (const attr of ['xmlns', 'display'] as const) {
+      if (!tagAttributes.includes(attr as any)) {
+        tagAttributes.push(attr as any)
+      }
+    }
+  }
+  if (tag === 'annotation') {
+    if (!tagAttributes.includes('encoding' as any)) {
+      tagAttributes.push('encoding' as any)
+    }
+  }
+  if (tag === 'semantics') {
+    if (!tagAttributes.includes('definitionURL' as any)) {
+      tagAttributes.push('definitionURL' as any)
     }
   }
   sanitizeSchema.attributes[tag] = tagAttributes
@@ -87,8 +151,9 @@ export default makeSource({
   contentDirPath: 'content',
   documentTypes: [Post, Project],
   mdx: {
-    remarkPlugins: [remarkGfm],
+    remarkPlugins: [remarkMath, remarkGfm],
     rehypePlugins: [
+      rehypeKatex,
       [
         rehypePrettyCodePlugin,
         prettyCodeOptions,
