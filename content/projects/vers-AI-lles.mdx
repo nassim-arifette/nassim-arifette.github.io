@@ -55,7 +55,7 @@ The backend (`backend/app.py`) is **FastAPI** orchestrating a **LangChain + Lang
 - **Environment variables** (see `README.md`) centralize keys for Mistral, weather, and maps.
 - We kept **clear boundaries**: Python backend, React web app, and MCP micro-services each with their own deps and hot-reload loops.
 
-## The 48-hour sprint (the human side)
+## The 48-hour sprint
 
 1. **Walk the journey** with Versailles staff; collect the pivotal questions and choke points.  
 2. **Prototype in Streamlit** to test tone and flow; harden the UX in React once it clicked.  
@@ -69,8 +69,6 @@ Honestly, the best part was the corridor testing: a guard asked us for a path th
 
 - **Frontend**: Vercel — [vers-ai-lles.vercel.app](https://vers-ai-lles.vercel.app/)  
 - **Backend**: Render (FastAPI + MCP services)
-
-The public demo showcases how the assistant plans, explains trade-offs (“rain at 15:00, do gardens first”), and updates routes as conditions change.
 
 ---
 
