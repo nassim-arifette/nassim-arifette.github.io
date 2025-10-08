@@ -1,10 +1,10 @@
 import { defineDocumentType, makeSource } from 'contentlayer/source-files'
+import type { Pluggable } from 'unified'
 import rehypePrettyCode from 'rehype-pretty-code'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
-const rehypePrettyCodePlugin: any = rehypePrettyCode
 const prettyCodeOptions = {
   // Force the dark theme in both modes so syntax colors stay readable on black
   theme: {
@@ -147,18 +147,19 @@ const Project = defineDocumentType(() => ({
   }
 }))
 
+const rehypePlugins = [
+  rehypeKatex as unknown as Pluggable,
+  [rehypePrettyCode, prettyCodeOptions] as unknown as Pluggable,
+  [rehypeSanitize, sanitizeSchema] as unknown as Pluggable,
+] as Pluggable[]
+
+const remarkPlugins = [remarkMath, remarkGfm] as Pluggable[]
+
 export default makeSource({
   contentDirPath: 'content',
   documentTypes: [Post, Project],
   mdx: {
-    remarkPlugins: [remarkMath, remarkGfm],
-    rehypePlugins: [
-      rehypeKatex,
-      [
-        rehypePrettyCodePlugin,
-        prettyCodeOptions,
-      ],
-      [rehypeSanitize, sanitizeSchema],
-    ],
+    remarkPlugins,
+    rehypePlugins,
   },
 })
