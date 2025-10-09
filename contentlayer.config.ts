@@ -160,7 +160,7 @@ const rehypePlugins = [
 
   // Then pretty-code
   [rehypePrettyCode, {
-    theme: { light: 'dark-plus', dark: 'dark-plus' },
+    theme: { light: 'dark²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²²-plus', dark: 'dark-plus' },
     keepBackground: false,
     transformers: [
       transformerNotationHighlight(),
