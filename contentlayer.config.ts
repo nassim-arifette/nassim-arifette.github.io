@@ -5,6 +5,13 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
+
+import {
+  transformerNotationDiff,
+  transformerNotationHighlight,
+  transformerNotationFocus,
+} from '@shikijs/transformers'
+
 const prettyCodeOptions = {
   // Force the dark theme in both modes so syntax colors stay readable on black
   theme: {
@@ -148,9 +155,21 @@ const Project = defineDocumentType(() => ({
 }))
 
 const rehypePlugins = [
-  rehypeKatex as unknown as Pluggable,
-  [rehypePrettyCode, prettyCodeOptions] as unknown as Pluggable,
+  // Sanitize first
   [rehypeSanitize, sanitizeSchema] as unknown as Pluggable,
+
+  // Then pretty-code
+  [rehypePrettyCode, {
+    theme: { light: 'dark-plus', dark: 'dark-plus' },
+    keepBackground: false,
+    transformers: [
+      transformerNotationHighlight(),
+      transformerNotationDiff(),
+      transformerNotationFocus(),
+    ],
+  }] as unknown as Pluggable,
+
+  rehypeKatex as unknown as Pluggable,
 ] as Pluggable[]
 
 const remarkPlugins = [remarkMath, remarkGfm] as Pluggable[]
