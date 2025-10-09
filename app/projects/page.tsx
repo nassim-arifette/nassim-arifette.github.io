@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { allProjects } from 'contentlayer/generated'
-import { ProjectCard } from '@/components/cards/ProjectCard'
+import { ProjectsGrid } from '@/components/projects/ProjectsGrid'
 import { absoluteUrl } from '@/lib/seo'
 
 export const metadata: Metadata = {
@@ -40,11 +40,7 @@ export default function ProjectsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <h1 className="text-3xl font-semibold">Projects</h1>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {projects.map((p) => (
-          <ProjectCard key={p.slug} project={p} idAnchor />
-        ))}
-      </div>
+      <ProjectsGrid projects={projects} />
     </div>
   )
 }

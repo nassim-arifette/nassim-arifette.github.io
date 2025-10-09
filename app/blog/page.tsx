@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { allPosts } from 'contentlayer/generated'
+import { PostsList } from '@/components/blog/PostsList'
 import { absoluteUrl } from '@/lib/seo'
 
 export const metadata: Metadata = {
@@ -49,19 +49,7 @@ export default function BlogIndex() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <h1 className="text-3xl font-semibold">Blog</h1>
-      <ul className="space-y-6">
-        {posts.map((post) => (
-          <li key={post.slug} className="group">
-            <Link href={post.url} className="block">
-              <div className="flex items-baseline gap-3">
-                <h2 className="text-xl font-medium group-hover:underline">{post.title}</h2>
-                <span className="text-xs text-muted-foreground">{new Date(post.date).toLocaleDateString()}</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{post.description}</p>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <PostsList posts={posts} />
     </div>
   )
 }
