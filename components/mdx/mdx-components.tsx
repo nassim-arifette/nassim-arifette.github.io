@@ -4,6 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ZoomableImage } from './zoomable-image'
 
 const CodeBlock = ({ className = '', ...props }: React.HTMLAttributes<HTMLPreElement>) => {
   const preRef = React.useRef<HTMLPreElement | null>(null)
@@ -242,4 +243,5 @@ export const mdxComponents = {
   code: (props: React.HTMLAttributes<HTMLElement>) => (
     <code className="rounded bg-muted px-1 py-0.5" {...props} />
   ),
+  img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <ZoomableImage {...props} />,
 }
