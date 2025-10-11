@@ -7,10 +7,10 @@ import { CommandPalette } from '@/components/command-palette'
 
 const nav = [
   { href: '/', label: 'Home' },
+  { href: '/cv', label: 'CV' },
   { href: '/projects', label: 'Projects' },
   { href: '/blog', label: 'Blog' },
   { href: '/tags', label: 'Tags' },
-  { href: '/cv', label: 'CV' },
   { href: '/other', label: 'Other' },
 ]
 
