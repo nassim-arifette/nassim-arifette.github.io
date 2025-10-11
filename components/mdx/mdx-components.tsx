@@ -5,6 +5,87 @@ import Link from 'next/link'
 import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+const CodeBlock = ({ className = '', ...props }: React.HTMLAttributes<HTMLPreElement>) => {
+  const preRef = React.useRef<HTMLPreElement | null>(null)
+  const [copyState, setCopyState] = React.useState<'idle' | 'copied'>('idle')
+
+  React.useEffect(() => {
+    if (copyState !== 'copied') return
+    const timeout = window.setTimeout(() => setCopyState('idle'), 2000)
+    return () => window.clearTimeout(timeout)
+  }, [copyState])
+
+  const getCodeText = React.useCallback(() => {
+    const pre = preRef.current
+    if (!pre) return ''
+    const code = pre.querySelector('code')
+    const text = code?.textContent ?? pre.textContent ?? ''
+    return text.replace(/\n+$/, '')
+  }, [])
+
+  const handleCopy = React.useCallback(async () => {
+    const text = getCodeText()
+    if (!text) return
+
+    let didCopy = false
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text)
+        didCopy = true
+      } catch {
+        didCopy = false
+      }
+    }
+
+    if (!didCopy && typeof document !== 'undefined') {
+      try {
+        const textarea = document.createElement('textarea')
+        textarea.value = text
+        textarea.setAttribute('readonly', '')
+        textarea.style.position = 'absolute'
+        textarea.style.left = '-9999px'
+        document.body.appendChild(textarea)
+        textarea.select()
+        didCopy = document.execCommand('copy')
+        document.body.removeChild(textarea)
+      } catch {
+        didCopy = false
+      }
+    }
+
+    if (didCopy) {
+      setCopyState('copied')
+    }
+  }, [getCodeText])
+
+  const isCopied = copyState === 'copied'
+  const label = isCopied ? 'Code copied' : 'Copy code'
+
+  return (
+    <div className="group relative">
+      <pre
+        ref={preRef}
+        className={cn('my-6 overflow-x-auto rounded-lg border bg-muted p-4 pr-12', className)}
+        {...props}
+      />
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={label}
+        title={label}
+        data-copy-state={isCopied ? 'copied' : 'idle'}
+        className={cn(
+          'absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded border border-transparent bg-background/80 text-muted-foreground transition hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 opacity-100 md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100',
+          isCopied && 'border-muted-foreground text-foreground',
+        )}
+      >
+        {isCopied ? <Check aria-hidden className="h-4 w-4" /> : <Copy aria-hidden className="h-4 w-4" />}
+        <span className="sr-only">{label}</span>
+      </button>
+    </div>
+  )
+}
+
 const HeadingAnchor = React.forwardRef<HTMLAnchorElement, React.AnchorHTMLAttributes<HTMLAnchorElement>>(
   ({ href = '', className = '', children: _children, ...rest }, ref) => {
     const [copyState, setCopyState] = React.useState<'idle' | 'copied'>('idle')
@@ -157,9 +238,7 @@ export const mdxComponents = {
       </Link>
     )
   },
-  pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
-    <pre className="my-6 overflow-x-auto rounded-lg border bg-muted p-4" {...props} />
-  ),
+  pre: (props: React.HTMLAttributes<HTMLPreElement>) => <CodeBlock {...props} />,
   code: (props: React.HTMLAttributes<HTMLElement>) => (
     <code className="rounded bg-muted px-1 py-0.5" {...props} />
   ),
