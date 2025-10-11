@@ -1,11 +1,12 @@
 import type { MetadataRoute } from 'next'
 import { allPosts, allProjects } from 'contentlayer/generated'
 import { absoluteUrl } from '@/lib/seo'
+import { getTagAggregates } from '@/lib/tags'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
 
-  const staticRoutes = ['/', '/projects', '/blog', '/cv', '/other'].map((path) => ({
+  const staticRoutes = ['/', '/projects', '/blog', '/tags', '/cv', '/other'].map((path) => ({
     url: absoluteUrl(path === '/' ? '/' : path),
     lastModified: now,
   }))
@@ -20,6 +21,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(project.date),
   }))
 
-  return [...staticRoutes, ...postRoutes, ...projectRoutes]
-}
+  const tagRoutes = getTagAggregates().map((tag) => ({
+    url: absoluteUrl(`/tags/${tag.slug}`),
+    lastModified: now,
+  }))
 
+  return [...staticRoutes, ...postRoutes, ...projectRoutes, ...tagRoutes]
+}

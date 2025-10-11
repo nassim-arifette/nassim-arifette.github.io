@@ -24,8 +24,10 @@ export function PostsList({ posts }: PostsListProps) {
   const [query, setQuery] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
   const [tagMode, setTagMode] = useState<'AND' | 'OR'>('AND')
+  const [activeIndex, setActiveIndex] = useState(0)
 
   const hasHydrated = useRef(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const qParam = searchParams.get('q') ?? ''
@@ -115,6 +117,20 @@ export function PostsList({ posts }: PostsListProps) {
       .map((entry) => entry.ref)
   }, [indexedPosts, activeTags, normalizedQuery, tagMode])
 
+  const filteredPostsRef = useRef(filteredPosts)
+
+  useEffect(() => {
+    filteredPostsRef.current = filteredPosts
+    setActiveIndex((current) => {
+      if (filteredPosts.length === 0) return 0
+      return Math.min(current, filteredPosts.length - 1)
+    })
+  }, [filteredPosts])
+
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [normalizedQuery, activeTags, tagMode])
+
   const toggleTag = (tag: string) => {
     setActiveTags((current) =>
       current.includes(tag) ? current.filter((value) => value !== tag) : [...current, tag],
@@ -127,6 +143,56 @@ export function PostsList({ posts }: PostsListProps) {
     setTagMode('AND')
   }
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      const isEditable =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.hasAttribute('contenteditable')
+
+      const results = filteredPostsRef.current
+
+      if (event.key === '/') {
+        if (isEditable && target !== searchInputRef.current) return
+        event.preventDefault()
+        if (document.activeElement === searchInputRef.current && query) {
+          setQuery('')
+        } else {
+          searchInputRef.current?.focus()
+          searchInputRef.current?.select()
+        }
+        return
+      }
+
+      const key = event.key.toLowerCase()
+      if ((key === 'j' || key === 'k') && results.length > 0) {
+        if (isEditable && target !== searchInputRef.current) return
+        event.preventDefault()
+        setActiveIndex((current) => {
+          if (key === 'j') {
+            return Math.min(current + 1, results.length - 1)
+          }
+          return Math.max(current - 1, 0)
+        })
+        return
+      }
+
+      if (event.key === 'Enter' && results.length > 0) {
+        if (isEditable && target !== searchInputRef.current) return
+        event.preventDefault()
+        const selected = results[activeIndex] ?? results[0]
+        if (selected) {
+          router.push(selected.url)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeIndex, router, query])
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -138,6 +204,7 @@ export function PostsList({ posts }: PostsListProps) {
             <input
               id="posts-search"
               type="search"
+              ref={searchInputRef}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search posts..."
@@ -191,19 +258,28 @@ export function PostsList({ posts }: PostsListProps) {
           <p className="text-sm text-muted-foreground">No posts match your filters.</p>
         ) : (
           <ul className="space-y-6">
-            {filteredPosts.map((post) => (
-              <li key={post.slug} className="group">
-                <Link href={post.url} className="block">
-                  <div className="flex items-baseline gap-3">
-                    <h2 className="text-xl font-medium group-hover:underline">{post.title}</h2>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(post.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{post.description}</p>
-                </Link>
-              </li>
-            ))}
+            {filteredPosts.map((post, index) => {
+              const selected = index === activeIndex
+              return (
+                <li key={post.slug} className="group">
+                  <Link
+                    href={post.url}
+                    className={`block rounded-md border border-transparent px-4 py-3 transition hover:border-foreground/40 hover:bg-muted/80 ${
+                      selected ? 'border-foreground/60 bg-muted' : ''
+                    }`}
+                    onMouseEnter={() => setActiveIndex(index)}
+                  >
+                    <div className="flex items-baseline gap-3">
+                      <h2 className="text-xl font-medium group-hover:underline">{post.title}</h2>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(post.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">{post.description}</p>
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>

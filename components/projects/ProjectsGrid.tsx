@@ -24,8 +24,10 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
   const [query, setQuery] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
   const [tagMode, setTagMode] = useState<'AND' | 'OR'>('AND')
+  const [activeIndex, setActiveIndex] = useState(0)
 
   const hasHydrated = useRef(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const qParam = searchParams.get('q') ?? ''
@@ -115,6 +117,20 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
       .map((entry) => entry.ref)
   }, [indexedProjects, activeTags, normalizedQuery, tagMode])
 
+  const filteredProjectsRef = useRef(filteredProjects)
+
+  useEffect(() => {
+    filteredProjectsRef.current = filteredProjects
+    setActiveIndex((current) => {
+      if (filteredProjects.length === 0) return 0
+      return Math.min(current, filteredProjects.length - 1)
+    })
+  }, [filteredProjects])
+
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [normalizedQuery, activeTags, tagMode])
+
   const toggleTag = (tag: string) => {
     setActiveTags((current) =>
       current.includes(tag) ? current.filter((value) => value !== tag) : [...current, tag],
@@ -127,6 +143,56 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
     setTagMode('AND')
   }
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      const isEditable =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.hasAttribute('contenteditable')
+
+      if (event.key === '/') {
+        if (isEditable && target !== searchInputRef.current) return
+        event.preventDefault()
+        if (document.activeElement === searchInputRef.current && query) {
+          setQuery('')
+        } else {
+          searchInputRef.current?.focus()
+          searchInputRef.current?.select()
+        }
+        return
+      }
+
+      const key = event.key.toLowerCase()
+      const results = filteredProjectsRef.current
+
+      if ((key === 'j' || key === 'k') && results.length > 0) {
+        if (isEditable && target !== searchInputRef.current) return
+        event.preventDefault()
+        setActiveIndex((current) => {
+          if (key === 'j') {
+            return Math.min(current + 1, results.length - 1)
+          }
+          return Math.max(current - 1, 0)
+        })
+        return
+      }
+
+      if (event.key === 'Enter' && results.length > 0) {
+        if (isEditable && target !== searchInputRef.current) return
+        event.preventDefault()
+        const selected = results[activeIndex] ?? results[0]
+        if (selected) {
+          router.push(selected.url)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeIndex, router, query])
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -138,6 +204,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
             <input
               id="projects-search"
               type="search"
+              ref={searchInputRef}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search projects..."
@@ -191,9 +258,20 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
           <p className="text-sm text-muted-foreground">No projects match your filters.</p>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project) => (
-              <ProjectCard key={project.slug} project={project} idAnchor />
-            ))}
+            {filteredProjects.map((project, index) => {
+              const selected = index === activeIndex
+              return (
+                <div key={project.slug} onMouseEnter={() => setActiveIndex(index)}>
+                  <ProjectCard
+                    project={project}
+                    idAnchor
+                    className={
+                      selected ? 'ring-2 ring-foreground/60 ring-offset-2 ring-offset-background' : undefined
+                    }
+                  />
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

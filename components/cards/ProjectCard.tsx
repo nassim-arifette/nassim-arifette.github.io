@@ -4,6 +4,7 @@ import type { Project } from 'contentlayer/generated'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/mdx'
 import { getPreviewText } from '@/lib/preview'
+import { cn } from '@/lib/utils'
 
 type Links = { github?: string; demo?: string; paper?: string; pdf?: string; website?: string }
 
@@ -17,9 +18,10 @@ type ProjectCardProject = Pick<
 type ProjectCardProps = {
   project: ProjectCardProject
   idAnchor?: boolean
+  className?: string
 }
 
-export function ProjectCard({ project, idAnchor }: ProjectCardProps) {
+export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) {
   const preview = getPreviewText(project.body?.raw, project.description)
   const hasLinks =
     project.links?.github ||
@@ -31,7 +33,10 @@ export function ProjectCard({ project, idAnchor }: ProjectCardProps) {
   return (
     <article
       id={idAnchor ? project.slug : undefined}
-      className="group relative overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg"
+      className={cn(
+        'group relative overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg',
+        className,
+      )}
     >
       {project.url ? (
         <Link

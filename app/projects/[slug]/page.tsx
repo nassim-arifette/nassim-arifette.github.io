@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { allProjects } from 'contentlayer/generated'
@@ -6,6 +7,7 @@ import { Mdx } from '@/components/mdx/mdx-client'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/mdx'
 import { absoluteUrl } from '@/lib/seo'
+import { slugifyTag } from '@/lib/utils'
 
 interface PageProps {
   params: { slug: string }
@@ -79,9 +81,11 @@ export default function ProjectPage({ params }: PageProps) {
         {project.tags?.length ? (
           <div className="flex flex-wrap gap-2">
             {project.tags.map((tag) => (
-              <Badge key={tag} variant="secondary">
-                {tag}
-              </Badge>
+              <Link key={tag} href={`/tags/${slugifyTag(tag)}`} className="inline-flex">
+                <Badge variant="secondary" className="transition hover:bg-foreground hover:text-background">
+                  #{tag}
+                </Badge>
+              </Link>
             ))}
           </div>
         ) : null}
