@@ -114,6 +114,15 @@ First-time setup:
 - `pnpm export` / `npm run export` — Static export to `out/`
 - `pnpm start` / `npm start` — Start Next.js server (not used for static hosting)
 
+## Testing
+- `pnpm test` / `npm test` — Run unit tests once (Vitest)
+- `pnpm test:watch` / `npm run test:watch` — Watch mode
+
+Note: if dependencies aren’t installed yet, run `pnpm install` (or `npm install`).
+
+Continuous Integration:
+- GitHub Actions (`.github/workflows/test.yml`) runs `pnpm test` on pushes and pull requests targeting `main`.
+
 ## Project Structure
 - `app/` — App Router pages, layout, sitemap/robots
 - `components/` — UI, MDX components, layout chrome
@@ -135,4 +144,3 @@ Locally, you can omit these. In CI, the workflow sets both automatically based o
 
 ## License
 No explicit license file is provided. If you intend to reuse substantial parts of this site, please ask the author or add a suitable LICENSE file.
-
