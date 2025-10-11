@@ -6,6 +6,8 @@ import { Mdx } from '@/components/mdx/mdx-client'
 import { Badge } from '@/components/ui/badge'
 import { absoluteUrl } from '@/lib/seo'
 import { slugifyTag } from '@/lib/utils'
+import { TableOfContents } from '@/components/mdx/table-of-contents'
+import type { TocHeading } from '@/components/mdx/table-of-contents'
 
 interface PageProps { params: { slug: string } }
 
@@ -50,28 +52,42 @@ export default function PostPage({ params }: PageProps) {
     url: absoluteUrl(`/blog/${post.slug}`),
   }
 
+  const headings = (post.headings ?? []) as TocHeading[]
+
   return (
-    <article className="prose">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-      <h1>{post.title}</h1>
-      <p className="text-sm !mt-0 !mb-6 text-muted-foreground">
-        {new Date(post.date).toLocaleDateString()}
-      </p>
-      {post.tags?.length ? (
-        <div className="mb-6 flex flex-wrap gap-2">
-          {post.tags.map((tag) => (
-            <Link key={tag} href={`/tags/${slugifyTag(tag)}`} className="inline-flex">
-              <Badge variant="secondary" className="transition hover:bg-foreground hover:text-background">
-                #{tag}
-              </Badge>
-            </Link>
-          ))}
-        </div>
+    <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(220px,1fr)] lg:gap-12">
+      <article className="prose">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        <h1>{post.title}</h1>
+        <p className="text-sm !mt-0 !mb-6 text-muted-foreground">
+          {new Date(post.date).toLocaleDateString()}
+        </p>
+        {post.tags?.length ? (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {post.tags.map((tag) => (
+              <Link key={tag} href={`/tags/${slugifyTag(tag)}`} className="inline-flex">
+                <Badge variant="secondary" className="transition hover:bg-foreground hover:text-background">
+                  #{tag}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+        {headings.length ? (
+          <div className="not-prose my-8 lg:hidden">
+            <TableOfContents headings={headings} />
+          </div>
+        ) : null}
+        <Mdx code={post.body.code} />
+      </article>
+      {headings.length ? (
+        <aside className="relative hidden lg:block">
+          <TableOfContents headings={headings} className="sticky top-24" />
+        </aside>
       ) : null}
-      <Mdx code={post.body.code} />
-    </article>
+    </div>
   )
 }

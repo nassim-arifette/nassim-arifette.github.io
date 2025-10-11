@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/mdx'
 import { absoluteUrl } from '@/lib/seo'
 import { slugifyTag } from '@/lib/utils'
+import { TableOfContents } from '@/components/mdx/table-of-contents'
+import type { TocHeading } from '@/components/mdx/table-of-contents'
 
 interface PageProps {
   params: { slug: string }
@@ -68,52 +70,63 @@ export default function ProjectPage({ params }: PageProps) {
     keywords: project.tags,
   }
 
-  return (
-    <article className="space-y-6">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-      <header className="space-y-4">
-        <p className="text-sm text-muted-foreground">{formatDate(project.date)}</p>
-        <h1 className="text-3xl font-semibold leading-tight">{project.title}</h1>
-        <p className="text-base text-muted-foreground max-w-2xl">{project.description}</p>
-        {project.tags?.length ? (
-          <div className="flex flex-wrap gap-2">
-            {project.tags.map((tag) => (
-              <Link key={tag} href={`/tags/${slugifyTag(tag)}`} className="inline-flex">
-                <Badge variant="secondary" className="transition hover:bg-foreground hover:text-background">
-                  #{tag}
-                </Badge>
-              </Link>
-            ))}
-          </div>
-        ) : null}
-        {linkEntries.length ? (
-          <div className="flex flex-wrap gap-3 text-sm">
-            {linkEntries.map(([key, href]) => {
-              const entry = linkConfig[key]
-              if (!entry) return null
-              const { Icon, label } = entry
-              return (
-                <a
-                  key={key}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 font-medium text-foreground transition-colors hover:text-foreground/80"
-                >
-                  <Icon size={16} /> {label}
-                </a>
-              )
-            })}
-          </div>
-        ) : null}
-      </header>
+  const headings = (project.headings ?? []) as TocHeading[]
 
-      <div className="prose">
+  return (
+    <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(220px,1fr)] lg:gap-12">
+      <article className="prose max-w-none">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        <header className="not-prose space-y-4">
+          <p className="text-sm text-muted-foreground">{formatDate(project.date)}</p>
+          <h1 className="text-3xl font-semibold leading-tight">{project.title}</h1>
+          <p className="max-w-2xl text-base text-muted-foreground">{project.description}</p>
+          {project.tags?.length ? (
+            <div className="flex flex-wrap gap-2">
+              {project.tags.map((tag) => (
+                <Link key={tag} href={`/tags/${slugifyTag(tag)}`} className="inline-flex">
+                  <Badge variant="secondary" className="transition hover:bg-foreground hover:text-background">
+                    #{tag}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+          {linkEntries.length ? (
+            <div className="flex flex-wrap gap-3 text-sm">
+              {linkEntries.map(([key, href]) => {
+                const entry = linkConfig[key]
+                if (!entry) return null
+                const { Icon, label } = entry
+                return (
+                  <a
+                    key={key}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-medium text-foreground transition-colors hover:text-foreground/80"
+                  >
+                    <Icon size={16} /> {label}
+                  </a>
+                )
+              })}
+            </div>
+          ) : null}
+        </header>
+        {headings.length ? (
+          <div className="not-prose my-8 lg:hidden">
+            <TableOfContents headings={headings} />
+          </div>
+        ) : null}
         <Mdx code={project.body.code} />
-      </div>
-    </article>
+      </article>
+      {headings.length ? (
+        <aside className="relative hidden lg:block">
+          <TableOfContents headings={headings} className="sticky top-24" />
+        </aside>
+      ) : null}
+    </div>
   )
 }
