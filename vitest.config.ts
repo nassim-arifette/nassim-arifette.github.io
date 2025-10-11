@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
+  cacheDir: path.join(process.cwd(), '.vitest'),
   test: {
     // Default to jsdom for component and DOM-oriented tests; pure utils still work here
     environment: 'jsdom',
@@ -17,7 +18,6 @@ export default defineConfig({
     ],
     globals: true,
     setupFiles: ['vitest.setup.ts'],
-    cacheDir: path.join(process.cwd(), '.vitest'),
   },
   resolve: {
     alias: {
