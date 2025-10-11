@@ -1,15 +1,109 @@
+"use client"
+
 import * as React from 'react'
 import Link from 'next/link'
+import { Check, Copy } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const HeadingAnchor = React.forwardRef<HTMLAnchorElement, React.AnchorHTMLAttributes<HTMLAnchorElement>>(
+  ({ href = '', className = '', children: _children, ...rest }, ref) => {
+    const [copyState, setCopyState] = React.useState<'idle' | 'copied'>('idle')
+
+    React.useEffect(() => {
+      if (copyState !== 'copied') return
+      const timeout = window.setTimeout(() => setCopyState('idle'), 2000)
+      return () => window.clearTimeout(timeout)
+    }, [copyState])
+
+    const handleClick = React.useCallback(
+      async (event: React.MouseEvent<HTMLAnchorElement>) => {
+        event.preventDefault()
+        if (!href) return
+        const hash = href.startsWith('#') ? href : `#${href}`
+
+        if (typeof window !== 'undefined') {
+          const targetUrl = `${window.location.origin}${window.location.pathname}${hash}`
+          let didCopy = false
+
+          if (navigator?.clipboard?.writeText) {
+            try {
+              await navigator.clipboard.writeText(targetUrl)
+              didCopy = true
+            } catch {
+              didCopy = false
+            }
+          }
+
+          if (!didCopy) {
+            try {
+              const textarea = document.createElement('textarea')
+              textarea.value = targetUrl
+              textarea.setAttribute('readonly', '')
+              textarea.style.position = 'absolute'
+              textarea.style.left = '-9999px'
+              document.body.appendChild(textarea)
+              textarea.select()
+              didCopy = document.execCommand('copy')
+              document.body.removeChild(textarea)
+            } catch {
+              didCopy = false
+            }
+          }
+
+          setCopyState(didCopy ? 'copied' : 'idle')
+
+          window.history.replaceState(null, '', hash)
+
+          const targetId = hash.slice(1)
+          const element = document.getElementById(targetId)
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        }
+      },
+      [href],
+    )
+
+    const isCopied = copyState === 'copied'
+
+    return (
+      <a
+        ref={ref}
+        href={href}
+        onClick={handleClick}
+        data-copy-state={isCopied ? 'copied' : 'idle'}
+        aria-label={isCopied ? 'Link copied' : rest['aria-label'] ?? 'Copy link to section'}
+        title={rest.title ?? (isCopied ? 'Link copied' : 'Copy link to section')}
+        className={cn(
+          'ml-2 inline-flex h-6 w-6 items-center justify-center rounded border border-transparent text-sm text-muted-foreground opacity-0 transition hover:border-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 focus-visible:opacity-100',
+          isCopied && 'border-muted-foreground text-foreground',
+          className,
+        )}
+        {...rest}
+      >
+        <span className="sr-only">{isCopied ? 'Link copied' : 'Copy link to section'}</span>
+        {isCopied ? <Check aria-hidden className="h-4 w-4" /> : <Copy aria-hidden className="h-4 w-4" />}
+      </a>
+    )
+  },
+)
+HeadingAnchor.displayName = 'HeadingAnchor'
 
 export const mdxComponents = {
-  h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h1 className="mt-2 scroll-m-20 text-3xl font-semibold tracking-tight" {...props} />
+  h1: ({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h1 className={cn('group mt-2 scroll-m-20 text-3xl font-semibold tracking-tight', className)} {...props} />
   ),
-  h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h2 className="mt-10 scroll-m-20 border-b pb-1 text-2xl font-semibold tracking-tight first:mt-0" {...props} />
+  h2: ({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h2
+      className={cn(
+        'group mt-10 scroll-m-20 border-b pb-1 text-2xl font-semibold tracking-tight first:mt-0',
+        className,
+      )}
+      {...props}
+    />
   ),
-  h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h3 className="mt-8 scroll-m-20 text-xl font-semibold tracking-tight" {...props} />
+  h3: ({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 className={cn('group mt-8 scroll-m-20 text-xl font-semibold tracking-tight', className)} {...props} />
   ),
   p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
     <p className="leading-7 [&:not(:first-child)]:mt-6" {...props} />
@@ -31,6 +125,14 @@ export const mdxComponents = {
     target: _target,
     ...rest
   }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    if (href.startsWith('#')) {
+      return (
+        <HeadingAnchor href={href} className={className} {...rest}>
+          {children}
+        </HeadingAnchor>
+      )
+    }
+
     const linkClassName = className
       ? `font-medium underline underline-offset-4 ${className}`
       : 'font-medium underline underline-offset-4'

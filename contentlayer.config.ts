@@ -5,6 +5,9 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
+import rehypeSlug from 'rehype-slug'
+import rehypeAutolinkHeadings from 'rehype-autolink-headings'
+import GithubSlugger from 'github-slugger'
 
 import {
   transformerNotationDiff,
@@ -55,6 +58,14 @@ for (const tag of ['pre', 'code', 'span', 'div'] as const) {
   }
   sanitizeSchema.attributes[tag] = tagAttributes
 }
+
+const anchorAttributes = sanitizeSchema.attributes['a'] ?? []
+for (const attr of ['className', 'aria-label', 'data-copy-feedback', 'data-copy-state', 'title'] as const) {
+  if (!anchorAttributes.includes(attr as any)) {
+    anchorAttributes.push(attr as any)
+  }
+}
+sanitizeSchema.attributes['a'] = anchorAttributes
 
 const mathMLTags = [
   'math',
@@ -130,6 +141,10 @@ const Post = defineDocumentType(() => ({
   computedFields: {
     slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath.replace('posts/', '') },
     url:  { type: 'string', resolve: (doc) => `/blog/${doc._raw.flattenedPath.replace('posts/','')}` },
+    headings: {
+      type: 'json',
+      resolve: (doc) => extractHeadings(doc.body.raw),
+    },
   }
 }))
 
@@ -151,12 +166,27 @@ const Project = defineDocumentType(() => ({
       type: 'string',
       resolve: (doc) => `/projects/${doc._raw.flattenedPath.replace('projects/','')}`,
     },
+    headings: {
+      type: 'json',
+      resolve: (doc) => extractHeadings(doc.body.raw),
+    },
   }
 }))
 
 const rehypePlugins = [
   // Sanitize first
   [rehypeSanitize, sanitizeSchema] as unknown as Pluggable,
+
+  rehypeSlug as unknown as Pluggable,
+  [rehypeAutolinkHeadings, {
+    behavior: 'append',
+    properties: {
+      className: ['heading-anchor'],
+      'aria-label': 'Copy link to section',
+      title: 'Copy link to section',
+    },
+    content: [],
+  }] as unknown as Pluggable,
 
   // Then pretty-code
   [rehypePrettyCode, {
@@ -182,3 +212,32 @@ export default makeSource({
     rehypePlugins,
   },
 })
+
+function extractHeadings(raw: string) {
+  const slugger = new GithubSlugger()
+  const headings: { id: string; title: string; level: number }[] = []
+  const lines = raw.split('\n')
+  let inCodeBlock = false
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('```')) {
+      inCodeBlock = !inCodeBlock
+      continue
+    }
+    if (inCodeBlock) continue
+    if (!trimmed.startsWith('#')) continue
+    const match = /^(#{2,4})\s+(.+)$/.exec(trimmed)
+    if (!match) continue
+
+    const level = match[1].length
+    let title = match[2].trim()
+    title = title.replace(/\s*\{#.*\}$/, '').trim()
+    if (!title) continue
+
+    const id = slugger.slug(title)
+    headings.push({ id, title, level })
+  }
+
+  return headings
+}
