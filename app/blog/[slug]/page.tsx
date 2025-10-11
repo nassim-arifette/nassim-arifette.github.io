@@ -1,8 +1,11 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { allPosts } from 'contentlayer/generated'
 import { Mdx } from '@/components/mdx/mdx-client'
+import { Badge } from '@/components/ui/badge'
 import { absoluteUrl } from '@/lib/seo'
+import { slugifyTag } from '@/lib/utils'
 
 interface PageProps { params: { slug: string } }
 
@@ -57,6 +60,17 @@ export default function PostPage({ params }: PageProps) {
       <p className="text-sm !mt-0 !mb-6 text-muted-foreground">
         {new Date(post.date).toLocaleDateString()}
       </p>
+      {post.tags?.length ? (
+        <div className="mb-6 flex flex-wrap gap-2">
+          {post.tags.map((tag) => (
+            <Link key={tag} href={`/tags/${slugifyTag(tag)}`} className="inline-flex">
+              <Badge variant="secondary" className="transition hover:bg-foreground hover:text-background">
+                #{tag}
+              </Badge>
+            </Link>
+          ))}
+        </div>
+      ) : null}
       <Mdx code={post.body.code} />
     </article>
   )

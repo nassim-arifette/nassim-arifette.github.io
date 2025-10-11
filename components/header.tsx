@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { CommandPalette } from '@/components/command-palette'
 
 const nav = [
   { href: '/', label: 'Home' },
   { href: '/projects', label: 'Projects' },
   { href: '/blog', label: 'Blog' },
+  { href: '/tags', label: 'Tags' },
   { href: '/cv', label: 'CV' },
   { href: '/other', label: 'Other' },
 ]
@@ -32,6 +34,7 @@ export default function Header() {
               </Link>
             )
           })}
+          <CommandPalette navItems={nav} />
           <ThemeToggle />
         </nav>
       </div>
