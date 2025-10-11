@@ -10,6 +10,32 @@ Clean, fast personal website built with Next.js (App Router), Contentlayer, Tail
 - SEO helpers, sitemap and robots routes
 - GitHub Pages deployment workflow included
 
+## Todo
+### Discovery & Nav
+- [x] Cmd/Ctrl K command palette to jump to pages, posts, tags (client-only).
+- [x] Dedicated tag pages (`/tags/[tag]`) generated statically plus "related posts/projects".
+- [x] "/" focuses search; "/" again clears. Also J/K to move between list items.
+
+### Reading Experience
+- [x] TOC plus anchored headings (rehype-slug + rehype-autolink) with copy-link buttons.
+- [x] Copy button on code blocks (works with the `rehype-pretty-code` output).
+- [ ] Reading progress bar at top; estimated read time in post meta.
+- [x] Lightbox/zoom for images (e.g., dialog + CSS or medium-zoom).
+
+### Projects/CV
+- [ ] "Copy share link" for filtered views on Projects (filters already sync to URL).
+- [ ] "Related projects" based on overlapping tags.
+- [ ] "Print-clean" project pages (extend existing print CSS to projects).
+
+### SEO/Feeds/Social
+- [ ] RSS and JSON Feed generator script at build time to `/public/feed.xml` and `/public/feed.json`.
+- [ ] Pre-generate OG images for posts/projects with Satori + Resvg at build to `/public/og/{slug}.png`.
+- [ ] Add `/uses` and `/now` pages (evergreen backlinks, helpful for hiring).
+
+### Perf/Privacy
+- [ ] Optional privacy-first analytics (Plausible or GoatCounter) behind an env flag.
+- [ ] Prefetch internal links on viewport (Next.js prefetch already helps).
+
 ## Tech Stack
 - `next@13` (App Router) • `react@18`
 - `contentlayer` + `next-contentlayer` for MDX content
