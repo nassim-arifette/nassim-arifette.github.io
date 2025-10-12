@@ -12,7 +12,7 @@ Clean, fast personal website built with Next.js (App Router), Contentlayer, Tail
 
 ## Todo
 ### Discovery & Nav
-- [x] Cmd/Ctrl K command palette to jump to pages, posts, tags (client-only).
+- [x] Cmd/Ctrl K command palette to jump to pages, posts, tags (client-only) (probably need to change to cmdk library in the future).
 - [x] Dedicated tag pages (`/tags/[tag]`) generated statically plus "related posts/projects".
 - [x] "/" focuses search; "/" again clears. Also J/K to move between list items.
 
