@@ -1,0 +1,93 @@
+---
+title: "From LLM to Agent: Designing Executable Intelligence"
+date: "2025-10-11"
+description: "How to wrap language models with tools, memory, and guardrails so they can pursue goals safely."
+tags: ["agents", "llm"]
+published: true
+---
+
+A language model can predict text; an agent can pursue goals. The leap from LLM to agent is architectural, not mystical. In practice, an agent is an LLM wrapped in just enough scaffolding to make decisions, use tools, remember what matters, and stay within clear boundaries.
+
+## What is an agent, precisely?
+
+**Agent = (LLM policy) + (Tools) + (Memory) + (Environment interface) + (Safety constraints).** In my builds, the policy is the brain that chooses what to do next—call a tool, ask a clarifying question, or stop. Tools are plain functions with typed arguments and observable side effects, like search, SQL, code execution, or ticket creation. Memory comes in two flavors: a short rolling window for the current task and a longer-term semantic store you can search. The environment is simply the surfaces the agent can act upon: APIs, files, browsers, terminals, calendars. And safety is the wrapper of budgets, permissions, timeouts, and human-in-the-loop controls that keeps everything on the rails.
+
+## Control flows that actually work
+
+Two control flows cover most needs for me. With ReAct (Reason + Act), the agent interleaves short thoughts, tool calls, and observations. It stays transparent and you can verify each step. With Plan–Act–Reflect, the agent sketches a plan, executes it step by step, then reflects and patches mistakes. This works well for multi-step tasks and quality-sensitive domains. Either way, I wrap the loop in a tiny state machine so I can bound loops and audit outcomes.
+
+```python
+class AgentState(Enum):
+    PLAN = 1
+    ACT = 2
+    REFLECT = 3
+    DONE = 4
+```
+
+## A minimal agent loop (typed tools, enforced budgets)
+
+```python
+from dataclasses import dataclass
+from typing import Callable, Dict, Any, List
+
+@dataclass
+class Tool:
+    name: str
+    schema: Dict[str, Any]   # JSON schema-like
+    fn: Callable[[Dict[str, Any]], Dict[str, Any]]
+    dangerous: bool = False  # requires explicit permission
+
+TOOLS: Dict[str, Tool] = {...}  # register search, web.get, sql.query, email.send, etc.
+
+def step(policy_prompt: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    """Ask the LLM: propose action {tool_name, args} or FINISH{answer}."""
+    return llm_function_call(policy_prompt, tools=[t.schema for t in TOOLS.values()])
+
+def run_agent(goal: str, max_steps=12, token_budget=8000, cost_budget=1.50):
+    transcript: List[Dict[str, Any]] = []
+    used_tokens = 0
+    cost = 0.0
+    for t in range(max_steps):
+        action = step(render_prompt(goal, transcript), state={})
+        if "FINISH" in action:
+            return {"answer": action["FINISH"], "transcript": transcript}
+        tool = TOOLS[action["tool_name"]]
+        guard(tool, action["args"], budgets=(used_tokens, token_budget, cost, cost_budget))
+        obs = tool.fn(action["args"])
+        transcript.append({"action": action, "observation": summarize(obs)})
+    return {"answer": "Reached step limit. Provide summary and next steps.", "transcript": transcript}
+```
+
+**Key idea:** the LLM chooses; the runtime enforces. That's how you get reliability.
+
+## Memory that stays useful
+
+I keep episodic memory—the rolling state—short via windowing and summarization so the model stays focused. For longer-term context, I use semantic memory: vector search over previous tasks, docs, and outcomes. When domain entities matter (customers, tickets, invoices), a small structured store (SQLite or a graph) helps. And I separate reads and writes: reads are liberal, but writes either need explicit permission or a human check.
+
+## RAG inside agents
+
+RAG is how agents stay situationally aware. I often add a lightweight query rewrite step so the agent can expand acronyms or add synonyms before retrieving. A single `retrieve` tool can expose strategies like `dense_only`, `sparse_only`, `hybrid`, or `table_lookup`, and the policy picks the right one. After acting, a `verify_with_sources` tool compares the plan and the evidence and flags contradictions before we commit.
+
+## Safety and operational guarantees
+
+Operationally, I set budgets (tokens, time, money), use a capabilities model so risky tools need elevated permission or a human approver, and run code or browsers inside sandboxes with egress controls. I add stop conditions to catch loops (repeated observations, no change in world state) and I log every action and observation so I can attribute decisions after the fact.
+
+## Evaluating agents (beyond demos)
+
+I evaluate agents with a repeatable task suite. I track success rate (did we complete the task to spec), tool accuracy (valid arguments and expected side effects), safety violations (like unauthorized write attempts), latency and cost (median and P95), and human effort (interventions and audit time). I wire this into CI so regressions show up before production.
+
+## Example: an expense-report agent (sketch)
+
+Here's a concrete sketch I like. Goal: file an expense for a trip to SFO ($437.80 hotel, $62.40 meals), attach receipt #8723, and charge cost center 19. The agent plans the steps, reads the receipt with `ocr.read_pdf`, retrieves the company's expense policy with `search.policy` and checks per-diem and receipt rules, drafts the expense, and runs `verify.compliance` to make sure it aligns with policy. If anything is missing, it asks a clarifying question; if not, it calls `erp.create_expense` and returns the created ID with citations to the relevant policy passages.
+
+## LLM vs. RAG vs. Agent: a quick decision table
+
+As a quick rule of thumb: if you need a one-off completion with no external facts, a plain LLM is fine. If you need grounded answers with citations over your own data, use RAG. If you need multi-step goals with tools, memory, and permissions, you want an agent. If you want grounded knowledge and actions, combine agents with RAG.
+
+## Implementation tips that save weeks
+
+In practice, I start with schemas: tool JSON contracts that I can validate before calling anything. I prefer small brains and sharp tools—keep the LLM simple and let SQL, search, and math do the heavy lifting. I keep the outer loop deterministic with explicit stop rules and telemetry. When side effects matter (money movement, data deletion), I insert human checkpoints. And I start narrow: one domain, a dozen tasks; once it works, scale breadth.
+
+## Closing thought
+
+RAG turns LLMs into credible researchers. Agents turn them into doers. Both succeed when you treat them as engineered systems, not magic.

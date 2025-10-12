@@ -1,0 +1,124 @@
+---
+title: "RAG That Actually Works: A Practical, Scientific Guide"
+date: "2025-10-3"
+description: "Practical design choices and evaluation tactics that make retrieval-augmented generation reliable."
+tags: ["rag", "llm"]
+published: true
+---
+
+If you've tried retrieval-augmented generation (RAG) and come away underwhelmed, I get it. Most disappointing RAG systems fail not because the idea is flawed, but because the pipeline is. The good news: reliable RAG is absolutely attainable with a handful of rigorous design choices and disciplined evaluation.
+
+## What RAG is (and isn't)
+
+RAG grounds a language model's output in an external knowledge base. Instead of asking the model to remember everything, we retrieve small, relevant pieces of evidence and ask the model to synthesize an answer from those. It's not a silver bullet for reasoning and it doesn't replace domain logic or data governance. Think of it as a retrieval system glued to a generator. Both halves need engineering.
+
+## A reference architecture
+
+```
+User -> Query Preprocessor
+     -> Hybrid Retriever (sparse BM25 + dense ANN)
+     -> Cross-Encoder Re-ranker
+     -> Context Builder (cite + compress)
+     -> LLM Generator (instruction + evidence)
+     -> Verifier / Guardrails (optional)
+     -> Answer + Attributions
+     ^ Feedback loop -> Telemetry -> Index Refresh
+```
+
+## Four design decisions that make or break retrieval
+
+### Segmentation (Chunking)
+
+The goal is simple: maximize the chance that a single chunk fully answers a query. In practice, I start with chunks around 400–800 tokens with 10–20% overlap. I segment along natural structure—headings, list boundaries, table rows—and avoid splitting tables mid-row. Most importantly, I keep artifact IDs (like `doc_id` and `section_id`) to attribute sources and deduplicate later.
+
+### Embeddings
+
+Choose a sentence-level encoder tuned for semantic search; go multilingual if your corpus demands it. Normalize vectors to unit length so cosine similarity reduces to a dot product: $\cos(\theta) = \frac{\mathbf{a}\cdot\mathbf{b}}{\lVert \mathbf{a} \rVert\,\lVert \mathbf{b} \rVert}$. Watch for index drift over time; when your model or tokenizer changes, re-embed and version the index so experiments remain comparable.
+
+### Hybrid retrieval
+
+Dense retrieval excels at synonyms and paraphrase. Sparse BM25 shines on exact terms, numbers, and jargon. I fuse them—often with reciprocal rank fusion (RRF) or a simple weighted sum—then pass the top 100–200 candidates to a re-ranker. This gives you breadth without losing precision.
+
+### Re-ranking
+
+A cross-encoder that scores (query, passage) pairs reliably upgrades result quality, often more than any other single change. Keep the re-ranking depth modest (roughly 50–200) to control latency.
+
+## Make the generator behave
+
+Instructioning matters. I explicitly tell the model to cite its evidence, avoid fabricating, and say "insufficient evidence" when sources don't support an answer. I keep the context tight by stripping boilerplate and lightly compressing passages, and I always display titles and anchors beside each passage. When I can, I ask the model to output a short evidence list (document IDs plus line ranges) so I can spot-check faithfulness automatically.
+
+## Latency and cost budgeting
+
+As a ballpark: ANN+BM25 retrieval runs around 50–150 ms; a small cross-encoder re-ranker adds about 100–300 ms; generation then dominates depending on the model and output length. Tight prompts, bounded max tokens, caching common answers, and short-circuiting on high-confidence cache hits keep things snappy.
+
+## Evaluating RAG: metrics that matter
+
+I split evaluation into three parts: retrieval, answer quality, and faithfulness.
+
+For retrieval, I track Recall@k (did a relevant passage land in the top-k?), the mean reciprocal rank $\text{MRR} = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{\operatorname{rank}_q}$, and the graded metric nDCG@k defined by $\text{DCG@k} = \sum_{i=1}^{k} \frac{\mathrm{rel}_i}{\log_2(i+1)}$ and $\text{nDCG@k} = \frac{\text{DCG@k}}{\text{IDCG@k}}$.
+
+For answer quality, I use exact match or F1 for factoid queries and a simple rubric (1–5 for correctness, completeness, and citation use) for long-form answers.
+
+For faithfulness, I pay attention to citation precision (what fraction of cited passages actually support the claim) and the contradiction rate (how often answers conflict with retrieved evidence). I run offline eval on a labeled set and then watch online signals like clicks on cited sources, user edits, and how often the system says "insufficient evidence."
+
+## A minimal, reproducible RAG pipeline (illustrative)
+
+```python
+# 1) Indexing
+from sentence_transformers import SentenceTransformer
+import faiss, numpy as np
+
+embed = SentenceTransformer("all-MiniLM-L6-v2")  # 384-dim
+chunks = [(doc_id, text, metadata) for ...]     # your segmented corpus
+X = embed.encode([c[1] for c in chunks], normalize_embeddings=True)
+index = faiss.IndexFlatIP(X.shape[1])           # cosine via normalized dot
+index.add(np.array(X).astype("float32"))
+
+# 2) Query time: hybrid retrieval (pseudo-BM25 + dense)
+def search(query, k=100):
+    qv = embed.encode([query], normalize_embeddings=True).astype("float32")
+    D, I = index.search(qv, k)                   # dense candidates
+    bm25 = bm25_search(query, k)                 # implement or call your engine
+    candidates = fuse(I[0], bm25)                # e.g., reciprocal rank fusion
+    return [chunks[i] for i in candidates]
+
+# 3) Re-rank top-N with a cross-encoder
+from sentence_transformers import CrossEncoder
+reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+def rerank(query, passages, top_n=8):
+    pairs = [(query, p[1]) for p in passages[:200]]
+    scores = reranker.predict(pairs)
+    order = np.argsort(scores)[::-1][:top_n]
+    return [passages[i] for i in order]
+
+# 4) Build prompt with citations and call your preferred LLM
+def build_prompt(query, contexts):
+    blocks = []
+    for j, (doc_id, text, meta) in enumerate(contexts, start=1):
+        blocks.append(f"[{j}] ({doc_id}) {meta.get('title','')} ::\n{text}")
+    evidence = "\n\n".join(blocks)
+    return f"""You are a careful analyst. Use only the sources below.
+If evidence is missing, say 'insufficient evidence'.
+
+Question: {query}
+
+Sources:
+{evidence}
+
+Answer with citations like [1], [2].
+"""
+
+def answer(query):
+    contexts = rerank(query, search(query))
+    prompt = build_prompt(query, contexts)
+    return llm_complete(prompt)  # plug in your model
+```
+
+## Governance and hardening
+
+Treat RAG like a production system. Enforce access control at retrieval time so tenants never see each other's chunks. Filter PII before indexing. Honor right-to-be-forgotten with tombstones and periodic compaction. Log the full chain—query, retrieved IDs, chosen citations, final answer—so debugging stays tractable. And when recall looks weak or a verifier flags contradictions, fail gracefully with a precise fallback: "I don't have enough evidence to answer that," plus suggestions for where to broaden the search.
+
+## When to choose RAG vs. fine-tuning
+
+Reach for RAG when knowledge changes often, you need citations, and governance matters, and you're comfortable with moderate latency. Reach for fine-tuning when patterns are stable, you need a style or format specialization, or you must shave latency. The best systems often combine both: fine-tune the "how" of answering, keep the "what" grounded with live facts via RAG.
