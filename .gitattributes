@@ -1,0 +1,12 @@
+# Text files → normalize to LF in repo; check them out as LF everywhere
+* text=auto eol=lf
+
+# Be explicit for common types
+*.md  text eol=lf
+*.mdx text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
