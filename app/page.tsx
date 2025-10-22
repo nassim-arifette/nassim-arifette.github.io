@@ -60,30 +60,39 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <section className="space-y-4">
-        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Hi, I’m Nassim Arifette.</h1>
-        <p className="text-muted-foreground max-w-2xl">
+      <section className="space-y-5">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Hi, I’m Nassim Arifette.</h1>
+        <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
           Graduate student in Artificial Intelligence at École Normale Supérieure Paris-Saclay M2 MVA. I am passionate about machine learning, computer vision, 3D, and medical imaging. I specialize in building reproducible research-grade systems with a focus on open science, reliable training infrastructure, and practical impact.
         </p>
-        <div className="flex gap-3">
-          <Link href="/projects" className="inline-flex items-center rounded-md bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90">
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap">
+          <Link
+            href="/projects"
+            className="inline-flex w-full items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 sm:w-auto"
+          >
             View Projects
           </Link>
-          <Link href="/blog" className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent">
+          <Link
+            href="/blog"
+            className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium transition hover:bg-accent sm:w-auto"
+          >
             Read Blog
           </Link>
-          <Link href="/cv" className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent">
+          <Link
+            href="/cv"
+            className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium transition hover:bg-accent sm:w-auto"
+          >
             View CV
           </Link>
         </div>
       </section>
 
       <section className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-2xl font-semibold">Featured Projects</h2>
-          <Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">All projects →</Link>
+          <Link href="/projects" className="text-sm text-muted-foreground transition hover:text-foreground">All projects →</Link>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
             <ProjectCard key={p.slug} project={p} idAnchor />
           ))}
@@ -91,11 +100,11 @@ export default function HomePage() {
       </section>
 
       <section className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-2xl font-semibold">Latest Posts</h2>
-          <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground">All posts →</Link>
+          <Link href="/blog" className="text-sm text-muted-foreground transition hover:text-foreground">All posts →</Link>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {posts.map((post) => (
             <PostCard key={post.slug} post={post} />
           ))}
