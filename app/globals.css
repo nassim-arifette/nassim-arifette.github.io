@@ -216,8 +216,8 @@ html:not(.dark) [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
     print-color-adjust: exact;
   }
 
-  /* Hide chrome that isn't part of the CV */
-  header, footer, .no-print {
+  /* Hide chrome that isn't part of the printed content */
+  .no-print {
     display: none !important;
   }
 
