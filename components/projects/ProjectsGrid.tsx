@@ -267,6 +267,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
               return (
                 <div
                   key={project.slug}
+                  className="h-full"
                   onMouseEnter={() => setActiveIndex(index)}
                   onMouseLeave={() => setActiveIndex((current) => (current === index ? -1 : current))}
                 >
@@ -274,7 +275,9 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
                     project={project}
                     idAnchor
                     className={
-                      selected ? 'ring-2 ring-foreground/60 ring-offset-2 ring-offset-background' : undefined
+                      selected
+                        ? 'h-full ring-2 ring-foreground/60 ring-offset-2 ring-offset-background'
+                        : 'h-full'
                     }
                   />
                 </div>

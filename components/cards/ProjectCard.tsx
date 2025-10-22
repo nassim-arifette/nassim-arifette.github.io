@@ -34,7 +34,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
     <article
       id={idAnchor ? project.slug : undefined}
       className={cn(
-        'group relative overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg',
+        'group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg',
         className,
       )}
     >
@@ -49,7 +49,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
         </Link>
       ) : null}
 
-      <div className="relative space-y-3">
+      <div className="relative flex flex-1 flex-col gap-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
           <h3 className="text-lg font-medium leading-tight">{project.title}</h3>
           <span className="shrink-0 text-xs text-muted-foreground sm:text-right">{formatDate(project.date)}</span>
@@ -130,6 +130,5 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
     </article>
   )
 }
-
 
 
