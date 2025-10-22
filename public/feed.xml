@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Personal Site</title>
+        <link>https://example.com</link>
+        <description>Clean, fast personal site built with Next.js</description>
+        <lastBuildDate>Sun, 12 Oct 2025 00:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <language>en</language>
+        <item>
+            <title><![CDATA[Field Notes: Six 2025 Ideas That Changed How I Build RAG & Agents]]></title>
+            <link>https://example.com/blog/field-notes-2025-ideas</link>
+            <guid isPermaLink="false">https://example.com/blog/field-notes-2025-ideas</guid>
+            <pubDate>Sun, 12 Oct 2025 00:00:00 GMT</pubDate>
+            <description><![CDATA[A story-driven tour of new papers and benchmarks—plus what actually moved the needle in my pipelines, with links and practical takeaways.]]></description>
+            <content:encoded><![CDATA[
+Two bugs broke my RAG system last month. The first was self‑inflicted—I nudged top‑k from 8 to 16 “for coverage” and watched answers get longer and less faithful. The second came from a knowledge base that contradicted itself; my agent cheerfully averaged the disagreement into nonsense. These weren’t model problems. They were system problems. And they pushed me into a week‑long rabbit hole of 2025 papers that, together, changed how I build.
+
+Below is a narrative of what I learned. It’s not a survey; it’s a lab notebook. I’ll explain the idea, link the paper, and show the exact tweak I made. No hype, just the pieces that actually moved the needle.
+
+---
+
+## 1) How many passages should we stuff into context?
+
+On Tuesday, I read Guo et al. (2025), who frame RAG as noisy in‑context learning and—finally—give finite‑sample risk bounds for the context you feed the LLM. The moral is refreshingly simple: each passage is an example; more examples add both signal and noise; there’s a bias–variance trade‑off; there’s a sweet spot.
+
+Paper: Retrieval‑Augmented Generation as Noisy In‑Context Learning: A Unified Theory and Risk Bounds, Guo et al., 2025 — [arXiv](https://arxiv.org/abs/2506.03100) · [HTML](https://arxiv.org/html/2506.03100v1)
+
+I stopped hard‑coding top‑k. Instead, I scored each candidate passage for “noisiness” (age, domain mismatch, lexical mismatch) and let a tiny controller pick k per query.
+
+```python
+# a 20‑line controller that paid for itself in a day
+from math import exp
+
+def choose_k(passages, min_k=4, max_k=12):
+    # passages: list of dicts with noise features in [0,1]
+    # heuristic risk ~ noise_mean + noise_var; lower risk → larger k
+    ns = [0.5*p['age'] + 0.3*p['domain_mismatch'] + 0.2*p['lex_mismatch'] for p in passages]
+    mu = sum(ns)/len(ns); var = sum((x-mu)**2 for x in ns)/len(ns)
+    risk = 0.7*mu + 0.3*var
+    # map risk→k with a smooth squashing; tune constants on logs, not vibes
+    frac = 1.0/(1.0 + exp(8*(risk-0.35)))  # center at ~0.35
+    return int(min_k + frac*(max_k-min_k))
+```
+
+In my logs, this shaved ~12–18% tokens per answer and reduced “contradiction with sources” flags. More importantly: answers felt calmer. The model wasn’t drowning in barely‑relevant context anymore.
+
+---
+
+## 2) What if the evidence fights itself?
+
+Mid‑week, a teammate sent me RAMDocs—a dataset where queries meet ambiguity, noise, and misinformation all at once. The accompanying method MADAM‑RAG uses a light, debate‑style agent setup that asks small critics to surface conflicts before we synthesize.
+
+Paper & data: Retrieval‑Augmented Generation with Conflicting Evidence — Wang et al., 2025 — [arXiv](https://arxiv.org/abs/2504.13079) · RAMDocs code: [GitHub](https://github.com/HanNight/RAMDocs)
+
+I borrowed the spirit, not the letter. After retrieval, I spawn two quick “voices”: one tries to resolve ambiguity (which entity/date/formula do we mean?), the other tries to flag misinformation (does any passage contradict the rest?). Only then do I ask the main model to answer, explicitly citing the sub‑conclusions.
+
+The effect is subtle but real: fewer confident wrong answers when the corpus disagrees with itself, and clearer “here are the two plausible interpretations” when things are genuinely ambiguous.
+
+---
+
+## 3) Train the process, not just the outcome
+
+Most of my failures start before generation: poor query rewriting, bad retriever choice, premature stopping. Leng et al. (2025) propose DecEx‑RAG, which treats agentic RAG as a tiny MDP—Decision (what/when to retrieve) then Execution (how to use it)—and adds process supervision so we reward good steps, not just good final answers.
+
+Paper: DecEx‑RAG: Boosting Agentic Retrieval‑Augmented Generation with Decision and Execution Optimization via Process Supervision — Leng et al., 2025 — [arXiv](https://arxiv.org/abs/2510.05691) · [HTML](https://arxiv.org/html/2510.05691v1)
+
+I instrumented my scaffold to log state → action → observation for each retrieve/rewrite/answer step, then trained a tiny critic that scores those steps post‑hoc. Even a simple linear reward model nudged the agent away from wasteful branches (e.g., redundant query expansions) and toward sequences that produced faithful answers with less context.
+
+---
+
+## 4) Small models as the default brain
+
+This one is more of an argument than a result, but it hit home: Belčák (2025) makes the case that Small Language Models (&lt;10B) should drive most agent workloads, with a bigger LLM reserved for the rare, ambiguous synthesis step. If your agent spends 80% of its life searching, filtering, formatting, filling forms, a small model plus sharp tools beats a giant model plus vibes.
+
+Position paper: Small Language Models are the Future of Agentic AI — Belčák, 2025 — [arXiv](https://arxiv.org/abs/2506.02153) · [PDF](https://arxiv.org/pdf/2506.02153) · Overview: [NVIDIA Labs](https://research.nvidia.com/labs/lpr/slm-agents/)
+
+I rewired the runtime: a 7–13B model handles tool calls and browsing, and I escalate to a larger model only when my critics disagree or confidence is low. Costs dropped; latency tails shrank; nobody missed the extra parameter count.
+
+---
+
+## 5) If your agent browses, give it a real test
+
+I used to evaluate browsing by watching a few demos. Then BrowseComp arrived: 1,266 questions that force multi‑page reading, reformulation, and patience. It’s nasty in a good way. Accuracy scales with test‑time compute, which is exactly what we need to tune planning policies.
+
+Benchmark: BrowseComp: A Simple Yet Challenging Benchmark for Browsing Agents — Wei et al., OpenAI, 2025 — [blog](https://openai.com/index/browsecomp/) · [paper PDF](https://cdn.openai.com/pdf/5e10f4ab-d6f7-442e-9508-59515c65e35d/browsecomp.pdf) · [arXiv](https://arxiv.org/pdf/2504.12516)
+
+I set a compute schedule (3, 6, 12 page loads/tool calls) and plotted accuracy vs. budget. The curve told me where my agent was too cautious (premature stopping) and where it was lost (looping on the wrong site). A single planning tweak—“when in doubt, reformulate once, then broaden”—bought me nine points.
+
+Related: OpenAI later reported 68.9% with the ChatGPT agent on this benchmark — announcement: [Introducing ChatGPT Agent](https://openai.com/index/introducing-chatgpt-agent/).
+
+---
+
+## 6) Security: no more wishful thinking
+
+Finally, WASP gave me the cold shower I needed. In a sandboxed GitLab/Reddit‑style world, simple human‑written prompt injections frequently pushed agents onto the wrong path (partial success rates up to 86%), even if full attacker goals were rarely completed.
+
+Benchmark: WASP: Benchmarking Web Agent Security Against Prompt Injection Attacks — Evtimov et al., 2025 — [arXiv](https://arxiv.org/abs/2504.18575) · [PDF](https://arxiv.org/pdf/2504.18575) · [code](https://github.com/facebookresearch/wasp)
+
+I added a strict instruction hierarchy (system > developer > page) and tool‑permission gating (writes require explicit elevation). Rerunning WASP made the partial‑success curve drop to something I could live with. Not perfect, but honest.
+
+---
+
+## Bonus: When GraphRAG actually pays off
+
+Two compact overviews helped me decide when to leave classic RAG:
+
+Survey: A Survey of Graph Retrieval‑Augmented Generation — Zhang et al., 2025 — [arXiv](https://arxiv.org/abs/2501.13958) · [PDF](https://arxiv.org/pdf/2501.13958)
+
+Evaluation: RAG vs. GraphRAG: A Systematic Evaluation and Key Insights — Han et al., 2025 — [arXiv](https://arxiv.org/abs/2502.11371) · [OpenReview PDF](https://openreview.net/pdf?id=K6N6gCCYcb)
+
+Rule of thumb I now use with teams: if the answer depends on entities and relations (incidents→causes→policies; functions→calls→PRs), GraphRAG or a hybrid is worth the added plumbing. If most passages stand alone, classic RAG is simpler and faster.
+
+---
+
+## A short, practical checklist
+
+I’m allergic to long bullet lists, so here’s the only one you’ll see:
+
+- Make top‑k adaptive with a simple noise‑aware controller, and log the choice.
+- Insert a conflict‑resolver micro‑stage (ambiguity + misinformation) before synthesis.
+- Instrument the process (state → action → observation) and supervise steps, not just outcomes.
+- Default to an SLM‑first scaffold; escalate to a big model only on demand.
+- Evaluate browsing on BrowseComp; red‑team the whole stack on WASP.
+
+If you implement even two of these, you’ll feel the system get quieter and more honest. That’s been the theme of my month: fewer knobs, better rails, and models that seem smarter mostly because the system got sharper.
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[From LLM to Agent: Designing Executable Intelligence]]></title>
+            <link>https://example.com/blog/from-llm-to-agent</link>
+            <guid isPermaLink="false">https://example.com/blog/from-llm-to-agent</guid>
+            <pubDate>Sat, 11 Oct 2025 00:00:00 GMT</pubDate>
+            <description><![CDATA[How to wrap language models with tools, memory, and guardrails so they can pursue goals safely.]]></description>
+            <content:encoded><![CDATA[
+A language model can predict text; an agent can pursue goals. The leap from LLM to agent is architectural, not mystical. In practice, an agent is an LLM wrapped in just enough scaffolding to make decisions, use tools, remember what matters, and stay within clear boundaries.
+
+## What is an agent, precisely?
+
+**Agent = (LLM policy) + (Tools) + (Memory) + (Environment interface) + (Safety constraints).** In my builds, the policy is the brain that chooses what to do next—call a tool, ask a clarifying question, or stop. Tools are plain functions with typed arguments and observable side effects, like search, SQL, code execution, or ticket creation. Memory comes in two flavors: a short rolling window for the current task and a longer-term semantic store you can search. The environment is simply the surfaces the agent can act upon: APIs, files, browsers, terminals, calendars. And safety is the wrapper of budgets, permissions, timeouts, and human-in-the-loop controls that keeps everything on the rails.
+
+## Control flows that actually work
+
+Two control flows cover most needs for me. With ReAct (Reason + Act), the agent interleaves short thoughts, tool calls, and observations. It stays transparent and you can verify each step. With Plan–Act–Reflect, the agent sketches a plan, executes it step by step, then reflects and patches mistakes. This works well for multi-step tasks and quality-sensitive domains. Either way, I wrap the loop in a tiny state machine so I can bound loops and audit outcomes.
+
+```python
+class AgentState(Enum):
+    PLAN = 1
+    ACT = 2
+    REFLECT = 3
+    DONE = 4
+```
+
+## A minimal agent loop (typed tools, enforced budgets)
+
+```python
+from dataclasses import dataclass
+from typing import Callable, Dict, Any, List
+
+@dataclass
+class Tool:
+    name: str
+    schema: Dict[str, Any]   # JSON schema-like
+    fn: Callable[[Dict[str, Any]], Dict[str, Any]]
+    dangerous: bool = False  # requires explicit permission
+
+TOOLS: Dict[str, Tool] = {...}  # register search, web.get, sql.query, email.send, etc.
+
+def step(policy_prompt: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    """Ask the LLM: propose action {tool_name, args} or FINISH{answer}."""
+    return llm_function_call(policy_prompt, tools=[t.schema for t in TOOLS.values()])
+
+def run_agent(goal: str, max_steps=12, token_budget=8000, cost_budget=1.50):
+    transcript: List[Dict[str, Any]] = []
+    used_tokens = 0
+    cost = 0.0
+    for t in range(max_steps):
+        action = step(render_prompt(goal, transcript), state={})
+        if "FINISH" in action:
+            return {"answer": action["FINISH"], "transcript": transcript}
+        tool = TOOLS[action["tool_name"]]
+        guard(tool, action["args"], budgets=(used_tokens, token_budget, cost, cost_budget))
+        obs = tool.fn(action["args"])
+        transcript.append({"action": action, "observation": summarize(obs)})
+    return {"answer": "Reached step limit. Provide summary and next steps.", "transcript": transcript}
+```
+
+**Key idea:** the LLM chooses; the runtime enforces. That's how you get reliability.
+
+## Memory that stays useful
+
+I keep episodic memory—the rolling state—short via windowing and summarization so the model stays focused. For longer-term context, I use semantic memory: vector search over previous tasks, docs, and outcomes. When domain entities matter (customers, tickets, invoices), a small structured store (SQLite or a graph) helps. And I separate reads and writes: reads are liberal, but writes either need explicit permission or a human check.
+
+## RAG inside agents
+
+RAG is how agents stay situationally aware. I often add a lightweight query rewrite step so the agent can expand acronyms or add synonyms before retrieving. A single `retrieve` tool can expose strategies like `dense_only`, `sparse_only`, `hybrid`, or `table_lookup`, and the policy picks the right one. After acting, a `verify_with_sources` tool compares the plan and the evidence and flags contradictions before we commit.
+
+## Safety and operational guarantees
+
+Operationally, I set budgets (tokens, time, money), use a capabilities model so risky tools need elevated permission or a human approver, and run code or browsers inside sandboxes with egress controls. I add stop conditions to catch loops (repeated observations, no change in world state) and I log every action and observation so I can attribute decisions after the fact.
+
+## Evaluating agents (beyond demos)
+
+I evaluate agents with a repeatable task suite. I track success rate (did we complete the task to spec), tool accuracy (valid arguments and expected side effects), safety violations (like unauthorized write attempts), latency and cost (median and P95), and human effort (interventions and audit time). I wire this into CI so regressions show up before production.
+
+## Example: an expense-report agent (sketch)
+
+Here's a concrete sketch I like. Goal: file an expense for a trip to SFO ($437.80 hotel, $62.40 meals), attach receipt #8723, and charge cost center 19. The agent plans the steps, reads the receipt with `ocr.read_pdf`, retrieves the company's expense policy with `search.policy` and checks per-diem and receipt rules, drafts the expense, and runs `verify.compliance` to make sure it aligns with policy. If anything is missing, it asks a clarifying question; if not, it calls `erp.create_expense` and returns the created ID with citations to the relevant policy passages.
+
+## LLM vs. RAG vs. Agent: a quick decision table
+
+As a quick rule of thumb: if you need a one-off completion with no external facts, a plain LLM is fine. If you need grounded answers with citations over your own data, use RAG. If you need multi-step goals with tools, memory, and permissions, you want an agent. If you want grounded knowledge and actions, combine agents with RAG.
+
+## Implementation tips that save weeks
+
+In practice, I start with schemas: tool JSON contracts that I can validate before calling anything. I prefer small brains and sharp tools—keep the LLM simple and let SQL, search, and math do the heavy lifting. I keep the outer loop deterministic with explicit stop rules and telemetry. When side effects matter (money movement, data deletion), I insert human checkpoints. And I start narrow: one domain, a dozen tasks; once it works, scale breadth.
+
+## Closing thought
+
+RAG turns LLMs into credible researchers. Agents turn them into doers. Both succeed when you treat them as engineered systems, not magic.
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[RAG That Actually Works: A Practical, Scientific Guide]]></title>
+            <link>https://example.com/blog/rag-that-actually-works</link>
+            <guid isPermaLink="false">https://example.com/blog/rag-that-actually-works</guid>
+            <pubDate>Thu, 02 Oct 2025 22:00:00 GMT</pubDate>
+            <description><![CDATA[Practical design choices and evaluation tactics that make retrieval-augmented generation reliable.]]></description>
+            <content:encoded><![CDATA[
+If you've tried retrieval-augmented generation (RAG) and come away underwhelmed, I get it. Most disappointing RAG systems fail not because the idea is flawed, but because the pipeline is. The good news: reliable RAG is absolutely attainable with a handful of rigorous design choices and disciplined evaluation.
+
+## What RAG is (and isn't)
+
+RAG grounds a language model's output in an external knowledge base. Instead of asking the model to remember everything, we retrieve small, relevant pieces of evidence and ask the model to synthesize an answer from those. It's not a silver bullet for reasoning and it doesn't replace domain logic or data governance. Think of it as a retrieval system glued to a generator. Both halves need engineering.
+
+## A reference architecture
+
+```
+User -> Query Preprocessor
+     -> Hybrid Retriever (sparse BM25 + dense ANN)
+     -> Cross-Encoder Re-ranker
+     -> Context Builder (cite + compress)
+     -> LLM Generator (instruction + evidence)
+     -> Verifier / Guardrails (optional)
+     -> Answer + Attributions
+     ^ Feedback loop -> Telemetry -> Index Refresh
+```
+
+## Four design decisions that make or break retrieval
+
+### Segmentation (Chunking)
+
+The goal is simple: maximize the chance that a single chunk fully answers a query. In practice, I start with chunks around 400–800 tokens with 10–20% overlap. I segment along natural structure—headings, list boundaries, table rows—and avoid splitting tables mid-row. Most importantly, I keep artifact IDs (like `doc_id` and `section_id`) to attribute sources and deduplicate later.
+
+### Embeddings
+
+Choose a sentence-level encoder tuned for semantic search; go multilingual if your corpus demands it. Normalize vectors to unit length so cosine similarity reduces to a dot product: $\cos(\theta) = \frac{\mathbf{a}\cdot\mathbf{b}}{\lVert \mathbf{a} \rVert\,\lVert \mathbf{b} \rVert}$. Watch for index drift over time; when your model or tokenizer changes, re-embed and version the index so experiments remain comparable.
+
+### Hybrid retrieval
+
+Dense retrieval excels at synonyms and paraphrase. Sparse BM25 shines on exact terms, numbers, and jargon. I fuse them—often with reciprocal rank fusion (RRF) or a simple weighted sum—then pass the top 100–200 candidates to a re-ranker. This gives you breadth without losing precision.
+
+### Re-ranking
+
+A cross-encoder that scores (query, passage) pairs reliably upgrades result quality, often more than any other single change. Keep the re-ranking depth modest (roughly 50–200) to control latency.
+
+## Make the generator behave
+
+Instructioning matters. I explicitly tell the model to cite its evidence, avoid fabricating, and say "insufficient evidence" when sources don't support an answer. I keep the context tight by stripping boilerplate and lightly compressing passages, and I always display titles and anchors beside each passage. When I can, I ask the model to output a short evidence list (document IDs plus line ranges) so I can spot-check faithfulness automatically.
+
+## Latency and cost budgeting
+
+As a ballpark: ANN+BM25 retrieval runs around 50–150 ms; a small cross-encoder re-ranker adds about 100–300 ms; generation then dominates depending on the model and output length. Tight prompts, bounded max tokens, caching common answers, and short-circuiting on high-confidence cache hits keep things snappy.
+
+## Evaluating RAG: metrics that matter
+
+I split evaluation into three parts: retrieval, answer quality, and faithfulness.
+
+For retrieval, I track Recall@k (did a relevant passage land in the top-k?), the mean reciprocal rank $\text{MRR} = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{\operatorname{rank}_q}$, and the graded metric nDCG@k defined by $\text{DCG@k} = \sum_{i=1}^{k} \frac{\mathrm{rel}_i}{\log_2(i+1)}$ and $\text{nDCG@k} = \frac{\text{DCG@k}}{\text{IDCG@k}}$.
+
+For answer quality, I use exact match or F1 for factoid queries and a simple rubric (1–5 for correctness, completeness, and citation use) for long-form answers.
+
+For faithfulness, I pay attention to citation precision (what fraction of cited passages actually support the claim) and the contradiction rate (how often answers conflict with retrieved evidence). I run offline eval on a labeled set and then watch online signals like clicks on cited sources, user edits, and how often the system says "insufficient evidence."
+
+## A minimal, reproducible RAG pipeline (illustrative)
+
+```python
+# 1) Indexing
+from sentence_transformers import SentenceTransformer
+import faiss, numpy as np
+
+embed = SentenceTransformer("all-MiniLM-L6-v2")  # 384-dim
+chunks = [(doc_id, text, metadata) for ...]     # your segmented corpus
+X = embed.encode([c[1] for c in chunks], normalize_embeddings=True)
+index = faiss.IndexFlatIP(X.shape[1])           # cosine via normalized dot
+index.add(np.array(X).astype("float32"))
+
+# 2) Query time: hybrid retrieval (pseudo-BM25 + dense)
+def search(query, k=100):
+    qv = embed.encode([query], normalize_embeddings=True).astype("float32")
+    D, I = index.search(qv, k)                   # dense candidates
+    bm25 = bm25_search(query, k)                 # implement or call your engine
+    candidates = fuse(I[0], bm25)                # e.g., reciprocal rank fusion
+    return [chunks[i] for i in candidates]
+
+# 3) Re-rank top-N with a cross-encoder
+from sentence_transformers import CrossEncoder
+reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+def rerank(query, passages, top_n=8):
+    pairs = [(query, p[1]) for p in passages[:200]]
+    scores = reranker.predict(pairs)
+    order = np.argsort(scores)[::-1][:top_n]
+    return [passages[i] for i in order]
+
+# 4) Build prompt with citations and call your preferred LLM
+def build_prompt(query, contexts):
+    blocks = []
+    for j, (doc_id, text, meta) in enumerate(contexts, start=1):
+        blocks.append(f"[{j}] ({doc_id}) {meta.get('title','')} ::\n{text}")
+    evidence = "\n\n".join(blocks)
+    return f"""You are a careful analyst. Use only the sources below.
+If evidence is missing, say 'insufficient evidence'.
+
+Question: {query}
+
+Sources:
+{evidence}
+
+Answer with citations like [1], [2].
+"""
+
+def answer(query):
+    contexts = rerank(query, search(query))
+    prompt = build_prompt(query, contexts)
+    return llm_complete(prompt)  # plug in your model
+```
+
+## Governance and hardening
+
+Treat RAG like a production system. Enforce access control at retrieval time so tenants never see each other's chunks. Filter PII before indexing. Honor right-to-be-forgotten with tombstones and periodic compaction. Log the full chain—query, retrieved IDs, chosen citations, final answer—so debugging stays tractable. And when recall looks weak or a verifier flags contradictions, fail gracefully with a precise fallback: "I don't have enough evidence to answer that," plus suggestions for where to broaden the search.
+
+## When to choose RAG vs. fine-tuning
+
+Reach for RAG when knowledge changes often, you need citations, and governance matters, and you're comfortable with moderate latency. Reach for fine-tuning when patterns are stable, you need a style or format specialization, or you must shave latency. The best systems often combine both: fine-tune the "how" of answering, keep the "what" grounded with live facts via RAG.
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Hello, world]]></title>
+            <link>https://example.com/blog/hello-world</link>
+            <guid isPermaLink="false">https://example.com/blog/hello-world</guid>
+            <pubDate>Fri, 26 Sep 2025 00:00:00 GMT</pubDate>
+            <description><![CDATA[Why I built this site and how it’s organized.]]></description>
+            <content:encoded><![CDATA[
+Welcome to my personal site. It’s built with **Next.js**, **Tailwind**, and **MDX** — statically exported so it runs great on GitHub Pages.
+
+## What you’ll find
+
+I use this space to document things I learn, ship project write-ups, and collect references that help me understand the world a little better.
+
+### Projects
+
+Deep dives on my builds, with architecture diagrams, lessons learned, and plenty of code.
+
+### Notes
+
+Lightweight posts for experiments, quick wins, and anything I don’t want to forget.
+
+```ts
+export function greet(name: string) {
+  return `Hello, ${name}!`
+}
+```
+
+Write in MDX with components, code blocks, and clean typography.
+]]></content:encoded>
+        </item>
+    </channel>
+</rss>
