@@ -24,7 +24,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
   const [query, setQuery] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
   const [tagMode, setTagMode] = useState<'AND' | 'OR'>('AND')
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(-1)
 
   const hasHydrated = useRef(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -122,13 +122,14 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
   useEffect(() => {
     filteredProjectsRef.current = filteredProjects
     setActiveIndex((current) => {
-      if (filteredProjects.length === 0) return 0
+      if (filteredProjects.length === 0) return -1
+      if (current < 0) return current
       return Math.min(current, filteredProjects.length - 1)
     })
   }, [filteredProjects])
 
   useEffect(() => {
-    setActiveIndex(0)
+    setActiveIndex(-1)
   }, [normalizedQuery, activeTags, tagMode])
 
   const toggleTag = (tag: string) => {
@@ -172,8 +173,11 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
         event.preventDefault()
         setActiveIndex((current) => {
           if (key === 'j') {
+            if (current < 0) return 0
             return Math.min(current + 1, results.length - 1)
           }
+          if (current < 0) return results.length - 1
+          if (current <= 0) return 0
           return Math.max(current - 1, 0)
         })
         return
@@ -261,7 +265,11 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
             {filteredProjects.map((project, index) => {
               const selected = index === activeIndex
               return (
-                <div key={project.slug} onMouseEnter={() => setActiveIndex(index)}>
+                <div
+                  key={project.slug}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onMouseLeave={() => setActiveIndex((current) => (current === index ? -1 : current))}
+                >
                   <ProjectCard
                     project={project}
                     idAnchor
