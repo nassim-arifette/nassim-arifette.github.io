@@ -50,9 +50,9 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
       ) : null}
 
       <div className="relative space-y-3">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
           <h3 className="text-lg font-medium leading-tight">{project.title}</h3>
-          <span className="shrink-0 text-xs text-muted-foreground">{formatDate(project.date)}</span>
+          <span className="shrink-0 text-xs text-muted-foreground sm:text-right">{formatDate(project.date)}</span>
         </div>
         <p className="text-sm text-muted-foreground">{project.description}</p>
         {project.tags?.length ? (
@@ -65,7 +65,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
       </div>
 
       {hasLinks && (
-        <div className="relative z-20 mt-4 flex items-center gap-3 text-sm">
+        <div className="relative z-20 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           {project.links?.github && (
             <a
               href={project.links.github}
@@ -130,3 +130,6 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
     </article>
   )
 }
+
+
+

@@ -12,9 +12,9 @@ export function PostCard({ post }: { post: Post }) {
       className="group relative block overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg"
     >
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
           <h3 className="text-lg font-medium leading-tight">{post.title}</h3>
-          <span className="shrink-0 text-xs text-muted-foreground">
+          <span className="shrink-0 text-xs text-muted-foreground sm:text-right">
             {new Date(post.date).toLocaleDateString()}
           </span>
         </div>
@@ -39,3 +39,4 @@ export function PostCard({ post }: { post: Post }) {
     </Link>
   )
 }
+
