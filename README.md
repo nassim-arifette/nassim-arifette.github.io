@@ -19,13 +19,16 @@ Clean, fast personal website built with Next.js (App Router), Contentlayer, Tail
 ### Reading Experience
 - [x] TOC plus anchored headings (rehype-slug + rehype-autolink) with copy-link buttons.
 - [x] Copy button on code blocks (works with the `rehype-pretty-code` output).
-- [ ] Reading progress bar at top; estimated read time in post meta.
+- [x] Reading progress bar at top; estimated read time in post meta.
 - [x] Lightbox/zoom for images (e.g., dialog + CSS or medium-zoom).
 
 ### Projects/CV
 - [ ] "Copy share link" for filtered views on Projects (filters already sync to URL).
-- [ ] "Related projects" based on overlapping tags.
-- [ ] "Print-clean" project pages (extend existing print CSS to projects).
+- [x] "Related projects" based on overlapping tags.
+- [x] "Related posts" based on overlapping tags.
+- [ ] Put related projects in blog and vice versa
+- [ ] "Print-clean" project/posts pages (extend existing print CSS to projects/posts).
+- [ ] Automatically clean after selected tag (for example when I select tag Deep learning it should autmatically remove the other tags in the list that are not in intersection with deep learning meaning that there is no existing deep learning + abstract interpretation for example but there is blog post deep learning + agent so it shows deep learning and agent but not the tag "abstract interpretation")
 
 ### SEO/Feeds/Social
 - [ ] RSS and JSON Feed generator script at build time to `/public/feed.xml` and `/public/feed.json`.

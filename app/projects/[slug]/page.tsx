@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { allProjects } from 'contentlayer/generated'
+import type { Project } from 'contentlayer/generated'
 import { Github, ExternalLink, FileText, FileDown } from 'lucide-react'
+import { ProjectCard } from '@/components/cards/ProjectCard'
 import { Mdx } from '@/components/mdx/mdx-client'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/mdx'
@@ -22,6 +24,37 @@ const linkConfig = {
   paper: { label: 'Paper', Icon: FileText },
   pdf: { label: 'PDF', Icon: FileDown },
 } as const
+
+const MAX_RELATED_PROJECTS = 3
+
+function getRelatedProjects(current: Project) {
+  if (!current.tags?.length) return []
+
+  const currentTags = new Set(current.tags.map((tag) => tag.trim()).filter(Boolean))
+  if (currentTags.size === 0) return []
+
+  return allProjects
+    .filter((candidate) => candidate.slug !== current.slug)
+    .map((candidate) => {
+      const candidateTags = new Set((candidate.tags ?? []).map((tag) => tag.trim()).filter(Boolean))
+      let overlap = 0
+      for (const tag of candidateTags) {
+        if (currentTags.has(tag)) {
+          overlap += 1
+        }
+      }
+      return { candidate, overlap }
+    })
+    .filter(({ overlap }) => overlap > 0)
+    .sort((a, b) => {
+      if (b.overlap !== a.overlap) return b.overlap - a.overlap
+      const dateDiff = +new Date(b.candidate.date) - +new Date(a.candidate.date)
+      if (dateDiff !== 0) return dateDiff
+      return a.candidate.title.localeCompare(b.candidate.title)
+    })
+    .slice(0, MAX_RELATED_PROJECTS)
+    .map(({ candidate }) => candidate)
+}
 
 export async function generateStaticParams() {
   return allProjects.map((project) => ({ slug: project.slug }))
@@ -55,6 +88,8 @@ export default function ProjectPage({ params }: PageProps) {
   const project = allProjects.find((p) => p.slug === params.slug)
   if (!project) return notFound()
 
+  const relatedProjects = getRelatedProjects(project)
+
   const linkEntries = Object.entries(project.links ?? {}) as Array<[
     keyof typeof linkConfig,
     string,
@@ -73,7 +108,7 @@ export default function ProjectPage({ params }: PageProps) {
   const headings = (project.headings ?? []) as TocHeading[]
 
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(220px,1fr)] lg:gap-12">
+    <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(220px,1fr)] lg:gap-12 print:block">
       <article className="prose max-w-none">
         <script
           type="application/ld+json"
@@ -116,14 +151,24 @@ export default function ProjectPage({ params }: PageProps) {
           ) : null}
         </header>
         {headings.length ? (
-          <div className="not-prose my-8 lg:hidden">
+          <div className="not-prose my-8 lg:hidden print:hidden">
             <TableOfContents headings={headings} />
           </div>
         ) : null}
         <Mdx code={project.body.code} />
+        {relatedProjects.length ? (
+          <section className="not-prose mt-12 space-y-4">
+            <h2 className="text-xl font-semibold">Related projects</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {relatedProjects.map((related) => (
+                <ProjectCard key={related.slug} project={related} />
+              ))}
+            </div>
+          </section>
+        ) : null}
       </article>
       {headings.length ? (
-        <aside className="relative hidden lg:block">
+        <aside className="relative hidden lg:block print:hidden">
           <TableOfContents headings={headings} className="sticky top-24" />
         </aside>
       ) : null}

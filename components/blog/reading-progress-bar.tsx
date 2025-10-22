@@ -36,7 +36,7 @@ export function ReadingProgressBar() {
   }, [])
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-1 bg-border/60">
+    <div className="no-print pointer-events-none fixed inset-x-0 top-0 z-50 h-1 bg-border/60">
       <div
         aria-hidden
         className="h-full bg-primary transition-[width] duration-150 ease-out"
