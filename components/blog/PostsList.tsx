@@ -24,7 +24,7 @@ export function PostsList({ posts }: PostsListProps) {
   const [query, setQuery] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
   const [tagMode, setTagMode] = useState<'AND' | 'OR'>('AND')
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(-1)
 
   const hasHydrated = useRef(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -122,13 +122,14 @@ export function PostsList({ posts }: PostsListProps) {
   useEffect(() => {
     filteredPostsRef.current = filteredPosts
     setActiveIndex((current) => {
-      if (filteredPosts.length === 0) return 0
+      if (filteredPosts.length === 0) return -1
+      if (current < 0) return current
       return Math.min(current, filteredPosts.length - 1)
     })
   }, [filteredPosts])
 
   useEffect(() => {
-    setActiveIndex(0)
+    setActiveIndex(-1)
   }, [normalizedQuery, activeTags, tagMode])
 
   const toggleTag = (tag: string) => {
@@ -172,8 +173,11 @@ export function PostsList({ posts }: PostsListProps) {
         event.preventDefault()
         setActiveIndex((current) => {
           if (key === 'j') {
+            if (current < 0) return 0
             return Math.min(current + 1, results.length - 1)
           }
+          if (current < 0) return results.length - 1
+          if (current <= 0) return 0
           return Math.max(current - 1, 0)
         })
         return
@@ -268,6 +272,7 @@ export function PostsList({ posts }: PostsListProps) {
                       selected ? 'border-foreground/60 bg-muted' : ''
                     }`}
                     onMouseEnter={() => setActiveIndex(index)}
+                    onMouseLeave={() => setActiveIndex((current) => (current === index ? -1 : current))}
                   >
                     <div className="flex items-baseline gap-3">
                       <h2 className="text-xl font-medium group-hover:underline">{post.title}</h2>
