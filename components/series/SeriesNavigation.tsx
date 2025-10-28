@@ -1,3 +1,6 @@
+'use client'
+
+import * as React from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { SeriesNavigation, SeriesResolved } from '@/lib/series'
@@ -158,12 +161,28 @@ function SeriesPartsList({ seriesData, currentSlug, size = 'desktop' }: SeriesPa
 }
 
 export function SeriesPartsDesktop({ seriesData, currentSlug }: Omit<SeriesPartsListProps, 'size'>) {
+  const [isCollapsed, setIsCollapsed] = React.useState(false)
+  const contentId = React.useId()
+
   return (
     <section className="not-prose">
-      <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Series parts</h2>
-      <div className="mt-3">
-        <SeriesPartsList seriesData={seriesData} currentSlug={currentSlug} size="desktop" />
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Series parts</h2>
+        <button
+          type="button"
+          aria-expanded={!isCollapsed}
+          aria-controls={contentId}
+          onClick={() => setIsCollapsed((previous) => !previous)}
+          className="inline-flex size-6 items-center justify-center rounded border border-border/70 text-base leading-none text-muted-foreground transition hover:border-foreground/50 hover:text-foreground"
+        >
+          <span aria-hidden="true">{isCollapsed ? '+' : '-'}</span>
+        </button>
       </div>
+      {!isCollapsed ? (
+        <div className="mt-3" id={contentId}>
+          <SeriesPartsList seriesData={seriesData} currentSlug={currentSlug} size="desktop" />
+        </div>
+      ) : null}
     </section>
   )
 }
