@@ -2,9 +2,11 @@ import Link from 'next/link'
 import type { Post } from 'contentlayer/generated'
 import { Badge } from '@/components/ui/badge'
 import { getPreviewText } from '@/lib/preview'
+import { getSeriesPartForPostSlug } from '@/lib/series'
 
 export function PostCard({ post }: { post: Post }) {
   const preview = getPreviewText(post.body?.raw, post.description)
+  const seriesPart = getSeriesPartForPostSlug(post.slug)
 
   return (
     <Link
@@ -12,6 +14,17 @@ export function PostCard({ post }: { post: Post }) {
       className="group relative block overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg"
     >
       <div className="relative z-10">
+        {seriesPart ? (
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            <span className="rounded-full border border-border px-2 py-0.5 leading-none">Series</span>
+            <span className="max-w-[180px] truncate text-muted-foreground">{seriesPart.series.title}</span>
+            {seriesPart.index > 0 ? (
+              <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] tracking-wide text-muted-foreground/80">
+                Part {seriesPart.index + 1}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
           <h3 className="text-lg font-medium leading-tight">{post.title}</h3>
           <span className="shrink-0 text-xs text-muted-foreground sm:text-right">
@@ -39,4 +52,3 @@ export function PostCard({ post }: { post: Post }) {
     </Link>
   )
 }
-

@@ -7,8 +7,16 @@ import type { Post } from 'contentlayer/generated'
 import { TagBar } from '@/components/filters/TagBar'
 import { normalizeText } from '@/lib/search'
 
+type SeriesMeta = {
+  seriesTitle: string
+  seriesSlug: string
+  index: number
+  total: number
+}
+
 type PostsListProps = {
   posts: Post[]
+  seriesInfo?: Record<string, SeriesMeta>
 }
 
 const arraysEqual = (a: string[], b: string[]) => {
@@ -16,7 +24,7 @@ const arraysEqual = (a: string[], b: string[]) => {
   return a.every((value, index) => value === b[index])
 }
 
-export function PostsList({ posts }: PostsListProps) {
+export function PostsList({ posts, seriesInfo }: PostsListProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -74,11 +82,18 @@ export function PostsList({ posts }: PostsListProps) {
   const normalizedQuery = useMemo(() => (deferredQuery ? normalizeText(deferredQuery) : ''), [deferredQuery])
 
   const indexedPosts = useMemo(() => {
-    return posts.map((post) => ({
-      ref: post,
-      haystack: normalizeText([post.title, post.description, ...(post.tags ?? [])].join(' ')),
-    }))
-  }, [posts])
+    return posts.map((post) => {
+      const seriesMeta = seriesInfo?.[post.slug]
+      const fields = [post.title, post.description, ...(post.tags ?? [])]
+      if (seriesMeta) {
+        fields.push(seriesMeta.seriesTitle, `Part ${seriesMeta.index + 1}`)
+      }
+      return {
+        ref: post,
+        haystack: normalizeText(fields.join(' ')),
+      }
+    })
+  }, [posts, seriesInfo])
 
   const tagCounts = useMemo(() => {
     const counts = new Map<string, number>()
@@ -264,24 +279,42 @@ export function PostsList({ posts }: PostsListProps) {
           <ul className="space-y-6">
             {filteredPosts.map((post, index) => {
               const selected = index === activeIndex
+              const seriesMeta = seriesInfo?.[post.slug]
               return (
                 <li key={post.slug} className="group">
-                  <Link
-                    href={post.url}
-                    className={`block rounded-md border border-transparent px-4 py-3 transition hover:border-foreground/40 hover:bg-muted/80 ${
+                  <div
+                    className={`rounded-md border border-transparent px-4 py-3 transition hover:border-foreground/40 hover:bg-muted/80 ${
                       selected ? 'border-foreground/60 bg-muted' : ''
                     }`}
                     onMouseEnter={() => setActiveIndex(index)}
                     onMouseLeave={() => setActiveIndex((current) => (current === index ? -1 : current))}
                   >
-                    <div className="flex items-baseline gap-3">
-                      <h2 className="text-xl font-medium group-hover:underline">{post.title}</h2>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(post.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{post.description}</p>
-                  </Link>
+                    {seriesMeta ? (
+                      <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                        <span className="rounded-full border border-border px-2 py-0.5 leading-none">Series</span>
+                        <Link
+                          href={`/series/${seriesMeta.seriesSlug}`}
+                          className="text-muted-foreground transition hover:text-foreground"
+                        >
+                          {seriesMeta.seriesTitle}
+                        </Link>
+                        {seriesMeta.index > 0 ? (
+                          <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] tracking-wide text-muted-foreground/80">
+                            Part {seriesMeta.index + 1}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    <Link href={post.url} className="block">
+                      <div className="flex items-baseline gap-3">
+                        <h2 className="text-xl font-medium group-hover:underline">{post.title}</h2>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(post.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">{post.description}</p>
+                    </Link>
+                  </div>
                 </li>
               )
             })}
