@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { allPosts } from 'contentlayer/generated'
 import { PostsList } from '@/components/blog/PostsList'
 import { absoluteUrl } from '@/lib/seo'
+import { getSeriesPartForPostSlug } from '@/lib/series'
 
 export const metadata: Metadata = {
   title: 'Blog — Nassim Arifette',
@@ -27,6 +28,22 @@ export default function BlogIndex() {
     .filter((p) => p.published !== false)
     .sort((a, b) => +new Date(b.date) - +new Date(a.date))
 
+  const seriesInfo = posts.reduce<Record<string, { seriesTitle: string; seriesSlug: string; index: number; total: number }>>(
+    (acc, post) => {
+      const part = getSeriesPartForPostSlug(post.slug)
+      if (part) {
+        acc[post.slug] = {
+          seriesTitle: part.series.title,
+          seriesSlug: part.series.slug,
+          index: part.index,
+          total: part.total,
+        }
+      }
+      return acc
+    },
+    {},
+  )
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
@@ -49,7 +66,7 @@ export default function BlogIndex() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <h1 className="text-3xl font-semibold">Blog</h1>
-      <PostsList posts={posts} />
+      <PostsList posts={posts} seriesInfo={seriesInfo} />
     </div>
   )
 }

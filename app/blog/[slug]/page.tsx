@@ -10,7 +10,10 @@ import { slugifyTag } from '@/lib/utils'
 import { TableOfContents } from '@/components/mdx/table-of-contents'
 import type { TocHeading } from '@/components/mdx/table-of-contents'
 import { ReadingProgressBar } from '@/components/blog/reading-progress-bar'
-import { formatDate } from '@/lib/mdx'
+import { formatDate, getReadingStats } from '@/lib/mdx'
+import { findSeriesBySlug, getSeriesNavigation } from '@/lib/series'
+import { SeriesBanner, SeriesPartsDesktop, SeriesPartsMobile } from '@/components/series/SeriesNavigation'
+import { SeriesProgressRecorder } from '@/components/series/SeriesProgressRecorder'
 
 interface PageProps { params: { slug: string } }
 
@@ -75,10 +78,12 @@ export default function PostPage({ params }: PageProps) {
   const post = allPosts.find((p) => p.slug === params.slug)
   if (!post) return notFound()
 
-  const wordCount = post.body?.raw?.match(/\S+/g)?.length ?? 0
-  const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 200))
-  const formattedDate = new Date(post.date).toLocaleDateString()
+  const readingStats = getReadingStats(post.body?.raw)
+  const readingTimeMinutes = readingStats.minutes ?? 1
+  const formattedDate = formatDate(post.date)
   const relatedPosts = getRelatedPosts(post)
+  const seriesNavigation = getSeriesNavigation(post.slug)
+  const seriesData = seriesNavigation ? findSeriesBySlug(seriesNavigation.current.series.slug) : undefined
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -106,6 +111,15 @@ export default function PostPage({ params }: PageProps) {
             <span aria-hidden="true" className="mx-1">|</span>
             <span>{readingTimeMinutes} min read</span>
           </p>
+          {seriesNavigation && seriesData ? (
+            <>
+              <SeriesBanner navigation={seriesNavigation} seriesData={seriesData} />
+              <SeriesProgressRecorder
+                seriesSlug={seriesNavigation.current.series.slug}
+                partSlug={post.slug}
+              />
+            </>
+          ) : null}
           {post.tags?.length ? (
             <div className="mb-6 flex flex-wrap gap-2">
               {post.tags.map((tag) => (
@@ -116,6 +130,9 @@ export default function PostPage({ params }: PageProps) {
                 </Link>
               ))}
             </div>
+          ) : null}
+          {seriesNavigation && seriesData ? (
+            <SeriesPartsMobile seriesData={seriesData} currentSlug={post.slug} />
           ) : null}
           {headings.length ? (
             <div className="not-prose my-8 lg:hidden print:hidden">
@@ -160,9 +177,14 @@ export default function PostPage({ params }: PageProps) {
             </section>
           ) : null}
         </article>
-        {headings.length ? (
+        {(seriesNavigation && seriesData) || headings.length ? (
           <aside className="relative hidden lg:block print:hidden">
-            <TableOfContents headings={headings} className="sticky top-24" />
+            <div className="sticky top-24 space-y-6">
+              {seriesNavigation && seriesData ? (
+                <SeriesPartsDesktop seriesData={seriesData} currentSlug={post.slug} />
+              ) : null}
+              {headings.length ? <TableOfContents headings={headings} /> : null}
+            </div>
           </aside>
         ) : null}
       </div>

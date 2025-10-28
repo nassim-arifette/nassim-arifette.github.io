@@ -1,4 +1,4 @@
-import { defineDocumentType, makeSource } from 'contentlayer/source-files'
+import { defineDocumentType, defineNestedType, makeSource } from 'contentlayer/source-files'
 import type { Pluggable } from 'unified'
 import rehypePrettyCode from 'rehype-pretty-code'
 import remarkGfm from 'remark-gfm'
@@ -148,6 +148,34 @@ const Post = defineDocumentType(() => ({
   }
 }))
 
+const SeriesPart = defineNestedType(() => ({
+  name: 'SeriesPart',
+  fields: {
+    slug: { type: 'string', required: true },
+    title: { type: 'string' },
+    summary: { type: 'string' },
+    comingSoon: { type: 'boolean', default: false },
+    manualReadingMinutes: { type: 'number' },
+  },
+}))
+
+const Series = defineDocumentType(() => ({
+  name: 'Series',
+  filePathPattern: `series/**/*.mdx`,
+  contentType: 'mdx',
+  fields: {
+    title: { type: 'string', required: true },
+    description: { type: 'string', required: true },
+    parts: { type: 'list', of: SeriesPart, required: true },
+    heroNote: { type: 'string' },
+  },
+  computedFields: {
+    slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath.replace('series/', '') },
+    url: { type: 'string', resolve: (doc) => `/series/${doc._raw.flattenedPath.replace('series/', '')}` },
+    totalParts: { type: 'number', resolve: (doc) => doc.parts.length },
+  },
+}))
+
 const Project = defineDocumentType(() => ({
   name: 'Project',
   filePathPattern: `projects/**/*.mdx`,
@@ -206,7 +234,7 @@ const remarkPlugins = [remarkMath, remarkGfm] as Pluggable[]
 
 export default makeSource({
   contentDirPath: 'content',
-  documentTypes: [Post, Project],
+  documentTypes: [Post, Project, Series],
   mdx: {
     remarkPlugins,
     rehypePlugins,
