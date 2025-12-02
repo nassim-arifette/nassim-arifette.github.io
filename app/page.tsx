@@ -38,6 +38,13 @@ export default function HomePage() {
     .sort((a, b) => +new Date(b.date) - +new Date(a.date))
     .slice(0, 3)
 
+  const hobbies = [
+    {
+      title: 'Chess',
+      description: '1500 on chess.com in rapid mode.',
+    },
+  ]
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Person',
@@ -107,6 +114,18 @@ export default function HomePage() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {posts.map((post) => (
             <PostCard key={post.slug} post={post} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <h2 className="text-2xl font-semibold">Hobbies</h2>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {hobbies.map((hobby) => (
+            <div key={hobby.title} className="rounded-lg border bg-card p-5">
+              <h3 className="font-medium">{hobby.title}</h3>
+              <p className="text-sm text-muted-foreground">{hobby.description}</p>
+            </div>
           ))}
         </div>
       </section>

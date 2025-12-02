@@ -10,7 +10,7 @@ type Links = { github?: string; demo?: string; paper?: string; pdf?: string; web
 
 type ProjectCardProject = Pick<
   Project,
-  'title' | 'date' | 'description' | 'tags' | 'links' | 'slug' | 'url' | 'body'
+  'title' | 'date' | 'description' | 'tags' | 'links' | 'slug' | 'url' | 'body' | 'placement' | 'winner'
 > & {
   links?: Links
 }
@@ -23,6 +23,7 @@ type ProjectCardProps = {
 
 export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) {
   const preview = getPreviewText(project.body?.raw, project.description)
+  const placementLabel = project.winner ? '👑' : project.placement
   const hasLinks =
     project.links?.github ||
     project.links?.website ||
@@ -35,6 +36,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
       id={idAnchor ? project.slug : undefined}
       className={cn(
         'group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg',
+        project.winner ? 'border-amber-400 shadow-amber-400/20' : '',
         className,
       )}
     >
@@ -51,7 +53,21 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
 
       <div className="relative flex flex-1 flex-col gap-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-          <h3 className="text-lg font-medium leading-tight">{project.title}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-medium leading-tight">{project.title}</h3>
+            {placementLabel ? (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide',
+                  project.winner
+                    ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                    : 'bg-muted text-foreground shadow-inner',
+                )}
+              >
+                {placementLabel}
+              </span>
+            ) : null}
+          </div>
           <span className="shrink-0 text-xs text-muted-foreground sm:text-right">{formatDate(project.date)}</span>
         </div>
         <p className="text-sm text-muted-foreground">{project.description}</p>
@@ -130,5 +146,3 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
     </article>
   )
 }
-
-
