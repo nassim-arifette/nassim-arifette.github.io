@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { allPosts, allProjects } from 'contentlayer/generated'
 import { normalizeText } from '@/lib/search'
-import { slugifyTag } from '@/lib/utils'
 
 type NavItem = {
   href: string
@@ -79,57 +78,6 @@ export function CommandPalette({ navItems }: CommandPaletteProps) {
       }))
   }, [])
 
-  const tagEntries = useMemo(() => {
-    const counts = new Map<string, { label: string; posts: number; projects: number }>()
-
-    for (const post of allPosts) {
-      if (post.published === false) continue
-      for (const rawTag of post.tags ?? []) {
-        const tag = rawTag.trim()
-        if (!tag) continue
-        const slug = slugifyTag(tag)
-        if (!counts.has(slug)) {
-          counts.set(slug, { label: tag, posts: 0, projects: 0 })
-        }
-        const entry = counts.get(slug)!
-        entry.label ||= tag
-        entry.posts += 1
-      }
-    }
-
-    for (const project of allProjects) {
-      for (const rawTag of project.tags ?? []) {
-        const tag = rawTag.trim()
-        if (!tag) continue
-        const slug = slugifyTag(tag)
-        if (!counts.has(slug)) {
-          counts.set(slug, { label: tag, posts: 0, projects: 0 })
-        }
-        const entry = counts.get(slug)!
-        entry.label ||= tag
-        entry.projects += 1
-      }
-    }
-
-    return Array.from(counts.values())
-      .sort((a, b) => a.label.localeCompare(b.label))
-      .map<CommandEntry>((entry) => {
-        const slug = slugifyTag(entry.label)
-        const total = entry.posts + entry.projects
-        const descriptionParts = []
-        if (entry.posts) descriptionParts.push(`${entry.posts} post${entry.posts === 1 ? '' : 's'}`)
-        if (entry.projects) descriptionParts.push(`${entry.projects} project${entry.projects === 1 ? '' : 's'}`)
-        return {
-          id: `tag:${slug}`,
-          group: 'Tags',
-          label: entry.label,
-          href: `/tags/${slug}`,
-          description: descriptionParts.join(' • ') || `${total} item${total === 1 ? '' : 's'}`,
-          keywords: normalizeText([entry.label, descriptionParts.join(' ')].join(' ')),
-        }
-      })
-  }, [])
-
   const pageEntries = useMemo(() => {
     return navItems.map<CommandEntry>((item) => ({
       id: `page:${item.href}`,
@@ -141,11 +89,10 @@ export function CommandPalette({ navItems }: CommandPaletteProps) {
     }))
   }, [navItems])
 
-  const allEntries = useMemo(() => [...pageEntries, ...postEntries, ...projectEntries, ...tagEntries], [
+  const allEntries = useMemo(() => [...pageEntries, ...postEntries, ...projectEntries], [
     pageEntries,
     postEntries,
     projectEntries,
-    tagEntries,
   ])
 
   const normalizedQuery = useMemo(() => (query ? normalizeText(query) : ''), [query])
@@ -331,7 +278,7 @@ export function CommandPalette({ navItems }: CommandPaletteProps) {
                 id="command-search"
                 ref={inputRef}
                 type="search"
-                placeholder="Search posts, projects, tags…"
+                placeholder="Search posts and projects…"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={handleResultKeyDown}

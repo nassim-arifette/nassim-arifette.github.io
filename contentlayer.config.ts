@@ -187,6 +187,8 @@ const Project = defineDocumentType(() => ({
     links: { type: 'json', required: false }, // { github, website, demo, paper, pdf }
     tags: { type: 'list', of: { type: 'string' } },
     featured: { type: 'boolean', default: false },
+    placement: { type: 'string', required: false }, // e.g., "1st place"
+    winner: { type: 'boolean', required: false, default: false },
   },
   computedFields: {
     slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath.replace('projects/','') },

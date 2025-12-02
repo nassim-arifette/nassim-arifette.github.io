@@ -11,10 +11,8 @@ const nav = [
   { href: '/', label: 'Home' },
   { href: '/cv', label: 'CV' },
   { href: '/projects', label: 'Projects' },
+  { href: '/hackathons', label: 'Hackathons' },
   { href: '/blog', label: 'Blog' },
-  { href: '/series', label: 'Series' },
-  { href: '/tags', label: 'Tags' },
-  { href: '/other', label: 'Other' },
 ]
 
 export default function Header() {

@@ -31,7 +31,6 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
 
   const [query, setQuery] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
-  const [tagMode, setTagMode] = useState<'AND' | 'OR'>('AND')
   const [activeIndex, setActiveIndex] = useState(-1)
 
   const hasHydrated = useRef(false)
@@ -40,12 +39,10 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
   useEffect(() => {
     const qParam = searchParams.get('q') ?? ''
     const tagsParam = searchParams.get('tags') ?? ''
-    const modeParam = searchParams.get('tagMode') === 'OR' ? 'OR' : 'AND'
     const tagsFromParams = tagsParam.split(',').filter(Boolean)
 
     setQuery((current) => (current === qParam ? current : qParam))
     setActiveTags((current) => (arraysEqual(current, tagsFromParams) ? current : tagsFromParams))
-    setTagMode((current) => (current === modeParam ? current : modeParam))
     hasHydrated.current = true
   }, [searchParams])
 
@@ -66,17 +63,11 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
       params.delete('tags')
     }
 
-    if (tagMode === 'OR') {
-      params.set('tagMode', 'OR')
-    } else {
-      params.delete('tagMode')
-    }
-
     const next = params.toString()
     const current = searchParams.toString()
     if (next === current) return
     router.replace(`${pathname}${next ? `?${next}` : ''}`, { scroll: false })
-  }, [query, activeTags, tagMode, router, pathname, searchParams])
+  }, [query, activeTags, router, pathname, searchParams])
 
   const deferredQuery = useDeferredValue(query)
   const normalizedQuery = useMemo(() => (deferredQuery ? normalizeText(deferredQuery) : ''), [deferredQuery])
@@ -114,10 +105,7 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
       .filter(({ ref, haystack }) => {
         const postTags = ref.tags ?? []
         const matchesTags =
-          activeTags.length === 0 ||
-          (tagMode === 'AND'
-            ? activeTags.every((tag) => postTags.includes(tag))
-            : activeTags.some((tag) => postTags.includes(tag)))
+          activeTags.length === 0 || activeTags.every((tag) => postTags.includes(tag))
 
         if (!matchesTags) {
           return false
@@ -130,7 +118,7 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
         return haystack.includes(normalizedQuery)
       })
       .map((entry) => entry.ref)
-  }, [indexedPosts, activeTags, normalizedQuery, tagMode])
+  }, [indexedPosts, activeTags, normalizedQuery])
 
   const filteredPostsRef = useRef(filteredPosts)
 
@@ -145,7 +133,7 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
 
   useEffect(() => {
     setActiveIndex(-1)
-  }, [normalizedQuery, activeTags, tagMode])
+  }, [normalizedQuery, activeTags])
 
   const toggleTag = (tag: string) => {
     setActiveTags((current) =>
@@ -156,7 +144,6 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
   const clearFilters = () => {
     setActiveTags([])
     setQuery('')
-    setTagMode('AND')
   }
 
   useEffect(() => {
@@ -215,44 +202,21 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <div className="flex flex-col">
-            <label htmlFor="posts-search" className="sr-only">
-              Search posts
-            </label>
-            <input
-              id="posts-search"
-              type="search"
-              ref={searchInputRef}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search posts..."
-              className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-72"
-            />
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Tag mode:</span>
-            <div className="inline-flex items-center rounded-md border border-border p-0.5">
-              {(['AND', 'OR'] as const).map((mode) => {
-                const selected = tagMode === mode
-                return (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setTagMode(mode)}
-                    className={`rounded px-2 py-1 font-medium transition ${
-                      selected ? 'bg-foreground text-background' : 'hover:text-foreground'
-                    }`}
-                    aria-pressed={selected}
-                  >
-                    {mode}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+        <div className="flex flex-col">
+          <label htmlFor="posts-search" className="sr-only">
+            Search posts
+          </label>
+          <input
+            id="posts-search"
+            type="search"
+            ref={searchInputRef}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search posts..."
+            className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-72"
+          />
         </div>
-        {(query || activeTags.length > 0 || tagMode === 'OR') && (
+        {(query || activeTags.length > 0) && (
           <button
             type="button"
             onClick={clearFilters}
