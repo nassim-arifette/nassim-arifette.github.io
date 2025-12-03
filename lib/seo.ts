@@ -1,4 +1,5 @@
-const DEFAULT_SITE_URL = 'https://example.com'
+// Fallback to the live GitHub Pages host so canonicals remain stable if env vars are missing.
+const DEFAULT_SITE_URL = 'https://nassim-arifette.github.io'
 
 export function getSiteUrl() {
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL

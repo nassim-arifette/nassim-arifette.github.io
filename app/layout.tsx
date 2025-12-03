@@ -5,22 +5,26 @@ import { Inter } from 'next/font/google'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 import { ThemeProvider } from '@/components/theme-provider'
+import { getSiteUrl } from '@/lib/seo'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'),
+  metadataBase: new URL(getSiteUrl()),
   title: {
-    default: 'Personal Site',
-    template: '%s • Personal Site',
+    default: 'Nassim Arifette',
+    template: '%s | Nassim Arifette',
   },
-  description: 'Clean, fast personal site built with Next.js',
+  description: 'ML engineer focused on computer vision, 3D, and medical imaging.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const rssUrl = `${getSiteUrl()}/feed.xml`
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="alternate" type="application/rss+xml" href={rssUrl} title="RSS feed" />
         <meta
           httpEquiv="Content-Security-Policy"
           content="default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"

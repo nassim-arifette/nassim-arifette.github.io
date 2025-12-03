@@ -91,6 +91,7 @@ export default function ProjectPage({ params }: PageProps) {
   if (!project) return notFound()
 
   const relatedProjects = getRelatedProjects(project)
+  const ogImage = getOgImageUrl(project.slug)
 
   const linkEntries = Object.entries(project.links ?? {}) as Array<[
     keyof typeof linkConfig,
@@ -100,10 +101,19 @@ export default function ProjectPage({ params }: PageProps) {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
+    headline: project.title,
     name: project.title,
     description: project.description,
     url: absoluteUrl(`/projects/${project.slug}`),
     datePublished: project.date,
+    dateModified: project.date,
+    mainEntityOfPage: absoluteUrl(`/projects/${project.slug}`),
+    author: {
+      '@type': 'Person',
+      name: 'Nassim Arifette',
+      url: absoluteUrl('/'),
+    },
+    image: [ogImage],
     keywords: project.tags,
   }
 
