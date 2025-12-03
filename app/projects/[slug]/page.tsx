@@ -8,6 +8,7 @@ import { Mdx } from '@/components/mdx/mdx-client'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/mdx'
 import { absoluteUrl } from '@/lib/seo'
+import { getOgImageUrl } from '@/lib/og'
 import { TableOfContents } from '@/components/mdx/table-of-contents'
 import type { TocHeading } from '@/components/mdx/table-of-contents'
 
@@ -61,6 +62,7 @@ export async function generateStaticParams() {
 export function generateMetadata({ params }: PageProps): Metadata {
   const project = allProjects.find((p) => p.slug === params.slug)
   if (!project) return {}
+  const ogImage = getOgImageUrl(project.slug)
 
   return {
     title: project.title,
@@ -73,11 +75,13 @@ export function generateMetadata({ params }: PageProps): Metadata {
       url: absoluteUrl(`/projects/${project.slug}`),
       title: project.title,
       description: project.description,
+      images: [ogImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: project.title,
       description: project.description,
+      images: [ogImage],
     },
   }
 }
@@ -153,7 +157,7 @@ export default function ProjectPage({ params }: PageProps) {
         ) : null}
         <Mdx code={project.body.code} />
         {relatedProjects.length ? (
-          <section className="not-prose mt-12 space-y-4">
+          <section className="not-prose mt-12 space-y-4 print:hidden">
             <h2 className="text-xl font-semibold">Related projects</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {relatedProjects.map((related) => (

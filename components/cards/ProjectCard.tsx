@@ -137,7 +137,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
       )}
 
       {preview && (
-        <div className="pointer-events-none absolute inset-0 z-20 translate-y-2 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+        <div className="pointer-events-none absolute inset-0 z-20 translate-y-2 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 print:hidden">
           <div className="flex h-full flex-col justify-between rounded-lg border border-border/80 bg-background/95 p-5 text-sm text-muted-foreground shadow-lg backdrop-blur">
             <p className="max-h-40 overflow-hidden">{preview}</p>
             <span className="mt-4 text-xs font-medium text-foreground/70">View project →</span>

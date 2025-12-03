@@ -209,16 +209,48 @@ html:not(.dark) [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
 
   html {
     font-size: 12pt;
+    color-scheme: light;
   }
 
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    background: white !important;
+    color: #0f172a !important;
+  }
+
+  /* Force light palette even if the runtime theme is dark */
+  :root,
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16.3% 35%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
   }
 
   /* Hide chrome that isn't part of the printed content */
   .no-print {
     display: none !important;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: underline;
   }
 
   /* Remove heavy decoration */
@@ -234,5 +266,43 @@ html:not(.dark) [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
   }
   section, article, header {
     break-inside: avoid;
+  }
+
+  /* Keep MDX content readable on paper */
+  .prose {
+    color: inherit;
+  }
+
+  .prose img,
+  .prose video,
+  .prose pre,
+  .prose table,
+  .prose figure,
+  .prose blockquote {
+    break-inside: avoid;
+  }
+
+  /* Lighten code blocks for print */
+  [data-rehype-pretty-code-figure] pre,
+  [data-rehype-pretty-code-fragment] pre,
+  [data-rehype-pretty-code-figure] > code,
+  [data-rehype-pretty-code-fragment] > code,
+  .prose :where(pre):not(:where([data-rehype-pretty-code-figure] pre, [data-rehype-pretty-code-fragment] pre)) {
+    --shiki-color-background: #f6f8fa !important;
+    --shiki-color-text: #0f172a !important;
+    background: #f6f8fa !important;
+    color: #0f172a !important;
+    border-color: #d0d7de !important;
+  }
+
+  .prose :where(code):not(:where(pre code)) {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #d0d7de !important;
+  }
+
+  [data-rehype-pretty-code-figure] span[style*='--shiki-'],
+  [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
+    color: currentColor !important;
   }
 }
