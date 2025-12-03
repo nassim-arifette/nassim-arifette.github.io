@@ -81,6 +81,7 @@ export default function PostPage({ params }: PageProps) {
   const post = allPosts.find((p) => p.slug === params.slug)
   if (!post) return notFound()
 
+  const image = getOgImageUrl(post.slug)
   const readingStats = getReadingStats(post.body?.raw)
   const readingTimeMinutes = readingStats.minutes ?? 1
   const formattedDate = formatDate(post.date)
@@ -94,7 +95,21 @@ export default function PostPage({ params }: PageProps) {
     headline: post.title,
     description: post.description,
     datePublished: post.date,
+    dateModified: post.date,
     url: absoluteUrl(`/blog/${post.slug}`),
+    mainEntityOfPage: absoluteUrl(`/blog/${post.slug}`),
+    author: {
+      '@type': 'Person',
+      name: 'Nassim Arifette',
+      url: absoluteUrl('/'),
+    },
+    publisher: {
+      '@type': 'Person',
+      name: 'Nassim Arifette',
+      url: absoluteUrl('/'),
+    },
+    image: [image],
+    keywords: post.tags,
   }
 
   const headings = (post.headings ?? []) as TocHeading[]
