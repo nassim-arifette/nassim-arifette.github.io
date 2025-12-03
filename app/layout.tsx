@@ -26,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           content="default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         />
         <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+        <meta name="google-site-verification" content="p3YI81qttzelRtR5pVdQ5jPsaSk2QrVTS43TRC68y58" />
       </head>
       <body className={inter.className}>
         <ThemeProvider>

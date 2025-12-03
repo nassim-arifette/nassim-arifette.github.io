@@ -25,13 +25,13 @@ Clean, fast personal website built with Next.js (App Router), Contentlayer, Tail
 - [ ] "Copy share link" for filtered views on Projects (filters already sync to URL).
 - [x] "Related projects" based on overlapping tags.
 - [x] "Related posts" based on overlapping tags.
-- [ ] Put related projects in blog and vice versa
+- [x] Put related projects in blog and vice versa
 - [ ] "Print-clean" project/posts pages (extend existing print CSS to projects/posts).
 - [ ] Automatically clean after selected tag (for example when I select tag Deep learning it should autmatically remove the other tags in the list that are not in intersection with deep learning meaning that there is no existing deep learning + abstract interpretation for example but there is blog post deep learning + agent so it shows deep learning and agent but not the tag "abstract interpretation")
 
 ### SEO/Feeds/Social
 - [x] RSS and JSON Feed generator script at build time to `/public/feed.xml` and `/public/feed.json`.
-- [ ] Pre-generate OG images for posts/projects with Satori + Resvg at build to `/public/og/{slug}.png`.
+- [x] Pre-generate OG images for posts/projects with Satori + Resvg at build to `/public/og/{slug}.png`.
 - [ ] Add `/uses` and `/now` pages (evergreen backlinks, helpful for hiring).
 
 ### Perf/Privacy
@@ -142,6 +142,7 @@ First-time setup:
 - `pnpm export` / `npm run export` — Static export to `out/`
 - `pnpm start` / `npm start` — Start Next.js server (not used for static hosting)
 - `pnpm generate:feed` / `npm run generate:feed` — Build RSS + JSON feeds in `public/`
+- `pnpm generate:og` / `npm run generate:og` — Pre-generate OpenGraph images in `public/og/` (add `public/og/default.png` for fallback)
 
 ## Testing
 - `pnpm test` / `npm test` — Run unit tests once (Vitest)

@@ -5,14 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node scripts/generate-feed.mjs",
+    "build": "next build && node scripts/generate-feed.mjs && node scripts/generate-og.mjs",
     "export": "next export",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "generate:feed": "node scripts/generate-feed.mjs"
+    "generate:feed": "node scripts/generate-feed.mjs",
+    "generate:og": "node scripts/generate-og.mjs"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "contentlayer": "^0.3.4",
     "feed": "^5.1.0",
     "framer-motion": "^10.16.4",
@@ -25,6 +27,7 @@
     "react-dom": "^18.2.0",
     "remark-gfm": "^3.0.1",
     "remark-math": "^6.0.0",
+    "satori": "^0.18.3",
     "shiki": "^1.10.0"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@ import type { Post } from 'contentlayer/generated'
 import { Mdx } from '@/components/mdx/mdx-client'
 import { Badge } from '@/components/ui/badge'
 import { absoluteUrl } from '@/lib/seo'
+import { getOgImageUrl } from '@/lib/og'
 import { TableOfContents } from '@/components/mdx/table-of-contents'
 import type { TocHeading } from '@/components/mdx/table-of-contents'
 import { ReadingProgressBar } from '@/components/blog/reading-progress-bar'
@@ -52,6 +53,7 @@ export async function generateStaticParams() {
 export function generateMetadata({ params }: PageProps): Metadata {
   const post = allPosts.find((p) => p.slug === params.slug)
   if (!post) return {}
+  const ogImage = getOgImageUrl(post.slug)
   return {
     title: post.title,
     description: post.description,
@@ -63,12 +65,14 @@ export function generateMetadata({ params }: PageProps): Metadata {
       url: absoluteUrl(`/blog/${post.slug}`),
       title: post.title,
       description: post.description,
+      images: [ogImage],
       publishedTime: post.date,
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.description,
+      images: [ogImage],
     },
   }
 }
@@ -111,13 +115,13 @@ export default function PostPage({ params }: PageProps) {
             <span>{readingTimeMinutes} min read</span>
           </p>
           {seriesNavigation && seriesData ? (
-            <>
+            <div className="print:hidden">
               <SeriesBanner navigation={seriesNavigation} seriesData={seriesData} />
               <SeriesProgressRecorder
                 seriesSlug={seriesNavigation.current.series.slug}
                 partSlug={post.slug}
               />
-            </>
+            </div>
           ) : null}
           {post.tags?.length ? (
             <div className="mb-6 flex flex-wrap gap-2">
@@ -129,7 +133,9 @@ export default function PostPage({ params }: PageProps) {
             </div>
           ) : null}
           {seriesNavigation && seriesData ? (
-            <SeriesPartsMobile seriesData={seriesData} currentSlug={post.slug} />
+            <div className="print:hidden">
+              <SeriesPartsMobile seriesData={seriesData} currentSlug={post.slug} />
+            </div>
           ) : null}
           {headings.length ? (
             <div className="not-prose my-8 lg:hidden print:hidden">
@@ -138,7 +144,7 @@ export default function PostPage({ params }: PageProps) {
           ) : null}
           <Mdx code={post.body.code} />
           {relatedPosts.length ? (
-            <section className="not-prose mt-12 space-y-4">
+            <section className="not-prose mt-12 space-y-4 print:hidden">
               <h2 className="text-xl font-semibold">Related posts</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {relatedPosts.map((related) => (
