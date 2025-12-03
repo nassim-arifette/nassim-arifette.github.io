@@ -55,7 +55,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
       <div className="relative flex flex-1 flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-lg font-medium leading-tight">{project.title}</h3>
-          <div className="flex shrink-0 flex-col items-end gap-1">
+          <div className="flex shrink-0 flex-col items-end justify-center gap-1 leading-none text-right min-w-[120px]">
             <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(project.date)}</span>
             {placementLabel ? (
               <span
