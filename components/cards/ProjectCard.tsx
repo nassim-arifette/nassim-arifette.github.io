@@ -23,7 +23,8 @@ type ProjectCardProps = {
 
 export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) {
   const preview = getPreviewText(project.body?.raw, project.description)
-  const placementLabel = project.winner ? '👑' : project.placement
+  const isWinner = project.winner === true
+  const placementLabel = isWinner ? '🏆 Winner' : project.placement
   const hasLinks =
     project.links?.github ||
     project.links?.website ||
@@ -36,7 +37,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
       id={idAnchor ? project.slug : undefined}
       className={cn(
         'group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg',
-        project.winner ? 'border-amber-400 shadow-amber-400/20' : '',
+        isWinner ? 'border-amber-400 shadow-amber-400/20' : '',
         className,
       )}
     >
@@ -52,23 +53,23 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
       ) : null}
 
       <div className="relative flex flex-1 flex-col gap-3">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-medium leading-tight">{project.title}</h3>
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-lg font-medium leading-tight">{project.title}</h3>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(project.date)}</span>
             {placementLabel ? (
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide',
-                  project.winner
-                    ? 'bg-amber-100 text-amber-700 border border-amber-300'
-                    : 'bg-muted text-foreground shadow-inner',
+                  'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide',
+                  isWinner
+                    ? 'bg-amber-300 text-black border-amber-400 shadow-amber-500/30'
+                    : 'bg-muted text-foreground border-border shadow-inner',
                 )}
               >
                 {placementLabel}
               </span>
             ) : null}
           </div>
-          <span className="shrink-0 text-xs text-muted-foreground sm:text-right">{formatDate(project.date)}</span>
         </div>
         <p className="text-sm text-muted-foreground">{project.description}</p>
         {project.tags?.length ? (
