@@ -15,7 +15,7 @@ describe('seo url helpers', () => {
   })
 
   it('uses default site url when env unset', () => {
-    expect(getSiteUrl()).toBe('https://example.com')
+    expect(getSiteUrl()).toBe('https://nassim-arifette.github.io')
   })
 
   it('prefers NEXT_PUBLIC_SITE_URL over SITE_URL', () => {
@@ -35,4 +35,3 @@ describe('seo url helpers', () => {
     expect(absoluteUrl('about')).toBe('https://example.org/about')
   })
 })
-
