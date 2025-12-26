@@ -30,10 +30,38 @@ interface SeriesIndex {
 
 let cachedIndex: SeriesIndex | null = null
 
+function getSeriesSlugFromPostSlug(slug: string) {
+  const parts = slug.split('/')
+  if (parts.length <= 1) return null
+  return parts.slice(0, -1).join('/')
+}
+
+function resolveSeriesPartSlug(seriesSlug: string, partSlug: string) {
+  if (partSlug.includes('/')) return partSlug
+  if (!seriesSlug) return partSlug
+  return `${seriesSlug}/${partSlug}`
+}
+
+function sortPostsBySeriesOrder(posts: Post[]) {
+  return [...posts].sort((a, b) => +new Date(a.date) - +new Date(b.date))
+}
+
 function buildSeriesIndex(): SeriesIndex {
   const postsBySlug = new Map<string, Post>()
   for (const post of allPosts) {
     postsBySlug.set(post.slug, post)
+  }
+
+  const postsBySeriesSlug = new Map<string, Post[]>()
+  for (const post of allPosts) {
+    const seriesSlug = getSeriesSlugFromPostSlug(post.slug)
+    if (!seriesSlug) continue
+    const list = postsBySeriesSlug.get(seriesSlug)
+    if (list) {
+      list.push(post)
+    } else {
+      postsBySeriesSlug.set(seriesSlug, [post])
+    }
   }
 
   const seriesList: SeriesResolved[] = []
@@ -41,36 +69,68 @@ function buildSeriesIndex(): SeriesIndex {
   const byPostSlug = new Map<string, SeriesPartResolved>()
 
   for (const series of allSeries) {
-    const total = series.parts.length
-    const resolvedParts: SeriesPartResolved[] = series.parts.map((part, index) => {
-      const post = postsBySlug.get(part.slug)
-      const hasPublishedPost = Boolean(post && post.published !== false)
-      const isComingSoon = part.comingSoon === true || !hasPublishedPost
-      const readingMinutes =
-        part.manualReadingMinutes ??
-        (hasPublishedPost && post?.body?.raw ? estimateReadingTimeMinutes(post.body.raw) : undefined)
+    const seriesSlug = series.slug
+    const seriesPosts = postsBySeriesSlug.get(seriesSlug) ?? []
+    const sortedSeriesPosts = sortPostsBySeriesOrder(seriesPosts)
+    const usedSlugs = new Set<string>()
+    const resolvedParts: SeriesPartResolved[] = []
 
-      const title = part.title ?? post?.title ?? `Part ${index + 1}`
-      const summary = part.summary ?? post?.description
+    const explicitParts = series.parts ?? []
+    if (explicitParts.length > 0) {
+      explicitParts.forEach((part, index) => {
+        const resolvedSlug = resolveSeriesPartSlug(seriesSlug, part.slug)
+        const post = postsBySlug.get(resolvedSlug)
+        if (post) {
+          usedSlugs.add(post.slug)
+        }
+        const hasPublishedPost = Boolean(post && post.published !== false)
+        const isComingSoon = part.comingSoon === true || !hasPublishedPost
+        const readingMinutes =
+          part.manualReadingMinutes ??
+          (post?.body?.raw ? estimateReadingTimeMinutes(post.body.raw) : undefined)
 
-      const resolved: SeriesPartResolved = {
+        const title = part.title ?? post?.title ?? `Part ${index + 1}`
+        const summary = part.summary ?? post?.description
+
+        resolvedParts.push({
+          series,
+          index,
+          total: 0,
+          slug: resolvedSlug,
+          title,
+          summary,
+          isComingSoon,
+          post: hasPublishedPost ? post : undefined,
+          readingMinutes,
+          manualReadingMinutes: part.manualReadingMinutes,
+        })
+      })
+    }
+
+    for (const post of sortedSeriesPosts) {
+      if (usedSlugs.has(post.slug)) continue
+      const isComingSoon = post.published === false
+      const readingMinutes = post.body?.raw ? estimateReadingTimeMinutes(post.body.raw) : undefined
+      resolvedParts.push({
         series,
-        index,
-        total,
-        slug: part.slug,
-        title,
-        summary,
+        index: 0,
+        total: 0,
+        slug: post.slug,
+        title: post.title,
+        summary: post.description,
         isComingSoon,
-        post: hasPublishedPost ? post : undefined,
+        post: !isComingSoon ? post : undefined,
         readingMinutes,
-        manualReadingMinutes: part.manualReadingMinutes,
-      }
+      })
+    }
 
-      if (hasPublishedPost && !part.comingSoon) {
-        byPostSlug.set(post!.slug, resolved)
+    const total = resolvedParts.length
+    resolvedParts.forEach((part, index) => {
+      part.index = index
+      part.total = total
+      if (part.post && !part.isComingSoon) {
+        byPostSlug.set(part.post.slug, part)
       }
-
-      return resolved
     })
 
     const publishedParts = resolvedParts.filter((part) => part.post && !part.isComingSoon)

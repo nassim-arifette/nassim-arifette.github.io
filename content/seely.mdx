@@ -1,0 +1,22 @@
+---
+title: "The hidden geometry of computation (and why it's 2D) / the igher view of computation"
+date: "2025-12-25"
+description: "Exploring how 2-categories can be used to model computational processes and structures."
+tags: ["category-theory", "computation", "mathematics", "foundations"]
+published: false
+---
+In the usual categorical semantics of typed lambda-calculus, ie cartesian closed categories, we often treat $\beta$-conversion and $\eta$-conversion as equalities. The major issue with this approach is that we lose the computational process, as the intermediate stage of computation with its results.
+
+Let's consider a simple example: 
+$$ (\lambda x.a ) b \to a [x := b] $$
+this is a step of computation that we would like to keep track of.
+But in plain category model, that step becomes an equation, so "before" and "after" are identified, they are the same morphism !
+
+The point of Seely is to keep the "rewrite step" itself as a first class citizen of the model.
+
+That's exacttly why  he is using 2-categories.
+A 2-category is a category enriched over categories.
+* Objects: types
+* 1-morphisms: terms-in-context (programs)
+* 2-morphisms: reductions/conversions (computation steps, or chain of steps)
+

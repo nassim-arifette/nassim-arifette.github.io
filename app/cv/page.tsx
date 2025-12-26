@@ -3,28 +3,16 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Link from 'next/link'
 import { FileDown, Eye } from 'lucide-react'
-import { absoluteUrl } from '@/lib/seo'
+import { buildMetadata } from '@/lib/metadata'
+import { getOgImageUrl } from '@/lib/og'
 
-export const metadata: Metadata = {
-  title: 'CV — Nassim Arifette',
+export const metadata: Metadata = buildMetadata({
+  title: 'CV',
   description: 'Download or read the CV of Nassim Arifette, ML Engineer specialized in computer vision, 3D, and medical imaging.',
-  alternates: {
-    canonical: absoluteUrl('/cv'),
-  },
-  openGraph: {
-    type: 'profile',
-    url: absoluteUrl('/cv'),
-    title: 'CV — Nassim Arifette',
-    description:
-      'Experience, education, and selected projects from Nassim Arifette, ML Engineer focusing on computer vision, 3D, and medical imaging.',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'CV — Nassim Arifette',
-    description:
-      'Explore Nassim Arifette’s ML engineering experience across computer vision, 3D, and medical imaging.',
-  },
-}
+  path: '/cv',
+  ogImage: getOgImageUrl(),
+  type: 'profile',
+})
 
 export default function CvPage() {
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''

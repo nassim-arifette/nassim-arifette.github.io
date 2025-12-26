@@ -1,31 +1,20 @@
 import type { Metadata } from 'next'
-import { allProjects } from 'contentlayer/generated'
-import { absoluteUrl } from '@/lib/seo'
 import { HackathonsClient } from './hackathons-client'
+import { buildMetadata } from '@/lib/metadata'
+import { getOgImageUrl } from '@/lib/og'
+import { getAllProjects } from '@/lib/content'
 
-export const metadata: Metadata = {
-  title: 'Hackathons – Nassim Arifette',
+export const metadata: Metadata = buildMetadata({
+  title: 'Hackathons',
   description: 'Hackathons I have participated in and the projects built during each event.',
-  alternates: {
-    canonical: absoluteUrl('/hackathons'),
-  },
-  openGraph: {
-    type: 'website',
-    url: absoluteUrl('/hackathons'),
-    title: 'Hackathons – Nassim Arifette',
-    description: 'Projects built during hackathons I have joined.',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Hackathons – Nassim Arifette',
-    description: 'Projects built during hackathons I have joined.',
-  },
-}
+  path: '/hackathons',
+  ogImage: getOgImageUrl(),
+})
 
 export default function HackathonsPage() {
-  const hackathonProjects = [...allProjects]
-    .filter((project) => project.tags?.some((tag) => tag.toLowerCase() === 'hackathon'))
-    .sort((a, b) => +new Date(b.date) - +new Date(a.date))
+  const hackathonProjects = getAllProjects().filter((project) =>
+    project.tags?.some((tag) => tag.toLowerCase() === 'hackathon'),
+  )
 
   return <HackathonsClient projects={hackathonProjects} />
 }

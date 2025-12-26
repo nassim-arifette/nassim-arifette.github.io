@@ -1,19 +1,19 @@
-import Link from 'next/link'
 import type { Post } from 'contentlayer/generated'
-import { Badge } from '@/components/ui/badge'
 import { getPreviewText } from '@/lib/preview'
 import { getSeriesPartForPostSlug } from '@/lib/series'
+import Link from 'next/link'
+import { TagLink } from '@/components/tags/TagLink'
 
 export function PostCard({ post }: { post: Post }) {
   const preview = getPreviewText(post.body?.raw, post.description)
   const seriesPart = getSeriesPartForPostSlug(post.slug)
 
   return (
-    <Link
-      href={post.url}
-      className="group relative block overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg"
-    >
-      <div className="relative z-10">
+    <article className="group relative block overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg">
+      <Link href={post.url} className="absolute inset-0 z-10" aria-label={`Read ${post.title}`}>
+        <span className="sr-only">Read {post.title}</span>
+      </Link>
+      <div className="relative">
         {seriesPart ? (
           <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
             <span className="rounded-full border border-border px-2 py-0.5 leading-none">Series</span>
@@ -33,9 +33,14 @@ export function PostCard({ post }: { post: Post }) {
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{post.description}</p>
         {post.tags?.length ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {post.tags.map((t) => (
-              <Badge key={t} variant="secondary">{t}</Badge>
+          <div className="relative z-20 mt-3 flex flex-wrap gap-2">
+            {post.tags.map((tag) => (
+              <TagLink
+                key={tag}
+                tag={tag}
+                variant="secondary"
+                className="transition hover:text-foreground"
+              />
             ))}
           </div>
         ) : null}
@@ -49,6 +54,6 @@ export function PostCard({ post }: { post: Post }) {
           </div>
         </div>
       )}
-    </Link>
+    </article>
   )
 }

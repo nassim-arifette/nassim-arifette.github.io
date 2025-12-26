@@ -1,11 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { allPosts } from 'contentlayer/generated'
-import type { Post } from 'contentlayer/generated'
 import { Mdx } from '@/components/mdx/mdx-client'
 import { Badge } from '@/components/ui/badge'
-import { absoluteUrl } from '@/lib/seo'
 import { getOgImageUrl } from '@/lib/og'
 import { TableOfContents } from '@/components/mdx/table-of-contents'
 import type { TocHeading } from '@/components/mdx/table-of-contents'
@@ -14,78 +11,51 @@ import { formatDate, getReadingStats } from '@/lib/mdx'
 import { findSeriesBySlug, getSeriesNavigation } from '@/lib/series'
 import { SeriesBanner, SeriesPartsDesktop, SeriesPartsMobile } from '@/components/series/SeriesNavigation'
 import { SeriesProgressRecorder } from '@/components/series/SeriesProgressRecorder'
+import { buildMetadata } from '@/lib/metadata'
+import { getPublishedPostBySlug, getPublishedPosts } from '@/lib/content'
+import { getRelatedByTags } from '@/lib/related'
+import { TagLink } from '@/components/tags/TagLink'
+import { absoluteUrl } from '@/lib/seo'
 
-interface PageProps { params: { slug: string } }
+interface PageProps { params: { slug: string[] } }
 
 const MAX_RELATED_POSTS = 3
 
-function getRelatedPosts(current: Post) {
-  const currentTags = new Set((current.tags ?? []).map((tag) => tag.trim()).filter(Boolean))
-  if (currentTags.size === 0) return []
-
-  return allPosts
-    .filter((candidate) => candidate.slug !== current.slug)
-    .map((candidate) => {
-      const candidateTags = new Set((candidate.tags ?? []).map((tag) => tag.trim()).filter(Boolean))
-      let overlap = 0
-      for (const tag of candidateTags) {
-        if (currentTags.has(tag)) {
-          overlap += 1
-        }
-      }
-      return { candidate, overlap }
-    })
-    .filter(({ overlap }) => overlap > 0)
-    .sort((a, b) => {
-      if (b.overlap !== a.overlap) return b.overlap - a.overlap
-      const dateDiff = +new Date(b.candidate.date) - +new Date(a.candidate.date)
-      if (dateDiff !== 0) return dateDiff
-      return a.candidate.title.localeCompare(b.candidate.title)
-    })
-    .slice(0, MAX_RELATED_POSTS)
-    .map(({ candidate }) => candidate)
-}
-
 export async function generateStaticParams() {
-  return allPosts.map((p) => ({ slug: p.slug }))
+  return getPublishedPosts().map((post) => ({ slug: post.slug.split('/') }))
 }
 
 export function generateMetadata({ params }: PageProps): Metadata {
-  const post = allPosts.find((p) => p.slug === params.slug)
+  const slug = params.slug.join('/')
+  const post = getPublishedPostBySlug(slug)
   if (!post) return {}
   const ogImage = getOgImageUrl(post.slug)
+
   return {
-    title: post.title,
-    description: post.description,
-    alternates: {
-      canonical: absoluteUrl(`/blog/${post.slug}`),
-    },
-    openGraph: {
+    ...buildMetadata({
+      title: post.title,
+      description: post.description,
+      path: `/blog/${post.slug}`,
+      ogImage,
       type: 'article',
-      url: absoluteUrl(`/blog/${post.slug}`),
-      title: post.title,
-      description: post.description,
-      images: [ogImage],
       publishedTime: post.date,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.title,
-      description: post.description,
-      images: [ogImage],
-    },
+      modifiedTime: post.date,
+      tags: post.tags,
+    }),
+    authors: [{ name: 'Nassim Arifette', url: absoluteUrl('/') }],
   }
 }
 
 export default function PostPage({ params }: PageProps) {
-  const post = allPosts.find((p) => p.slug === params.slug)
+  const slug = params.slug.join('/')
+  const post = getPublishedPostBySlug(slug)
   if (!post) return notFound()
 
   const image = getOgImageUrl(post.slug)
   const readingStats = getReadingStats(post.body?.raw)
   const readingTimeMinutes = readingStats.minutes ?? 1
   const formattedDate = formatDate(post.date)
-  const relatedPosts = getRelatedPosts(post)
+  const relatedPosts = getRelatedByTags(post, getPublishedPosts(), MAX_RELATED_POSTS)
   const seriesNavigation = getSeriesNavigation(post.slug)
   const seriesData = seriesNavigation ? findSeriesBySlug(seriesNavigation.current.series.slug) : undefined
 
@@ -141,9 +111,13 @@ export default function PostPage({ params }: PageProps) {
           {post.tags?.length ? (
             <div className="mb-6 flex flex-wrap gap-2">
               {post.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="cursor-default">
-                  #{tag}
-                </Badge>
+                <TagLink
+                  key={tag}
+                  tag={tag}
+                  showHash
+                  variant="secondary"
+                  className="transition hover:text-foreground"
+                />
               ))}
             </div>
           ) : null}

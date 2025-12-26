@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { Github, ExternalLink, FileText, FileDown } from 'lucide-react'
 import type { Project } from 'contentlayer/generated'
-import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/mdx'
 import { getPreviewText } from '@/lib/preview'
 import { cn } from '@/lib/utils'
+import { TagLink } from '@/components/tags/TagLink'
 
 type Links = { github?: string; demo?: string; paper?: string; pdf?: string; website?: string }
 
@@ -73,9 +73,14 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
         </div>
         <p className="text-sm text-muted-foreground">{project.description}</p>
         {project.tags?.length ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="relative z-20 flex flex-wrap gap-2">
             {project.tags.map((tag) => (
-              <Badge key={tag} variant="secondary">{tag}</Badge>
+              <TagLink
+                key={tag}
+                tag={tag}
+                variant="secondary"
+                className="transition hover:text-foreground"
+              />
             ))}
           </div>
         ) : null}

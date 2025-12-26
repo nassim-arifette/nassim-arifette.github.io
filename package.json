@@ -39,6 +39,7 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.16",
+    "baseline-browser-mapping": "^2.9.11",
     "github-slugger": "^2.0.0",
     "jsdom": "^27.3.0",
     "markdown-wasm": "^1.2.0",
