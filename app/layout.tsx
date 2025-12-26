@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     template: '%s | Nassim Arifette',
   },
   description: 'ML engineer focused on computer vision, 3D, and medical imaging.',
+  icons: [],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -129,7 +129,7 @@ for (const tag of mathMLTags) {
 
 const Post = defineDocumentType(() => ({
   name: 'Post',
-  filePathPattern: `posts/**/*.mdx`,
+  filePathPattern: `posts/**/[^_]*.mdx`,
   contentType: 'mdx',
   fields: {
     title: { type: 'string', required: true },
@@ -161,18 +161,32 @@ const SeriesPart = defineNestedType(() => ({
 
 const Series = defineDocumentType(() => ({
   name: 'Series',
-  filePathPattern: `series/**/*.mdx`,
+  filePathPattern: `posts/**/_series.mdx`,
   contentType: 'mdx',
   fields: {
     title: { type: 'string', required: true },
     description: { type: 'string', required: true },
-    parts: { type: 'list', of: SeriesPart, required: true },
+    parts: { type: 'list', of: SeriesPart },
     heroNote: { type: 'string' },
   },
   computedFields: {
-    slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath.replace('series/', '') },
-    url: { type: 'string', resolve: (doc) => `/series/${doc._raw.flattenedPath.replace('series/', '')}` },
-    totalParts: { type: 'number', resolve: (doc) => doc.parts.length },
+    slug: {
+      type: 'string',
+      resolve: (doc) =>
+        doc._raw.flattenedPath
+          .replace(/^series\//, '')
+          .replace(/^posts\//, '')
+          .replace(/\/_series$/, ''),
+    },
+    url: {
+      type: 'string',
+      resolve: (doc) =>
+        `/series/${doc._raw.flattenedPath
+          .replace(/^series\//, '')
+          .replace(/^posts\//, '')
+          .replace(/\/_series$/, '')}`,
+    },
+    totalParts: { type: 'number', resolve: (doc) => doc.parts?.length ?? 0 },
   },
 }))
 

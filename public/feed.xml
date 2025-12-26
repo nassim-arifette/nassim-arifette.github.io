@@ -10,8 +10,8 @@
         <language>en</language>
         <item>
             <title><![CDATA[Field Notes: Six 2025 Ideas That Changed How I Build RAG & Agents]]></title>
-            <link>https://example.com/blog/field-notes-2025-ideas</link>
-            <guid isPermaLink="false">https://example.com/blog/field-notes-2025-ideas</guid>
+            <link>https://example.com/blog/ai-foundations/field-notes-2025-ideas</link>
+            <guid isPermaLink="false">https://example.com/blog/ai-foundations/field-notes-2025-ideas</guid>
             <pubDate>Sun, 12 Oct 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[A story-driven tour of new papers and benchmarks—plus what actually moved the needle in my pipelines, with links and practical takeaways.]]></description>
             <content:encoded><![CDATA[
@@ -129,8 +129,8 @@ If you implement even two of these, you’ll feel the system get quieter and mor
         </item>
         <item>
             <title><![CDATA[From LLM to Agent: Designing Executable Intelligence]]></title>
-            <link>https://example.com/blog/from-llm-to-agent</link>
-            <guid isPermaLink="false">https://example.com/blog/from-llm-to-agent</guid>
+            <link>https://example.com/blog/ai-foundations/from-llm-to-agent</link>
+            <guid isPermaLink="false">https://example.com/blog/ai-foundations/from-llm-to-agent</guid>
             <pubDate>Sat, 11 Oct 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[How to wrap language models with tools, memory, and guardrails so they can pursue goals safely.]]></description>
             <content:encoded><![CDATA[
@@ -223,8 +223,8 @@ RAG turns LLMs into credible researchers. Agents turn them into doers. Both succ
         </item>
         <item>
             <title><![CDATA[RAG That Actually Works: A Practical, Scientific Guide]]></title>
-            <link>https://example.com/blog/rag-that-actually-works</link>
-            <guid isPermaLink="false">https://example.com/blog/rag-that-actually-works</guid>
+            <link>https://example.com/blog/ai-foundations/rag-that-actually-works</link>
+            <guid isPermaLink="false">https://example.com/blog/ai-foundations/rag-that-actually-works</guid>
             <pubDate>Thu, 02 Oct 2025 22:00:00 GMT</pubDate>
             <description><![CDATA[Practical design choices and evaluation tactics that make retrieval-augmented generation reliable.]]></description>
             <content:encoded><![CDATA[
@@ -348,8 +348,8 @@ Reach for RAG when knowledge changes often, you need citations, and governance m
         </item>
         <item>
             <title><![CDATA[Hello, world]]></title>
-            <link>https://example.com/blog/hello-world</link>
-            <guid isPermaLink="false">https://example.com/blog/hello-world</guid>
+            <link>https://example.com/blog/ai-foundations/hello-world</link>
+            <guid isPermaLink="false">https://example.com/blog/ai-foundations/hello-world</guid>
             <pubDate>Fri, 26 Sep 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[Why I built this site and how it’s organized.]]></description>
             <content:encoded><![CDATA[

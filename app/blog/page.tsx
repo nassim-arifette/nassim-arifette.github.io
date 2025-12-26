@@ -1,35 +1,29 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { allPosts } from 'contentlayer/generated'
 import { PostsList } from '@/components/blog/PostsList'
-import { absoluteUrl } from '@/lib/seo'
 import { getSeriesPartForPostSlug, listSeries } from '@/lib/series'
+import { absoluteUrl } from '@/lib/seo'
+import { buildMetadata } from '@/lib/metadata'
+import { getOgImageUrl } from '@/lib/og'
+import { getPublishedPosts } from '@/lib/content'
+import { getTagAggregates } from '@/lib/tags'
+import { TagLink } from '@/components/tags/TagLink'
 
-export const metadata: Metadata = {
-  title: 'Blog — Nassim Arifette',
+export const metadata: Metadata = buildMetadata({
+  title: 'Blog',
   description: 'Analyses, research notes, and engineering write-ups from Nassim Arifette.',
-  alternates: {
-    canonical: absoluteUrl('/blog'),
-  },
-  openGraph: {
-    type: 'website',
-    url: absoluteUrl('/blog'),
-    title: 'Blog — Nassim Arifette',
-    description: 'Read research notes, implementation guides, and engineering write-ups from Nassim Arifette.',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Blog — Nassim Arifette',
-    description: 'Research notes and engineering write-ups from Nassim Arifette.',
-  },
-}
+  path: '/blog',
+  ogImage: getOgImageUrl(),
+})
 
 export default function BlogIndex() {
-  const posts = [...allPosts]
-    .filter((p) => p.published !== false)
-    .sort((a, b) => +new Date(b.date) - +new Date(a.date))
+  const posts = getPublishedPosts()
 
   const seriesList = listSeries()
+  const tagHighlights = getTagAggregates()
+    .filter((tag) => tag.posts.length > 0)
+    .sort((a, b) => b.posts.length - a.posts.length || a.tag.localeCompare(b.tag))
+    .slice(0, 12)
 
   const seriesInfo = posts.reduce<Record<string, { seriesTitle: string; seriesSlug: string; index: number; total: number }>>(
     (acc, post) => {
@@ -50,7 +44,7 @@ export default function BlogIndex() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'Nassim Arifette — Blog',
+    name: 'Nassim Arifette - Blog',
     url: absoluteUrl('/blog'),
     about: 'Research notes and engineering write-ups from Nassim Arifette.',
     blogPost: posts.map((post) => ({
@@ -74,6 +68,27 @@ export default function BlogIndex() {
           <PostsList posts={posts} seriesInfo={seriesInfo} />
         </div>
         <aside className="space-y-4 self-start lg:sticky lg:top-24">
+          {tagHighlights.length > 0 ? (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold">Tags</h2>
+                <p className="text-sm text-muted-foreground">Browse posts by topic.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {tagHighlights.map((tag) => (
+                  <TagLink
+                    key={tag.slug}
+                    tag={tag.tag}
+                    variant="secondary"
+                    className="transition hover:text-foreground"
+                  />
+                ))}
+              </div>
+              <Link href="/tags" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
+                View all tags
+              </Link>
+            </div>
+          ) : null}
           <div className="space-y-1">
             <h2 className="text-xl font-semibold">Series</h2>
             <p className="text-sm text-muted-foreground">Follow related posts in order.</p>
@@ -104,6 +119,11 @@ export default function BlogIndex() {
               ))
             )}
           </div>
+          {seriesList.length > 0 ? (
+            <Link href="/series" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
+              View all series
+            </Link>
+          ) : null}
         </aside>
       </div>
     </div>

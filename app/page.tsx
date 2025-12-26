@@ -1,40 +1,25 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { allPosts, allProjects } from 'contentlayer/generated'
 import { ProjectCard } from '@/components/cards/ProjectCard'
 import { PostCard } from '@/components/cards/PostCard'
 import { absoluteUrl } from '@/lib/seo'
 import { HousePortal } from '@/components/house/HousePortal'
+import { buildMetadata } from '@/lib/metadata'
+import { getOgImageUrl } from '@/lib/og'
+import { getAllProjects, getPublishedPosts } from '@/lib/content'
 
-export const metadata: Metadata = {
-  title: 'Nassim Arifette | ML Engineer & Researcher',
+export const metadata: Metadata = buildMetadata({
+  title: 'ML Engineer & Researcher',
   description:
     'Nassim Arifette is an ML engineer specializing in computer vision, 3D, and medical imaging, sharing selected projects, experiments, and research notes.',
-  alternates: {
-    canonical: absoluteUrl('/'),
-  },
-  openGraph: {
-    type: 'website',
-    url: absoluteUrl('/'),
-    title: 'Nassim Arifette | ML Engineer & Researcher',
-    description:
-      'Explore featured ML projects, research notes, and engineering writing from Nassim Arifette.',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Nassim Arifette | ML Engineer & Researcher',
-    description:
-      'ML engineer focusing on computer vision, 3D, and medical imaging - projects, experiments, and writing.',
-  },
-}
+  path: '/',
+  ogImage: getOgImageUrl(),
+})
 
 export default function HomePage() {
-  const posts = [...allPosts]
-    .filter((p) => p.published !== false)
-    .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-    .slice(0, 2)
+  const posts = getPublishedPosts().slice(0, 2)
 
-  const projectItems = [...allProjects].sort((a, b) => +new Date(b.date) - +new Date(a.date))
+  const projectItems = getAllProjects()
 
   const projects = projectItems
     .filter((p) => p.featured)
@@ -49,7 +34,7 @@ export default function HomePage() {
     url: absoluteUrl('/'),
     headline: 'ML Engineer - Computer Vision, 3D, Medical Imaging',
     jobTitle: 'Machine Learning Engineer',
-    image: absoluteUrl('/og/default.png'),
+    image: getOgImageUrl(),
     sameAs: [
       'https://www.linkedin.com/in/nassim-arifette',
       'https://github.com/nassim-arifette',
@@ -100,6 +85,12 @@ export default function HomePage() {
           >
             Hackathons
           </Link>
+          <Link
+            href="/tags"
+            className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium transition hover:bg-accent sm:w-auto"
+          >
+            Tags
+          </Link>
         </div>
       </section>
 
@@ -134,6 +125,9 @@ export default function HomePage() {
           </Link>
           <Link href="/blog" className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50">
             All blog posts
+          </Link>
+          <Link href="/tags" className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50">
+            All tags
           </Link>
           <Link href="/hackathons?winners=1" className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50">
             Winning hackathons

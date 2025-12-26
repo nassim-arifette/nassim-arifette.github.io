@@ -26,13 +26,13 @@ export function HousePortal({ projects, hackathons }: HousePortalProps) {
 
   return (
     <section className="space-y-4">
-      <div className="rounded-2xl border border-border bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 shadow-xl sm:p-8">
+      <div className="rounded-2xl border border-border bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 shadow-xl dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Tiny world</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Mini game</p>
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-2xl font-semibold leading-tight sm:text-3xl">Stardew-like top-down mini game</h2>
-              <span className="rounded-full border border-emerald-300/40 bg-emerald-200/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-200">
+              <h2 className="text-2xl font-semibold leading-tight sm:text-3xl">Tiny world</h2>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:border-emerald-300/40 dark:bg-emerald-200/10 dark:text-emerald-200">
                 Prototype
               </span>
             </div>

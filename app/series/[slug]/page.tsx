@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { absoluteUrl } from '@/lib/seo'
 import { formatDate } from '@/lib/mdx'
 import { findSeriesBySlug, listSeries } from '@/lib/series'
 import { SeriesContinueButton } from '@/components/series/SeriesContinueButton'
+import { buildMetadata } from '@/lib/metadata'
+import { getOgImageUrl } from '@/lib/og'
 
 interface PageProps {
   params: { slug: string }
@@ -18,24 +19,12 @@ export function generateMetadata({ params }: PageProps): Metadata {
   const seriesData = findSeriesBySlug(params.slug)
   if (!seriesData) return {}
 
-  return {
-    title: `${seriesData.series.title} — Series`,
+  return buildMetadata({
+    title: `${seriesData.series.title} - Series`,
     description: seriesData.series.description,
-    alternates: {
-      canonical: absoluteUrl(seriesData.series.url),
-    },
-    openGraph: {
-      type: 'website',
-      url: absoluteUrl(seriesData.series.url),
-      title: `${seriesData.series.title} — Series`,
-      description: seriesData.series.description,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${seriesData.series.title} — Series`,
-      description: seriesData.series.description,
-    },
-  }
+    path: seriesData.series.url,
+    ogImage: getOgImageUrl(seriesData.series.slug),
+  })
 }
 
 export default function SeriesDetailPage({ params }: PageProps) {

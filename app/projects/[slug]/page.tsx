@@ -1,16 +1,17 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { allProjects } from 'contentlayer/generated'
-import type { Project } from 'contentlayer/generated'
 import { Github, ExternalLink, FileText, FileDown } from 'lucide-react'
 import { ProjectCard } from '@/components/cards/ProjectCard'
 import { Mdx } from '@/components/mdx/mdx-client'
-import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/mdx'
-import { absoluteUrl } from '@/lib/seo'
 import { getOgImageUrl } from '@/lib/og'
 import { TableOfContents } from '@/components/mdx/table-of-contents'
 import type { TocHeading } from '@/components/mdx/table-of-contents'
+import { buildMetadata } from '@/lib/metadata'
+import { getAllProjects, getProjectBySlug } from '@/lib/content'
+import { getRelatedByTags } from '@/lib/related'
+import { TagLink } from '@/components/tags/TagLink'
+import { absoluteUrl } from '@/lib/seo'
 
 interface PageProps {
   params: { slug: string }
@@ -26,71 +27,35 @@ const linkConfig = {
 
 const MAX_RELATED_PROJECTS = 3
 
-function getRelatedProjects(current: Project) {
-  if (!current.tags?.length) return []
-
-  const currentTags = new Set(current.tags.map((tag) => tag.trim()).filter(Boolean))
-  if (currentTags.size === 0) return []
-
-  return allProjects
-    .filter((candidate) => candidate.slug !== current.slug)
-    .map((candidate) => {
-      const candidateTags = new Set((candidate.tags ?? []).map((tag) => tag.trim()).filter(Boolean))
-      let overlap = 0
-      for (const tag of candidateTags) {
-        if (currentTags.has(tag)) {
-          overlap += 1
-        }
-      }
-      return { candidate, overlap }
-    })
-    .filter(({ overlap }) => overlap > 0)
-    .sort((a, b) => {
-      if (b.overlap !== a.overlap) return b.overlap - a.overlap
-      const dateDiff = +new Date(b.candidate.date) - +new Date(a.candidate.date)
-      if (dateDiff !== 0) return dateDiff
-      return a.candidate.title.localeCompare(b.candidate.title)
-    })
-    .slice(0, MAX_RELATED_PROJECTS)
-    .map(({ candidate }) => candidate)
-}
-
 export async function generateStaticParams() {
-  return allProjects.map((project) => ({ slug: project.slug }))
+  return getAllProjects().map((project) => ({ slug: project.slug }))
 }
 
 export function generateMetadata({ params }: PageProps): Metadata {
-  const project = allProjects.find((p) => p.slug === params.slug)
+  const project = getProjectBySlug(params.slug)
   if (!project) return {}
   const ogImage = getOgImageUrl(project.slug)
 
   return {
-    title: project.title,
-    description: project.description,
-    alternates: {
-      canonical: absoluteUrl(`/projects/${project.slug}`),
-    },
-    openGraph: {
+    ...buildMetadata({
+      title: project.title,
+      description: project.description,
+      path: `/projects/${project.slug}`,
+      ogImage,
       type: 'article',
-      url: absoluteUrl(`/projects/${project.slug}`),
-      title: project.title,
-      description: project.description,
-      images: [ogImage],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: project.title,
-      description: project.description,
-      images: [ogImage],
-    },
+      publishedTime: project.date,
+      modifiedTime: project.date,
+      tags: project.tags,
+    }),
+    authors: [{ name: 'Nassim Arifette', url: absoluteUrl('/') }],
   }
 }
 
 export default function ProjectPage({ params }: PageProps) {
-  const project = allProjects.find((p) => p.slug === params.slug)
+  const project = getProjectBySlug(params.slug)
   if (!project) return notFound()
 
-  const relatedProjects = getRelatedProjects(project)
+  const relatedProjects = getRelatedByTags(project, getAllProjects(), MAX_RELATED_PROJECTS)
   const ogImage = getOgImageUrl(project.slug)
 
   const linkEntries = Object.entries(project.links ?? {}) as Array<[
@@ -133,9 +98,13 @@ export default function ProjectPage({ params }: PageProps) {
           {project.tags?.length ? (
             <div className="flex flex-wrap gap-2">
               {project.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="cursor-default">
-                  #{tag}
-                </Badge>
+                <TagLink
+                  key={tag}
+                  tag={tag}
+                  showHash
+                  variant="secondary"
+                  className="transition hover:text-foreground"
+                />
               ))}
             </div>
           ) : null}
