@@ -75,10 +75,10 @@ export function TagBar({
       <button
         type="button"
         onClick={() => onToggle(tag)}
-        className={`rounded-full border px-3 py-1 text-xs transition ${
+        className={`inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-xs font-medium transition [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12 [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-2 ${
           selected
             ? 'border-foreground bg-foreground text-background'
-            : 'border-border bg-muted text-muted-foreground hover:border-foreground/50 hover:text-foreground'
+            : 'border-border bg-muted text-foreground hover:border-foreground/50 hover:text-foreground'
         }`}
         aria-pressed={selected}
       >
@@ -106,7 +106,7 @@ export function TagBar({
             aria-expanded={open}
             aria-labelledby={labelId}
             onClick={() => setOpen((value) => !value)}
-            className="rounded-full border px-3 py-1 text-xs text-muted-foreground hover:border-foreground/50 hover:text-foreground"
+            className="inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-xs font-medium text-foreground transition hover:border-foreground/50 hover:text-foreground [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12 [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-2"
             title="Show all tags"
           >
             +{moreCount} more

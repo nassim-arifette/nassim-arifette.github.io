@@ -31,6 +31,10 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
     project.links?.demo ||
     project.links?.paper ||
     project.links?.pdf
+  const titleLinkClasses =
+    'inline-flex items-center rounded-md px-1 py-1 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:px-2 [@media(pointer:coarse)]:py-2'
+  const actionLinkClasses =
+    'inline-flex min-h-8 items-center gap-1 rounded-md px-2 py-1 transition-colors hover:text-foreground hover:underline [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12 [@media(pointer:coarse)]:px-3 [@media(pointer:coarse)]:py-2'
 
   return (
     <article
@@ -41,20 +45,17 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
         className,
       )}
     >
-      {project.url ? (
-        <Link
-          href={project.url}
-          className="absolute inset-0 z-10"
-          aria-label={`View ${project.title}`}
-          prefetch
-        >
-          <span className="sr-only">View {project.title}</span>
-        </Link>
-      ) : null}
-
       <div className="relative flex flex-1 flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-lg font-medium leading-tight">{project.title}</h3>
+          <h3 className="text-lg font-medium leading-tight">
+            {project.url ? (
+              <Link href={project.url} className={titleLinkClasses} prefetch>
+                {project.title}
+              </Link>
+            ) : (
+              project.title
+            )}
+          </h3>
           <div className="flex shrink-0 flex-col items-end justify-center gap-1 leading-none text-right min-w-[120px]">
             <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(project.date)}</span>
             {placementLabel ? (
@@ -93,7 +94,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
               href={project.links.github}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 transition-colors hover:text-foreground hover:underline"
+              className={actionLinkClasses}
             >
               <Github size={16} /> GitHub
             </a>
@@ -103,7 +104,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
               href={project.links.website}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 transition-colors hover:text-foreground hover:underline"
+              className={actionLinkClasses}
             >
               <ExternalLink size={16} /> Website
             </a>
@@ -113,7 +114,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
               href={project.links.demo}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 transition-colors hover:text-foreground hover:underline"
+              className={actionLinkClasses}
             >
               <ExternalLink size={16} /> Demo
             </a>
@@ -123,7 +124,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
               href={project.links.paper}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 transition-colors hover:text-foreground hover:underline"
+              className={actionLinkClasses}
             >
               <FileText size={16} /> Paper
             </a>
@@ -133,7 +134,7 @@ export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) 
               href={project.links.pdf}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 transition-colors hover:text-foreground hover:underline"
+              className={actionLinkClasses}
             >
               <FileDown size={16} /> PDF
             </a>
