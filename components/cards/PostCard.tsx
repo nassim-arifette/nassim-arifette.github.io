@@ -7,12 +7,11 @@ import { TagLink } from '@/components/tags/TagLink'
 export function PostCard({ post }: { post: Post }) {
   const preview = getPreviewText(post.body?.raw, post.description)
   const seriesPart = getSeriesPartForPostSlug(post.slug)
+  const titleLinkClasses =
+    'inline-flex items-center rounded-md px-1 py-1 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:px-2 [@media(pointer:coarse)]:py-2'
 
   return (
     <article className="group relative block overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg">
-      <Link href={post.url} className="absolute inset-0 z-10" aria-label={`Read ${post.title}`}>
-        <span className="sr-only">Read {post.title}</span>
-      </Link>
       <div className="relative">
         {seriesPart ? (
           <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
@@ -26,7 +25,11 @@ export function PostCard({ post }: { post: Post }) {
           </div>
         ) : null}
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-          <h3 className="text-lg font-medium leading-tight">{post.title}</h3>
+          <h3 className="text-lg font-medium leading-tight">
+            <Link href={post.url} className={titleLinkClasses}>
+              {post.title}
+            </Link>
+          </h3>
           <span className="shrink-0 text-xs text-muted-foreground sm:text-right">
             {new Date(post.date).toLocaleDateString()}
           </span>
