@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { ProjectCard } from '@/components/cards/ProjectCard'
 import { PostCard } from '@/components/cards/PostCard'
 import { absoluteUrl } from '@/lib/seo'
-import { HousePortal } from '@/components/house/HousePortal'
 import { buildMetadata } from '@/lib/metadata'
 import { getOgImageUrl } from '@/lib/og'
 import { getAllProjects, getPublishedPosts } from '@/lib/content'
@@ -94,62 +93,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <HousePortal
-        projects={projectItems.map((p) => ({
-          slug: p.slug,
-          title: p.title,
-          description: p.description,
-          url: p.url,
-          tags: p.tags ?? [],
-          placement: p.placement,
-          winner: p.winner,
-          date: p.date,
-        }))}
-        hackathons={hackathonProjects.map((p) => ({
-          slug: p.slug,
-          title: p.title,
-          description: p.description,
-          url: p.url,
-          tags: p.tags ?? [],
-          placement: p.placement,
-          winner: p.winner,
-          date: p.date,
-        }))}
-      />
-
-      <section className="space-y-4" id="quick-links">
-        <h2 className="text-2xl font-semibold">Quick links</h2>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Link href="/projects" className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50">
-            All projects
-          </Link>
-          <Link href="/blog" className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50">
-            All blog posts
-          </Link>
-          <Link href="/tags" className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50">
-            All tags
-          </Link>
-          <Link href="/hackathons?winners=1" className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50">
-            Winning hackathons
-          </Link>
-          {projects[0] ? (
-            <Link
-              href={projects[0].url}
-              className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50"
-            >
-              Featured: {projects[0].title}
-            </Link>
-          ) : null}
-          {posts[0] ? (
-            <Link
-              href={posts[0].url}
-              className="rounded-md border px-3 py-1.5 transition hover:border-foreground/50"
-            >
-              Latest post: {posts[0].title}
-            </Link>
-          ) : null}
-        </div>
-      </section>
+      {/* Tiny world mini-game temporarily removed; re-enable <HousePortal /> when ready. */}
+      {/* Quick links section temporarily removed; restore once final destinations are set. */}
 
       <section className="space-y-6" id="projects">
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
