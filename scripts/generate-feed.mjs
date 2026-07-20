@@ -7,9 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 
-const DEFAULT_SITE_URL = "https://https://nassim-arifette.github.io";
-const siteTitle = "Personal Site";
-const siteDescription = "Clean, fast personal site built with Next.js";
+const DEFAULT_SITE_URL = "https://nassim-arifette.github.io";
+const siteTitle = "Nassim Arifette";
+const siteDescription = "Research notes and projects in machine learning, computer vision, and medical imaging.";
 const siteAuthorName = "Nassim Arifette";
 
 function getEnv(key, fallback = "") {
@@ -41,7 +41,7 @@ async function loadPosts() {
     return Array.isArray(allPosts) ? allPosts : [];
   } catch (error) {
     throw new Error(
-      `Unable to load Contentlayer data. Did you run "next build" first?\n${
+      `Unable to load Contentlayer data. Run "npm run content:build" first.\n${
         error instanceof Error ? error.message : error
       }`
     );

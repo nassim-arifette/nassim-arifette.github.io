@@ -2,6 +2,7 @@
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Search } from 'lucide-react'
 import type { Project } from 'contentlayer/generated'
 import { ProjectCard } from '@/components/cards/ProjectCard'
 import { TagBar } from '@/components/filters/TagBar'
@@ -134,13 +135,10 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return
       const target = event.target as HTMLElement | null
-      const isEditable =
-        target?.tagName === 'INPUT' ||
-        target?.tagName === 'TEXTAREA' ||
-        target?.hasAttribute('contenteditable')
+      const isInteractive = target?.closest('a, button, input, textarea, select, [contenteditable]') != null
 
       if (event.key === '/') {
-        if (isEditable && target !== searchInputRef.current) return
+        if (isInteractive && target !== searchInputRef.current) return
         event.preventDefault()
         if (document.activeElement === searchInputRef.current && query) {
           setQuery('')
@@ -155,7 +153,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
       const results = filteredProjectsRef.current
 
       if ((key === 'j' || key === 'k') && results.length > 0) {
-        if (isEditable && target !== searchInputRef.current) return
+        if (isInteractive) return
         event.preventDefault()
         setActiveIndex((current) => {
           if (key === 'j') {
@@ -170,7 +168,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
       }
 
       if (event.key === 'Enter' && results.length > 0) {
-        if (isEditable && target !== searchInputRef.current) return
+        if (isInteractive) return
         event.preventDefault()
         const selected = results[activeIndex] ?? results[0]
         if (selected) {
@@ -184,9 +182,9 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
   }, [activeIndex, router, query])
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col">
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 border-b border-border/70 pb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex flex-col">
           <label htmlFor="projects-search" className="sr-only">
             Search projects
           </label>
@@ -196,9 +194,11 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
             ref={searchInputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search projects..."
-            className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-72"
+            placeholder="Search title, method, or field"
+            className="h-11 w-full border-0 border-b border-border bg-transparent pl-8 pr-10 text-sm outline-none transition focus:border-foreground focus-visible:ring-0 sm:w-80"
           />
+          <Search aria-hidden="true" className="absolute bottom-3 left-0 text-muted-foreground" size={16} />
+          <kbd className="pointer-events-none absolute bottom-2.5 right-1 hidden border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground sm:block">/</kbd>
         </div>
         {(query || activeTags.length > 0) && (
           <button
@@ -220,11 +220,14 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
           label="Filter projects by tag"
         />
       )}
-      <div aria-live="polite">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground" aria-live="polite">
+        {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projects'} shown
+      </p>
+      <div>
         {filteredProjects.length === 0 ? (
           <p className="text-sm text-muted-foreground">No projects match your filters.</p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
             {filteredProjects.map((project, index) => {
               const selected = index === activeIndex
               return (
@@ -238,10 +241,9 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
                     project={project}
                     idAnchor
                     className={
-                      selected
-                        ? 'h-full ring-2 ring-foreground/60 ring-offset-2 ring-offset-background'
-                        : 'h-full'
+                      selected ? 'h-full bg-accent/65 ring-1 ring-inset ring-foreground/30' : 'h-full'
                     }
+                    index={index + 1}
                   />
                 </div>
               )

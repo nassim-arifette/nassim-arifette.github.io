@@ -50,7 +50,7 @@ export function getAllProjects() {
   return getIndex().projects
 }
 
-export function getPostBySlug(slug: string) {
+function getPostBySlug(slug: string) {
   return getIndex().postsBySlug.get(slug)
 }
 

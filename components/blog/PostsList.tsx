@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Post } from 'contentlayer/generated'
 import { TagBar } from '@/components/filters/TagBar'
 import { normalizeText } from '@/lib/search'
+import { formatDate } from '@/lib/mdx'
 
 type SeriesMeta = {
   seriesTitle: string
@@ -272,9 +273,7 @@ export function PostsList({ posts, seriesInfo }: PostsListProps) {
                     <Link href={post.url} className="block">
                       <div className="flex items-baseline gap-3">
                         <h2 className="text-xl font-medium group-hover:underline">{post.title}</h2>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(post.date).toLocaleDateString()}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{formatDate(post.date)}</span>
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">{post.description}</p>
                     </Link>
