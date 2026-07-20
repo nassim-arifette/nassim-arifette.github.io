@@ -47,15 +47,14 @@ function sortPostsBySeriesOrder(posts: Post[]) {
 }
 
 function buildSeriesIndex(): SeriesIndex {
-  const postsBySlug = new Map<string, Post>()
-  for (const post of allPosts) {
-    postsBySlug.set(post.slug, post)
-  }
+  const postsBySlug = new Map<string, Post>(allPosts.map((post) => [post.slug, post] as const))
+  const seriesSlugs = new Set(allSeries.map((series) => series.slug))
 
   const postsBySeriesSlug = new Map<string, Post[]>()
   for (const post of allPosts) {
     const seriesSlug = getSeriesSlugFromPostSlug(post.slug)
     if (!seriesSlug) continue
+    if (!seriesSlugs.has(seriesSlug)) continue
     const list = postsBySeriesSlug.get(seriesSlug)
     if (list) {
       list.push(post)
@@ -76,7 +75,9 @@ function buildSeriesIndex(): SeriesIndex {
     const resolvedParts: SeriesPartResolved[] = []
 
     const explicitParts = series.parts ?? []
-    if (explicitParts.length > 0) {
+    const hasExplicitParts = explicitParts.length > 0
+
+    if (hasExplicitParts) {
       explicitParts.forEach((part, index) => {
         const resolvedSlug = resolveSeriesPartSlug(seriesSlug, part.slug)
         const post = postsBySlug.get(resolvedSlug)
@@ -107,8 +108,12 @@ function buildSeriesIndex(): SeriesIndex {
       })
     }
 
-    for (const post of sortedSeriesPosts) {
-      if (usedSlugs.has(post.slug)) continue
+    // Default to including every post in the series folder when no manual order is provided.
+    const postsToAutoInclude = hasExplicitParts
+      ? sortedSeriesPosts.filter((post) => !usedSlugs.has(post.slug))
+      : sortedSeriesPosts
+
+    for (const post of postsToAutoInclude) {
       const isComingSoon = post.published === false
       const readingMinutes = post.body?.raw ? estimateReadingTimeMinutes(post.body.raw) : undefined
       resolvedParts.push({
@@ -191,8 +196,4 @@ export function getSeriesNavigation(slug: string): SeriesNavigation | undefined 
     next,
   }
   return navigation
-}
-
-export function resetSeriesCache() {
-  cachedIndex = null
 }

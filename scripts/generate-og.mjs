@@ -20,7 +20,7 @@ async function loadContentlayer() {
     return { posts: allPosts, projects: allProjects }
   } catch (error) {
     throw new Error(
-      `Unable to load Contentlayer data from .contentlayer/generated/index.mjs. Run "next build" first.\n${
+      `Unable to load Contentlayer data from .contentlayer/generated/index.mjs. Run "npm run content:build" first.\n${
         error instanceof Error ? error.message : error
       }`,
     )
@@ -263,6 +263,16 @@ async function writeOgImage(targetPath, tree) {
   await fs.writeFile(targetPath, png)
 }
 
+async function removeStaleOgImages(ogDir, expectedBasenames) {
+  const entries = await fs.readdir(ogDir, { withFileTypes: true })
+  await Promise.all(
+    entries
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.png'))
+      .filter((entry) => !expectedBasenames.has(entry.name.slice(0, -4)))
+      .map((entry) => fs.unlink(path.join(ogDir, entry.name))),
+  )
+}
+
 async function generateAll() {
   const { posts, projects } = await loadContentlayer()
   const ogDir = path.join(rootDir, 'public', 'og')
@@ -291,6 +301,7 @@ async function generateAll() {
     return
   }
 
+  const expectedBasenames = new Set([RESERVED_BASENAME])
   let written = 0
   for (const entry of entries) {
     const base = safeSlug(entry.slug || `og-${written + 1}`)
@@ -302,8 +313,11 @@ async function generateAll() {
     const filename = `${base}.png`
     const targetPath = path.join(ogDir, filename)
     await writeOgImage(targetPath, tree)
+    expectedBasenames.add(base)
     written += 1
   }
+
+  await removeStaleOgImages(ogDir, expectedBasenames)
 
   console.log(`Generated ${written} social image${written === 1 ? '' : 's'} in ${path.relative(rootDir, ogDir)}`)
 }

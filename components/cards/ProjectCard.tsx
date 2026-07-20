@@ -1,155 +1,47 @@
 import Link from 'next/link'
-import { Github, ExternalLink, FileText, FileDown } from 'lucide-react'
+import { ArrowUpRight, Github, ExternalLink, FileText, FileDown } from 'lucide-react'
 import type { Project } from 'contentlayer/generated'
 import { formatDate } from '@/lib/mdx'
 import { getPreviewText } from '@/lib/preview'
 import { cn } from '@/lib/utils'
 import { TagLink } from '@/components/tags/TagLink'
+import { isProjectLinkReady } from '@/lib/project-links'
 
 type Links = { github?: string; demo?: string; paper?: string; pdf?: string; website?: string }
+type ProjectCardProject = Pick<Project, 'title' | 'date' | 'description' | 'tags' | 'links' | 'slug' | 'url' | 'body' | 'placement' | 'winner'> & { links?: Links }
+type ProjectCardProps = { project: ProjectCardProject; idAnchor?: boolean; className?: string; index?: number }
 
-type ProjectCardProject = Pick<
-  Project,
-  'title' | 'date' | 'description' | 'tags' | 'links' | 'slug' | 'url' | 'body' | 'placement' | 'winner'
-> & {
-  links?: Links
-}
-
-type ProjectCardProps = {
-  project: ProjectCardProject
-  idAnchor?: boolean
-  className?: string
-}
-
-export function ProjectCard({ project, idAnchor, className }: ProjectCardProps) {
+export function ProjectCard({ project, idAnchor, className, index }: ProjectCardProps) {
   const preview = getPreviewText(project.body?.raw, project.description)
   const isWinner = project.winner === true
   const placementLabel = isWinner ? '🏆 Winner' : project.placement
-  const hasLinks =
-    project.links?.github ||
-    project.links?.website ||
-    project.links?.demo ||
-    project.links?.paper ||
-    project.links?.pdf
-  const titleLinkClasses =
-    'inline-flex items-center rounded-md px-1 py-1 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:px-2 [@media(pointer:coarse)]:py-2'
-  const actionLinkClasses =
-    'inline-flex min-h-8 items-center gap-1 rounded-md px-2 py-1 transition-colors hover:text-foreground hover:underline [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12 [@media(pointer:coarse)]:px-3 [@media(pointer:coarse)]:py-2'
+  const hasLinks = Object.values(project.links ?? {}).some(isProjectLinkReady)
+  const actionClasses = 'inline-flex min-h-8 items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground [@media(pointer:coarse)]:min-h-11'
 
   return (
-    <article
-      id={idAnchor ? project.slug : undefined}
-      className={cn(
-        'group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg',
-        isWinner ? 'border-amber-400 shadow-amber-400/20' : '',
-        className,
-      )}
-    >
-      <div className="relative flex flex-1 flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-lg font-medium leading-tight">
-            {project.url ? (
-              <Link href={project.url} className={titleLinkClasses} prefetch>
-                {project.title}
-              </Link>
-            ) : (
-              project.title
-            )}
+    <article id={idAnchor ? project.slug : undefined} className={cn('group relative flex h-full flex-col bg-card p-6 transition-colors duration-300 hover:bg-accent/45 sm:p-7', isWinner ? 'ring-1 ring-inset ring-amber-400/70' : '', className)}>
+      <div className="flex flex-1 flex-col gap-5">
+        <div className="flex items-center justify-between text-xs uppercase tracking-[0.14em] text-muted-foreground">
+          <span>{index ? String(index).padStart(2, '0') : 'Project'}</span><span>{formatDate(project.date)}</span>
+        </div>
+        <div className="flex items-start justify-between gap-3 pr-8">
+          <h3 className="text-xl font-semibold leading-tight tracking-[-0.025em]">
+            {project.url ? <Link href={project.url} className="transition-colors hover:text-[hsl(var(--signal))]" prefetch>{project.title}</Link> : project.title}
           </h3>
-          <div className="flex shrink-0 flex-col items-end justify-center gap-1 leading-none text-right min-w-[120px]">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(project.date)}</span>
-            {placementLabel ? (
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide',
-                  isWinner
-                    ? 'bg-amber-300 text-black border-amber-400 shadow-amber-500/30'
-                    : 'bg-muted text-foreground border-border shadow-inner',
-                )}
-              >
-                {placementLabel}
-              </span>
-            ) : null}
-          </div>
+          {placementLabel ? <span className={cn('shrink-0 border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide', isWinner ? 'border-amber-400 bg-amber-300 text-black' : 'border-border bg-muted text-foreground')}>{placementLabel}</span> : null}
         </div>
-        <p className="text-sm text-muted-foreground">{project.description}</p>
-        {project.tags?.length ? (
-          <div className="relative z-20 flex flex-wrap gap-2">
-            {project.tags.map((tag) => (
-              <TagLink
-                key={tag}
-                tag={tag}
-                variant="secondary"
-                className="transition hover:text-foreground"
-              />
-            ))}
-          </div>
-        ) : null}
+        <p className="text-sm leading-relaxed text-muted-foreground">{project.description}</p>
+        {preview && preview !== project.description ? <p className="line-clamp-3 text-sm leading-relaxed text-foreground/75">{preview}</p> : null}
+        {project.tags?.length ? <div className="flex flex-wrap gap-2">{project.tags.slice(0, 4).map((tag) => <TagLink key={tag} tag={tag} variant="secondary" className="transition hover:text-foreground" />)}</div> : null}
       </div>
-
-      {hasLinks && (
-        <div className="relative z-20 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-          {project.links?.github && (
-            <a
-              href={project.links.github}
-              target="_blank"
-              rel="noreferrer"
-              className={actionLinkClasses}
-            >
-              <Github size={16} /> GitHub
-            </a>
-          )}
-          {project.links?.website && (
-            <a
-              href={project.links.website}
-              target="_blank"
-              rel="noreferrer"
-              className={actionLinkClasses}
-            >
-              <ExternalLink size={16} /> Website
-            </a>
-          )}
-          {project.links?.demo && (
-            <a
-              href={project.links.demo}
-              target="_blank"
-              rel="noreferrer"
-              className={actionLinkClasses}
-            >
-              <ExternalLink size={16} /> Demo
-            </a>
-          )}
-          {project.links?.paper && (
-            <a
-              href={project.links.paper}
-              target="_blank"
-              rel="noreferrer"
-              className={actionLinkClasses}
-            >
-              <FileText size={16} /> Paper
-            </a>
-          )}
-          {project.links?.pdf && (
-            <a
-              href={project.links.pdf}
-              target="_blank"
-              rel="noreferrer"
-              className={actionLinkClasses}
-            >
-              <FileDown size={16} /> PDF
-            </a>
-          )}
-        </div>
-      )}
-
-      {preview && (
-        <div className="pointer-events-none absolute inset-0 z-20 translate-y-2 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 print:hidden">
-          <div className="flex h-full flex-col justify-between rounded-lg border border-border/80 bg-background/95 p-5 text-sm text-muted-foreground shadow-lg backdrop-blur">
-            <p className="max-h-40 overflow-hidden">{preview}</p>
-            <span className="mt-4 text-xs font-medium text-foreground/70">View project →</span>
-          </div>
-        </div>
-      )}
+      {hasLinks ? <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 pt-4 pr-10">
+        {isProjectLinkReady(project.links?.github) && <a href={project.links.github} target="_blank" rel="noreferrer" className={actionClasses}><Github size={14} /> GitHub</a>}
+        {isProjectLinkReady(project.links?.website) && <a href={project.links.website} target="_blank" rel="noreferrer" className={actionClasses}><ExternalLink size={14} /> Website</a>}
+        {isProjectLinkReady(project.links?.demo) && <a href={project.links.demo} target="_blank" rel="noreferrer" className={actionClasses}><ExternalLink size={14} /> Demo</a>}
+        {isProjectLinkReady(project.links?.paper) && <a href={project.links.paper} target="_blank" rel="noreferrer" className={actionClasses}><FileText size={14} /> Paper</a>}
+        {isProjectLinkReady(project.links?.pdf) && <a href={project.links.pdf} target="_blank" rel="noreferrer" className={actionClasses}><FileDown size={14} /> Report</a>}
+      </div> : null}
+      {project.url ? <Link href={project.url} aria-label={`View ${project.title}`} className="absolute bottom-6 right-6 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background transition group-hover:border-foreground group-hover:bg-foreground group-hover:text-background"><ArrowUpRight size={16} /></Link> : null}
     </article>
   )
 }
