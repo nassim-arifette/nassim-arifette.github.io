@@ -23,10 +23,19 @@ export default function Header() {
     setMobileOpen(false)
   }, [pathname])
 
+  useEffect(() => {
+    if (!mobileOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileOpen(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [mobileOpen])
+
   return (
-    <header className="no-print sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between">
-        <Link href="/" className="font-medium text-sm sm:text-base">Nassim Arifette</Link>
+    <header className="no-print sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md">
+      <div className="container flex h-16 items-center justify-between">
+        <Link href="/" className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.12em]"><span className="inline-flex h-7 w-7 items-center justify-center bg-foreground text-[10px] text-background">NA</span><span className="hidden sm:inline">Nassim Arifette</span></Link>
         <div className="flex items-center gap-3">
           <nav className="hidden items-center gap-6 text-sm md:flex">
             {nav.map((item) => {
@@ -35,7 +44,8 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={active ? 'text-foreground' : 'text-muted-foreground transition hover:text-foreground'}
+                  aria-current={active ? 'page' : undefined}
+                  className={active ? 'border-b border-[hsl(var(--signal))] pb-1 text-foreground' : 'pb-1 text-muted-foreground transition hover:text-foreground'}
                 >
                   {item.label}
                 </Link>
@@ -50,7 +60,7 @@ export default function Header() {
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border hover:border-foreground/40"
               onClick={() => setMobileOpen((prev) => !prev)}
-              aria-label="Toggle navigation"
+              aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
             >
@@ -68,6 +78,7 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? 'page' : undefined}
                   className={active ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}
                 >
                   {item.label}

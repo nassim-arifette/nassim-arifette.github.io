@@ -15,14 +15,6 @@ import {
   transformerNotationFocus,
 } from '@shikijs/transformers'
 
-const prettyCodeOptions = {
-  // Force the dark theme in both modes so syntax colors stay readable on black
-  theme: {
-    light: 'dark-plus',
-    dark: 'dark-plus',
-  },
-}
-
 // Allow pretty-code data attributes (and inline styles) while keeping sanitation tight
 const sanitizeSchema = structuredClone(defaultSchema)
 sanitizeSchema.attributes ??= {}
@@ -166,7 +158,7 @@ const Series = defineDocumentType(() => ({
   fields: {
     title: { type: 'string', required: true },
     description: { type: 'string', required: true },
-    parts: { type: 'list', of: SeriesPart },
+    parts: { type: 'list', of: SeriesPart, required: false },
     heroNote: { type: 'string' },
   },
   computedFields: {

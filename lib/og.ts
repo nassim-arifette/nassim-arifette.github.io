@@ -5,7 +5,7 @@ import { absoluteUrl } from './seo'
 const OG_PUBLIC_DIR = path.join(process.cwd(), 'public', 'og')
 const DEFAULT_OG_BASENAME = 'default'
 
-export function sanitizeOgSlug(slug: string) {
+function sanitizeOgSlug(slug: string) {
   return slug ? slug.replace(/[^a-zA-Z0-9-_]/g, '-') : ''
 }
 

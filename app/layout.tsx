@@ -36,8 +36,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider>
           <div className="min-h-screen flex flex-col">
+            <a href="#main-content" className="no-print fixed left-4 top-3 z-50 -translate-y-20 bg-foreground px-4 py-2 text-sm font-semibold text-background transition-transform focus:translate-y-0">Skip to content</a>
             <Header />
-            <main className="container flex-1 py-10">{children}</main>
+            <main id="main-content" className="container flex-1 py-10">{children}</main>
             <Footer />
           </div>
         </ThemeProvider>

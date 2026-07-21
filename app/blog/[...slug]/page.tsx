@@ -12,7 +12,7 @@ import { findSeriesBySlug, getSeriesNavigation } from '@/lib/series'
 import { SeriesBanner, SeriesPartsDesktop, SeriesPartsMobile } from '@/components/series/SeriesNavigation'
 import { SeriesProgressRecorder } from '@/components/series/SeriesProgressRecorder'
 import { buildMetadata } from '@/lib/metadata'
-import { getPublishedPostBySlug, getPublishedPosts } from '@/lib/content'
+import { getAllPosts, getPublishedPostBySlug, getPublishedPosts } from '@/lib/content'
 import { getRelatedByTags } from '@/lib/related'
 import { TagLink } from '@/components/tags/TagLink'
 import { absoluteUrl } from '@/lib/seo'
@@ -22,7 +22,7 @@ interface PageProps { params: { slug: string[] } }
 const MAX_RELATED_POSTS = 3
 
 export async function generateStaticParams() {
-  return getPublishedPosts().map((post) => ({ slug: post.slug.split('/') }))
+  return getAllPosts().map((post) => ({ slug: post.slug.split('/') }))
 }
 
 export function generateMetadata({ params }: PageProps): Metadata {
