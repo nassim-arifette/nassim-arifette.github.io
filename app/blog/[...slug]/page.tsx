@@ -86,19 +86,27 @@ export default function PostPage({ params }: PageProps) {
 
   return (
     <>
-      <ReadingProgressBar />
-      <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(220px,1fr)] lg:gap-12 print:block">
-        <article className="prose print:max-w-none">
+      <ReadingProgressBar targetId="post-article" />
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.28fr)] lg:gap-16 print:block">
+        <article id="post-article" className="prose min-w-0 max-w-[78ch] print:max-w-none">
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
           />
-          <h1>{post.title}</h1>
-          <p className="text-sm !mt-0 !mb-6 text-muted-foreground">
-            <time dateTime={post.date}>{formattedDate}</time>
-            <span aria-hidden="true" className="mx-1">|</span>
-            <span>{readingTimeMinutes} min read</span>
-          </p>
+          <header className="not-prose mb-10 border-b border-border pb-9 pt-3 sm:mb-12 sm:pb-11">
+            <p className="manuscript-label text-signal">Research note</p>
+            <h1 className="mt-5 max-w-[18ch] text-[clamp(2.8rem,6vw,5.5rem)] font-medium leading-[0.96] tracking-[-0.045em]">
+              {post.title}
+            </h1>
+            <p className="mt-5 max-w-[65ch] text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+              {post.description}
+            </p>
+            <p className="mt-5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <time dateTime={post.date}>{formattedDate}</time>
+              <span aria-hidden="true" className="mx-2">·</span>
+              <span>{readingTimeMinutes} minute read</span>
+            </p>
+          </header>
           {seriesNavigation && seriesData ? (
             <div className="print:hidden">
               <SeriesBanner navigation={seriesNavigation} seriesData={seriesData} />
@@ -128,22 +136,25 @@ export default function PostPage({ params }: PageProps) {
           ) : null}
           {headings.length ? (
             <div className="not-prose my-8 lg:hidden print:hidden">
-              <TableOfContents headings={headings} />
+              <TableOfContents headings={headings} defaultCollapsed />
             </div>
           ) : null}
           <Mdx code={post.body.code} />
           {relatedPosts.length ? (
-            <section className="not-prose mt-12 space-y-4 print:hidden">
-              <h2 className="text-xl font-semibold">Related posts</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+            <section className="not-prose mt-16 space-y-5 border-t border-border pt-9 print:hidden">
+              <div>
+                <p className="manuscript-label text-signal">Continue reading</p>
+                <h2 className="mt-2 text-3xl font-medium">Related notes</h2>
+              </div>
+              <div className="divide-y divide-border border-y border-border">
                 {relatedPosts.map((related) => (
                   <Link
                     key={related.slug}
                     href={related.url}
-                    className="group block rounded-lg border bg-card p-5 transition duration-200 ease-out hover:-translate-y-1 hover:border-foreground/40 hover:shadow-lg"
+                    className="group block py-5 transition-colors hover:text-signal"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-lg font-medium leading-tight group-hover:underline">
+                      <h3 className="text-xl font-medium leading-tight group-hover:underline">
                         {related.title}
                       </h3>
                       <span className="shrink-0 text-xs text-muted-foreground">
@@ -160,7 +171,7 @@ export default function PostPage({ params }: PageProps) {
                         ))}
                       </div>
                     ) : null}
-                    <span className="mt-4 inline-flex items-center text-xs font-medium text-primary/70">
+                    <span className="mt-4 inline-flex items-center text-xs font-semibold uppercase tracking-[0.1em] text-signal">
                       Continue reading →
                     </span>
                   </Link>
@@ -171,7 +182,7 @@ export default function PostPage({ params }: PageProps) {
         </article>
         {(seriesNavigation && seriesData) || headings.length ? (
           <aside className="relative hidden lg:block print:hidden">
-            <div className="sticky top-24 space-y-6">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] space-y-6 overflow-y-auto overscroll-contain pr-2">
               {seriesNavigation && seriesData ? (
                 <SeriesPartsDesktop seriesData={seriesData} currentSlug={post.slug} />
               ) : null}

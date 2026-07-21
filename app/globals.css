@@ -4,67 +4,69 @@
 
 @layer base {
   :root {
-    --background: 42 33% 97%;
-    --foreground: 223 28% 13%;
-    --signal: 12 74% 39%;
+    --background: 97.2% 0.015 83;
+    --foreground: 20.5% 0.025 257;
+    --signal: 49% 0.16 258;
+    --annotation: 66% 0.12 70;
 
-    --card: 42 33% 97%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card: 98.1% 0.011 83;
+    --card-foreground: 20.5% 0.025 257;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover: 98.6% 0.01 83;
+    --popover-foreground: 20.5% 0.025 257;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 27% 0.075 258;
+    --primary-foreground: 97.2% 0.015 83;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 93.8% 0.018 83;
+    --secondary-foreground: 24% 0.04 257;
 
-    --muted: 38 20% 92%;
-    --muted-foreground: 220 10% 42%;
+    --muted: 93.5% 0.016 83;
+    --muted-foreground: 46% 0.03 257;
 
-    --accent: 36 25% 91%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 91.5% 0.025 82;
+    --accent-foreground: 24% 0.04 257;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 53% 0.19 27;
+    --destructive-foreground: 97.5% 0.012 83;
 
-    --border: 33 16% 82%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 82.5% 0.025 78;
+    --input: 85% 0.022 80;
+    --ring: 49% 0.16 258;
 
-    --radius: 0.75rem;
+    --radius: 0.3rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 40 24% 93%;
-    --signal: 16 88% 64%;
+    --background: 17.5% 0.026 258;
+    --foreground: 91.5% 0.018 82;
+    --signal: 71% 0.13 253;
+    --annotation: 72% 0.105 72;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 20% 0.028 258;
+    --card-foreground: 91.5% 0.018 82;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 22% 0.03 258;
+    --popover-foreground: 91.5% 0.018 82;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 88% 0.022 82;
+    --primary-foreground: 18% 0.028 258;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 24% 0.032 258;
+    --secondary-foreground: 91% 0.018 82;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 24% 0.03 258;
+    --muted-foreground: 70% 0.025 250;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 27% 0.038 255;
+    --accent-foreground: 93% 0.018 82;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 58% 0.18 27;
+    --destructive-foreground: 96% 0.014 82;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 33% 0.035 255;
+    --input: 31% 0.034 255;
+    --ring: 71% 0.13 253;
   }
 }
 
@@ -74,19 +76,109 @@
   }
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background-image: radial-gradient(circle at 12% 5%, hsl(var(--signal) / 0.045), transparent 28rem);
+    min-width: 20rem;
+    background-image:
+      radial-gradient(circle at 8% 0%, oklch(var(--signal) / 0.045), transparent 30rem),
+      radial-gradient(circle at 94% 22%, oklch(var(--annotation) / 0.035), transparent 24rem);
     font-feature-settings: "ss01" 1, "cv11" 1;
+    font-kerning: normal;
   }
-  ::selection { background: hsl(var(--signal) / 0.22); }
+  h1,
+  h2,
+  h3 {
+    @apply font-serif;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: oklch(var(--signal) / 0.2);
+  }
+  :where(a, button, input, summary, [tabindex]):focus-visible {
+    outline: 2px solid oklch(var(--ring));
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  .manuscript-label {
+    @apply text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .manuscript-rule {
+    @apply border-t border-border/80;
+  }
+
+  .marginalia {
+    @apply border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground;
+  }
+
+  .editorial-link {
+    @apply inline-flex min-h-11 items-center gap-2 border-b border-current text-sm font-medium text-signal transition-colors hover:text-foreground;
+  }
 }
 
 
 /* Typography defaults */
 .prose {
-  @apply prose-neutral dark:prose-invert max-w-none;
+  @apply prose-neutral dark:prose-invert;
+  max-width: 74ch;
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.prose :where(h1, h2, h3, h4):not(:where([class~="not-prose"] *)) {
+  font-family: var(--font-editorial), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.prose :where(p, li):not(:where([class~="not-prose"] *)) {
+  color: oklch(var(--foreground) / 0.86);
+}
+
+.prose :where(blockquote):not(:where([class~="not-prose"] *)) {
+  border-color: oklch(var(--signal));
+  color: oklch(var(--muted-foreground));
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: 1.12em;
+  font-weight: 400;
+}
+
+.prose :where(table):not(:where([class~="not-prose"] *)) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose :where(.katex-display):not(:where([class~="not-prose"] *)) {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25rem;
+  overscroll-behavior-inline: contain;
 }
 
 /* Syntax highlighting (rehype-pretty-code) */
@@ -112,7 +204,7 @@ html:not(.dark) [data-rehype-pretty-code-fragment] code[data-theme*='light'] {
 [data-rehype-pretty-code-fragment] pre {
   background: var(--shiki-color-background) !important;
   color: var(--shiki-color-text) !important;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid oklch(var(--border));
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
   overflow-x: auto;
@@ -123,7 +215,7 @@ html:not(.dark) [data-rehype-pretty-code-fragment] code[data-theme*='light'] {
 [data-rehype-pretty-code-fragment] > code {
   background: var(--shiki-color-background) !important;
   color: var(--shiki-color-text) !important;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid oklch(var(--border));
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
   display: grid;
@@ -135,10 +227,10 @@ html:not(.dark) [data-rehype-pretty-code-figure] pre,
 html:not(.dark) [data-rehype-pretty-code-fragment] pre,
 html:not(.dark) [data-rehype-pretty-code-figure] > code,
 html:not(.dark) [data-rehype-pretty-code-fragment] > code {
-  --shiki-color-background: #000000;
-  --shiki-color-text: #f8fafc;
-  background: #000000 !important;
-  color: #f8fafc !important;
+  --shiki-color-background: oklch(18% 0.026 258);
+  --shiki-color-text: oklch(93% 0.015 82);
+  background: oklch(18% 0.026 258) !important;
+  color: oklch(93% 0.015 82) !important;
   border-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -163,17 +255,17 @@ html:not(.dark) [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
 [data-rehype-pretty-code-figure] [data-highlighted-line],
 [data-rehype-pretty-code-fragment] [data-highlighted-line] {
   /* Fallback */
-  background: hsl(var(--accent) / 0.12);
+  background: oklch(var(--accent) / 0.12);
   /* Better contrast if supported */
-  background: color-mix(in oklab, var(--shiki-color-background) 85%, hsl(var(--accent)) 15%);
-  border-left: 2px solid hsl(var(--accent-foreground));
+  background: color-mix(in oklab, var(--shiki-color-background) 85%, oklch(var(--accent)) 15%);
+  border-left: 2px solid oklch(var(--accent-foreground));
 }
 
 /* Inline code (non-pre) */
 :not(pre) > code {
-  background: hsl(var(--muted));
-  color: hsl(var(--foreground));
-  border: 1px solid hsl(var(--border));
+  background: oklch(var(--muted));
+  color: oklch(var(--foreground));
+  border: 1px solid oklch(var(--border));
   border-radius: 0.375rem;
   padding: 0.125rem 0.375rem;
 }
@@ -227,25 +319,27 @@ html:not(.dark) [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
   /* Force light palette even if the runtime theme is dark */
   :root,
   .dark {
-    --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16.3% 35%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --background: 99% 0.005 83;
+    --foreground: 20.5% 0.025 257;
+    --signal: 43% 0.15 258;
+    --annotation: 60% 0.11 70;
+    --card: 99% 0.005 83;
+    --card-foreground: 20.5% 0.025 257;
+    --popover: 99% 0.005 83;
+    --popover-foreground: 20.5% 0.025 257;
+    --primary: 27% 0.075 258;
+    --primary-foreground: 99% 0.005 83;
+    --secondary: 94% 0.012 83;
+    --secondary-foreground: 24% 0.04 257;
+    --muted: 94% 0.012 83;
+    --muted-foreground: 42% 0.028 257;
+    --accent: 93% 0.016 82;
+    --accent-foreground: 24% 0.04 257;
+    --destructive: 48% 0.18 27;
+    --destructive-foreground: 99% 0.005 83;
+    --border: 83% 0.018 78;
+    --input: 86% 0.016 80;
+    --ring: 43% 0.15 258;
   }
 
   /* Hide chrome that isn't part of the printed content */
@@ -269,7 +363,7 @@ html:not(.dark) [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
   h1, h2, h3, .prose h1, .prose h2, .prose h3 {
     break-after: avoid;
   }
-  section, article, header {
+  header {
     break-inside: avoid;
   }
 

@@ -1,420 +1,806 @@
 ---
-title: "A 2D View of Computation: Seely's Approach"
+title: "What Happens to Currying When Beta and Eta Become Computations?"
 date: "2025-12-25"
-description: "Why ordinary categorical semantics forgets evaluation paths, how 2-categories retain them, and a typed Haskell model that makes reductions explicit."
+description: "A worked path through Seely's 2-categorical lambda calculus: from one term with two beta reductions to interchange, laxity, and the adjunction between currying and uncurrying."
 tags: ["category-theory", "computation", "mathematics", "lambda-calculus", "haskell"]
 published: true
 ---
 
-In the usual categorical semantics of the simply typed lambda calculus, types
-are objects and terms are morphisms. Products interpret product types, while
-exponentials interpret function types. This is why **cartesian closed
-categories** are a natural semantic home for typed functional programs.
+Fix a type $O$, a closed function $f:O\Rightarrow O$, and one free input
+$y:O$. Consider the term
 
-There is, however, a deliberate loss of information. The equations of the
-lambda calculus—including $\beta$ and $\eta$—are interpreted as equalities of
-morphisms. Consider the familiar reduction
+$$
+T(y)
+=
+(\lambda u:O.\,u)
+\big((\lambda v:O.\,v)(f\,y)\big).
+$$
 
-$$ (\lambda x.M)\,N \longrightarrow_\beta M[x := N]. $$
+It contains two beta redexes. We can contract the outer one first,
 
-In a one-dimensional categorical model, the term before evaluation and the term
-after evaluation denote the same arrow. The model tells us what the program
-means, but not **how it computed that meaning**. The redex, the rewrite that
-contracts it, and every intermediate program state have disappeared.
+$$
+T(y)
+\Rightarrow_\beta
+(\lambda v.v)(f\,y)
+\Rightarrow_\beta
+f\,y,
+$$
 
-Robert A. G. Seely's proposal in *Modelling Computations: A 2-Categorical
-Framework* (LICS 1987) is to keep this computational dimension. Reductions and
-conversions are promoted from equations to structure.
+or the inner one first,
 
-## From equality to a second dimension
+$$
+T(y)
+\Rightarrow_\beta
+(\lambda u.u)(f\,y)
+\Rightarrow_\beta
+f\,y.
+$$
 
-A strict 2-category has three levels:
+Ordinary beta equality tells us that $T(y)=f\,y$. That statement is correct,
+but it does not tell us that two contractions occurred, or that they can occur
+in either order.
 
-- **objects**, which we read as types;
-- **1-morphisms**, which we read as typed terms in context;
-- **2-morphisms**, which we read as reductions or conversions between terms.
+Robert Seely's 1987 paper
+[*Modelling Computations: A 2-Categorical Framework*](https://www.math.mcgill.ca/~rags/WkAdj/LICS.pdf)
+asks what happens when we refuse to erase that information. His answer changes
+the usual roles of beta and eta. They stop being equations that justify a
+cartesian closed structure and become directed cells that build a
+two-dimensional version of it.
 
-For two programs $f,g : A \to B$, a computation
+After reading this article, you should be able to use the term $T$ to explain
+four points:
 
-$$ \alpha : f \Rightarrow g $$
+1. why a conversion is naturally a 2-cell;
+2. why substitution forces some reduction histories to be identified;
+3. why eta and beta become the unit and counit of an adjunction between
+   currying and uncurrying;
+4. why $E\Rightarrow-$ preserves composition through a beta comparison rather
+   than by equality.
 
-is not merely the assertion $f=g$. It is a directed witness that $f$ computes
-to $g$. Two programs can have the same input and output behaviour while
-retaining different computational histories.
+The intended reader knows typed lambda calculus, substitution, beta and eta,
+and the ordinary idea of currying. Some basic category theory is helpful, but
+the category-theoretic notation needed for the central calculation is explained
+as it appears. No domain theory or 2-category theory is assumed.
 
-There are two ways to compose these computations:
+## 1. What does equality forget?
 
-1. **Vertical composition** chains reductions. If
-   $\alpha:f\Rightarrow g$ and $\beta:g\Rightarrow h$, then
-   $\beta\circ\alpha:f\Rightarrow h$.
-2. **Horizontal composition** places a reduction inside a larger program
-   context. If a subterm reduces, the term containing it can reduce as well.
+Start with the smaller redex
 
-The interchange law states that these two forms of composition cooperate. It
-is the algebraic version of an important implementation principle: local
-rewrites remain valid inside larger programs.
+$$
+(\lambda u:O.\,u)x
+\Rightarrow_\beta
+x.
+$$
 
-## Why Haskell for the executable model?
+In the usual equational theory, we quotient terms by beta conversion. The two
+expressions then represent the same term. In a cartesian closed category, they
+are interpreted by the same morphism.
 
-Lean or Agda would be the strongest choice for machine-checking every theorem.
-For an explanatory implementation, Haskell offers a better balance: algebraic
-data types match the syntax of the lambda calculus, values are immutable,
-pattern matching follows the inference rules, and the host compiler checks the
-model itself.
+This is useful when the question is extensional: do the programs have the same
+result? It is insufficient when the reduction itself matters. Equality retains
+the endpoints and discards the witness between them.
 
-The code below is still a small **syntactic illustration**, not Seely's full
-categorical construction. Unlike the earlier Python version, however, the
-object language is explicitly typed.
+Seely's first move is simple. Keep the typed terms as arrows, but place a new
+kind of arrow between parallel terms:
 
-### Types, terms, and contexts
+$$
+p:
+(\lambda u.u)x
+\Rightarrow_\beta
+x.
+$$
 
-We start with base types and function types. A lambda binder carries its input
-type, which lets us check a term-in-context $\Gamma\vdash M:A$.
+The symbol $p$ is not another program. It is the beta conversion from one
+program expression to another. This gives three levels of structure:
+
+| Lambda calculus | Two-dimensional semantics |
+| --- | --- |
+| a type $A$ | an object |
+| a term $x:B\vdash a:A$ | a 1-cell $a:B\to A$ |
+| a conversion $p:a\Rightarrow b$ | a 2-cell between parallel 1-cells |
+
+The direction $B\to A$ says that the term consumes one free input of type $B$
+and produces a result of type $A$. If a term has several free variables, Seely
+packages their context into a product. The one-input presentation therefore
+does not restrict the programs we can describe.
+
+The mental model is now this: types are boundaries, terms are programs between
+those boundaries, and conversions are computations between programs.
+
+## 2. Why are reduction arrows alone not enough?
+
+Once conversions are kept, they must compose in two ways.
+
+### Chaining steps gives vertical composition
+
+The first composition is familiar. If
+
+$$
+p:a\Rightarrow b
+\qquad\text{and}\qquad
+q:b\Rightarrow c,
+$$
+
+then we can run $p$ followed by $q$:
+
+$$
+q\mathbin{\cdot}p:a\Rightarrow c.
+$$
+
+Each of the two routes from $T(y)$ to $f\,y$ is a vertical composite of two
+beta conversions. The target of the first step must match the source of the
+second.
+
+### Placing a step in a context gives horizontal composition
+
+The second composition comes from substitution. Return to the two open terms
+
+$$
+a(x)=(\lambda u.u)x,
+\qquad
+b(x)=x,
+$$
+
+and their beta conversion $p:a\Rightarrow b$. Now define
+
+$$
+d(y)=(\lambda v.v)(f\,y),
+\qquad
+e(y)=f\,y,
+$$
+
+with the inner conversion $r:d\Rightarrow e$.
+
+Substituting $d(y)$ for $x$ in $a(x)$ produces the running term:
+
+$$
+a[d/x]
+=
+(\lambda u.u)((\lambda v.v)(f\,y))
+=
+T(y).
+$$
+
+The conversion $r$ can also be placed inside the context $(\lambda u.u)[-]$:
+
+$$
+(\lambda u.u)d
+\Rightarrow
+(\lambda u.u)e.
+$$
+
+This is substitution acting on a computation. In 2-category language it is a
+special case of horizontal composition. In general, from
+
+$$
+p:a\Rightarrow b:B\to A
+\qquad\text{and}\qquad
+r:d\Rightarrow e:C\to B,
+$$
+
+substitution constructs
+
+$$
+p*r:
+a[d/x]
+\Rightarrow
+b[e/x].
+$$
+
+The important point is computational: a valid local conversion remains valid
+when a larger term uses it.
+
+## 3. Why must the two paths be identified?
+
+We can now label every step in the two reductions of $T$.
+
+The outer-first route is
+
+$$
+\begin{aligned}
+a[d/x]
+&\xRightarrow{\ p[d/x]\ }
+b[d/x]
+&&\text{contract the outer redex},\\
+&\xRightarrow{\ b[r]\ }
+b[e/x]
+&&\text{then contract the inner redex}.
+\end{aligned}
+$$
+
+The inner-first route is
+
+$$
+\begin{aligned}
+a[d/x]
+&\xRightarrow{\ a[r]\ }
+a[e/x]
+&&\text{move the inner step through the context},\\
+&\xRightarrow{\ p[e/x]\ }
+b[e/x]
+&&\text{then contract the outer redex}.
+\end{aligned}
+$$
+
+Both routes start at $T(y)$ and end at $f\,y$. More is true: each route applies
+the same outer conversion and the same substituted conversion, only in the
+opposite order.
+
+Here $p[d/x]$ means that the term $d$ is substituted into both the source and
+target of the cell $p$. The notation $a[r]$ means that the cell $r$ is placed
+inside the term context $a[-]$; $b[r]$ and $p[e/x]$ are read in the same way.
+The four labels therefore name ordinary substitution operations, now applied
+to conversions as well as terms.
+
+$$
+\begin{array}{ccc}
+a[d/x]
+&\xRightarrow{\ p[d/x]\ }&
+b[d/x]\\
+{\scriptstyle a[r]}\Big\downarrow
+&&
+\Big\downarrow{\scriptstyle b[r]}\\
+a[e/x]
+&\xRightarrow{\ p[e/x]\ }&
+b[e/x]
+\end{array}
+$$
+
+*Figure 1. Interchange identifies the outer-first and inner-first routes. The
+figure answers which scheduling distinction Seely's strict 2-category chooses
+not to retain.*
+
+For composition of terms to act functorially on conversions, the square must
+commute. Seely therefore imposes the equation
+
+$$
+b[r]\mathbin{\cdot}p[d/x]
+=
+p[e/x]\mathbin{\cdot}a[r].
+$$
+
+This is the interchange law in the concrete language of substitution. The
+common 2-cell is the horizontal composite $p*r$.
+
+### A common misconception: 2-cells are raw execution traces
+
+They are not raw traces in Seely's construction. The two sequences above look
+different as schedules, but the 2-category identifies them. More equations are
+added later for naturality and coherence.
+
+Seely's model therefore sits between two extremes:
+
+- ordinary equational semantics erases every conversion between equal terms;
+- a raw trace model distinguishes every sequence of steps;
+- LAMBDA keeps directed conversions, then quotients some sequences so that
+  substitution is compositional.
+
+That middle position is the main conceptual obstacle in the paper. Replacing
+an equality by an arrow is only the beginning. One must also decide which
+arrows count as the same computation.
+
+## 4. What structure have we built?
+
+Seely calls the resulting 2-category **LAMBDA**. Starting from primitive types,
+its types are closed under products and function types:
+
+$$
+A\mathbin{\&}B,
+\qquad
+A\Rightarrow B.
+$$
+
+Its terms use pairing, projections, lambda abstraction, and application. The
+function-type conversions are directed:
+
+$$
+(\lambda x:A.\,m)n
+\Rightarrow_\beta
+m[n/x],
+$$
+
+$$
+c
+\Rightarrow_\eta
+\lambda x:A.\,c(x)
+\qquad
+(x\text{ not free in }c).
+$$
+
+The eta rule may look reversed. Many presentations use eta contraction,
+$\lambda x.c(x)\Rightarrow c$. Seely initially chooses eta expansion because
+the direction will supply the unit of the adjunction in Section 5.
+
+The rest of the construction is compact:
+
+- objects are types;
+- 1-cells are one-input typed terms;
+- 2-cells are directed conversions modulo the equations needed for the
+  2-category laws;
+- 1-cell composition is substitution;
+- vertical composition chains conversions;
+- horizontal composition substitutes conversions.
+
+One technical convention will matter below. Seely treats alpha conversion as
+identity, and he collapses the product beta and eta conversions to identities
+so that the paper can concentrate on function types. Associativity of 1-cell
+composition is inherited from typed substitution. The construction therefore
+does not promote every lambda-calculus equation to a nontrivial 2-cell.
+
+## 5. What becomes of currying?
+
+The endpoint of our running example was $f\,y$. Categorically, application is
+described by evaluation. At the types already fixed in the example, write
+
+$$
+\operatorname{ev}_O:
+(O\Rightarrow O)\mathbin{\&}O
+\longrightarrow
+O,
+$$
+
+with
+
+$$
+\operatorname{ev}_O\langle f,y\rangle=f\,y.
+$$
+
+Currying evaluation turns the stored function into a lambda abstraction:
+
+$$
+K(\operatorname{ev}_O)(f)
+=
+\lambda z:O.\,\operatorname{ev}_O\langle f,z\rangle
+=
+\lambda z:O.\,fz.
+$$
+
+Uncurrying it again recreates an application, and therefore a beta redex:
+
+$$
+\begin{aligned}
+LK(\operatorname{ev}_O)\langle f,y\rangle
+&=
+K(\operatorname{ev}_O)(f)(y)\\
+&=
+(\lambda z:O.\,fz)y\\
+&\Rightarrow_\beta
+f\,y
+=
+\operatorname{ev}_O\langle f,y\rangle.
+\end{aligned}
+$$
+
+The original endpoint has now reappeared for a structural reason: currying
+introduces the abstraction $\lambda z.fz$, and uncurrying exposes the beta
+step that removes it.
+
+In an ordinary cartesian closed category, product with $O$ is left adjoint to
+function space out of $O$. Here $\mathcal C(X,Y)$ means the set of arrows from
+$X$ to $Y$. Saying that the two constructions are adjoint means, at this
+ordinary one-dimensional level, that currying gives a natural bijection
+
+$$
+\mathcal C(A\mathbin{\&}O,B)
+\cong
+\mathcal C(A,O\Rightarrow B).
+$$
+
+When beta and eta are equations, currying and uncurrying are inverse maps. In
+LAMBDA, the arrows from one type to another form a **hom-category**: terms are
+its objects, and conversions between parallel terms are its morphisms.
+Currying and uncurrying now give functors between these hom-categories.
+
+Call currying $K$ and uncurrying $L$:
+
+$$
+K:
+\mathbf{LAMBDA}(A\mathbin{\&}O,B)
+\longrightarrow
+\mathbf{LAMBDA}(A,O\Rightarrow B),
+$$
+
+$$
+L:
+\mathbf{LAMBDA}(A,O\Rightarrow B)
+\longrightarrow
+\mathbf{LAMBDA}(A\mathbin{\&}O,B).
+$$
+
+Let $d:A\mathbin{\&}O\to B$. Currying isolates the $O$ input:
+
+$$
+K(d)(x)
+=
+\lambda z:O.\,d\langle x,z\rangle.
+$$
+
+Let $c:A\to(O\Rightarrow B)$. Uncurrying applies the function stored at the
+first projection to the argument stored at the second:
+
+$$
+L(c)(u)
+=
+c(\operatorname{fst}u)(\operatorname{snd}u).
+$$
+
+Now we can derive one composite line by line:
+
+$$
+\begin{aligned}
+LK(d)(u)
+&=
+K(d)(\operatorname{fst}u)(\operatorname{snd}u)
+&&\text{by the definition of }L,\\
+&=
+(\lambda z.\,d\langle \operatorname{fst}u,z\rangle)
+(\operatorname{snd}u)
+&&\text{by the definition of }K,\\
+&\Rightarrow_\beta
+d\langle \operatorname{fst}u,\operatorname{snd}u\rangle
+&&\text{by one beta contraction},\\
+&=
+d(u)
+&&\text{by product eta, treated as equality}.
+\end{aligned}
+$$
+
+Thus beta supplies a conversion
+
+$$
+LK(d)\Rightarrow d.
+$$
+
+For the other composite, unfold the definitions again:
+
+$$
+\begin{aligned}
+KL(c)(x)
+&=
+\lambda z.\,L(c)\langle x,z\rangle,\\
+&=
+\lambda z.\,c(\operatorname{fst}\langle x,z\rangle)
+  (\operatorname{snd}\langle x,z\rangle)
+&&\text{by the definition of }L,\\
+&=
+\lambda z.\,c(x)(z)
+&&\text{by the product beta equalities}.
+\end{aligned}
+$$
+
+Seely's eta orientation points from $c(x)$ to this expanded term:
+
+$$
+c(x)
+\Rightarrow_\eta
+\lambda z.\,c(x)(z)
+=
+KL(c)(x).
+$$
+
+So eta supplies candidate cells $1\Rightarrow KL$, while beta supplies
+$LK\Rightarrow 1$. The two calculations alone do not yet prove an adjunction.
+The cells must be natural in the terms they transform, and both triangle
+identities must hold. Seely's naturality and coherence equations establish
+those facts. With those equations in place, eta and beta are the unit and
+counit of
+
+$$
+L\dashv K.
+$$
+
+This is the payoff. Currying and uncurrying are no longer inverse functions
+between hom-sets. They are adjoint functors between hom-categories, and the
+computations that used to disappear into equality now witness the adjunction.
+
+One of the triangle calculations has a direct computational reading. At
+evaluation, eta followed by beta gives
+
+$$
+f\,y
+\Rightarrow_\eta
+(\lambda z.fz)y
+\Rightarrow_\beta
+f\,y.
+$$
+
+Seely imposes that this matching eta-beta operation acts as the identity
+conversion, and the corresponding coherence equation handles the other
+triangle. The raw two-step history does not become an identity by endpoint
+equality alone.
+
+## 6. Where does laxity enter?
+
+The adjunction above varies with its types. To understand why that variation is
+not strict, reuse the type $O$ from the running example and consider the
+function-space constructor
+
+$$
+G(A)=O\Rightarrow A.
+$$
+
+Suppose $m:B\to A$. The induced map
+
+$$
+G(m):(O\Rightarrow B)\to(O\Rightarrow A)
+$$
+
+takes a function $g:O\Rightarrow B$ and postcomposes it with $m$:
+
+$$
+G(m)(g)=\lambda z:O.\,m(gz).
+$$
+
+Now let $n:C\to B$ and start with $g:O\Rightarrow C$. Applying $G(n)$ and
+then $G(m)$ creates a beta redex that the direct composite does not contain:
+
+$$
+\begin{aligned}
+G(m)(G(n)(g))
+&=
+\lambda z:O.\,
+m\big((\lambda w:O.\,n(gw))z\big)
+&&\text{unfold }G\text{ twice},\\
+&\Rightarrow_\beta
+\lambda z:O.\,m(n(gz))
+&&\text{contract the introduced redex},\\
+&=
+G(m\circ n)(g)
+&&\text{recognize ordinary composition}.
+\end{aligned}
+$$
+
+Check the types at the middle line. The term $gz$ has type $C$, so $n(gz)$ has
+type $B$, and $m(n(gz))$ has type $A$. Abstracting over $z:O$ therefore gives
+a term of type $O\Rightarrow A$ on both sides.
+
+The beta conversion above is the comparison 2-cell
+
+$$
+G(m)G(n)
+\Rightarrow
+G(m\circ n).
+$$
+
+The identity comparison is the same eta expansion seen in the currying
+calculation. For $q:O\Rightarrow A$:
+
+$$
+q
+\Rightarrow_\eta
+\lambda z.qz
+=
+G(1_A)(q).
+$$
+
+This is what **lax** means here. It does not mean approximate or defective.
+Composition and identity are preserved through specified directed 2-cells
+rather than literal equalities.
+
+This calculation exhibits the two comparison cells; it is not the whole lax
+functor proof. The constructor must also act on conversions, and the comparison
+cells must satisfy naturality, associativity, and identity coherence. Seely
+checks those remaining laws in the construction of LAMBDA.
+
+Under Seely's treatment of products, $F=-\mathbin{\&}O$ is strict, while
+$G=O\Rightarrow-$ is lax. The families $K_{A,B}$ and $L_{A,B}$ are strict in
+their first type argument and lax in their second. Seely packages the
+comparison cells, unit, and counit into what he calls a **lax semantic
+adjunction**. This is his specific 1987 notion, so it should not be renamed a
+strict modern 2-adjunction.
+
+## 7. Can the two paths be represented in code?
+
+Haskell is useful for a small companion because algebraic data types mirror
+terms, individual cells, and paths. The program below builds the two reductions
+of $T$. It checks only their boundaries. It is not a type checker, a beta
+validator, or an implementation of Seely's quotient.
 
 ```haskell
-{-# LANGUAGE LambdaCase #-}
-
-module Main where
-
-import Data.List (intercalate)
-import qualified Data.Map.Strict as Map
-import qualified Data.Set as Set
-
-data Type
-  = Base String
-  | Type :-> Type
-  deriving (Eq)
-
-infixr 5 :->
-
-instance Show Type where
-  show (Base name) = name
-  show (domain :-> codomain) = "(" ++ show domain ++ " → " ++ show codomain ++ ")"
+module Main (main) where
 
 data Term
   = Var String
-  | Lam String Type Term
+  | Const String
+  | Lam String Term
   | App Term Term
   deriving (Eq)
 
-pretty :: Term -> String
-pretty = \case
-  Var name -> name
-  Lam parameter _ body -> "(λ" ++ parameter ++ "." ++ pretty body ++ ")"
-  App function argument -> "(" ++ pretty function ++ " " ++ pretty argument ++ ")"
-
 instance Show Term where
-  show = pretty
+  show (Var x) = x
+  show (Const c) = c
+  show (Lam x body) = "(λ" ++ x ++ "." ++ show body ++ ")"
+  show (App fun arg) = "(" ++ show fun ++ " " ++ show arg ++ ")"
 
-type Context = Map.Map String Type
-
-infer :: Context -> Term -> Either String Type
-infer context = \case
-  Var name ->
-    maybe (Left ("unbound variable: " ++ name)) Right (Map.lookup name context)
-
-  Lam parameter parameterType body -> do
-    bodyType <- infer (Map.insert parameter parameterType context) body
-    pure (parameterType :-> bodyType)
-
-  App function argument -> do
-    functionType <- infer context function
-    argumentType <- infer context argument
-    case functionType of
-      domain :-> codomain
-        | domain == argumentType -> Right codomain
-        | otherwise -> Left "function and argument types do not match"
-      _ -> Left "attempted to apply a non-function"
-```
-
-The constructor `(:->)` is not decoration: ill-typed applications are rejected
-before evaluation. This keeps the first categorical dimension—the source and
-target types—visible in the program.
-
-### Capture-avoiding substitution
-
-A beta step replaces the bound variable with the argument. Naive textual
-replacement is wrong because it may **capture** a free variable. Substituting
-$y$ for $x$ in $\lambda y.x$, for example, must first rename the bound $y$.
-
-```haskell
-freeVariables :: Term -> Set.Set String
-freeVariables = \case
-  Var name -> Set.singleton name
-  Lam parameter _ body -> Set.delete parameter (freeVariables body)
-  App function argument -> freeVariables function `Set.union` freeVariables argument
-
-allNames :: Term -> Set.Set String
-allNames = \case
-  Var name -> Set.singleton name
-  Lam parameter _ body -> Set.insert parameter (allNames body)
-  App function argument -> allNames function `Set.union` allNames argument
-
-freshName :: String -> Set.Set String -> String
-freshName base forbidden = choose (0 :: Int)
-  where
-    choose index =
-      let candidate = if index == 0 then base else base ++ "_" ++ show index
-       in if candidate `Set.member` forbidden then choose (index + 1) else candidate
-
-substitute :: Term -> String -> Term -> Term
-substitute term variable replacement = case term of
-  Var name
-    | name == variable -> replacement
-    | otherwise -> term
-
-  App function argument ->
-    App
-      (substitute function variable replacement)
-      (substitute argument variable replacement)
-
-  Lam parameter parameterType body
-    | parameter == variable -> term
-    | parameter `Set.notMember` freeVariables replacement ->
-        Lam parameter parameterType (substitute body variable replacement)
-    | otherwise ->
-        let forbidden =
-              allNames body
-                `Set.union` allNames replacement
-                `Set.union` Set.singleton variable
-            renamed = freshName parameter forbidden
-            alphaConverted = substitute body parameter (Var renamed)
-         in Lam
-              renamed
-              parameterType
-              (substitute alphaConverted variable replacement)
-```
-
-The `allNames` check is intentional. Looking only at free variables while
-renaming a binder can choose a name already bound deeper in the term and cause a
-second, subtler capture.
-
-### Reductions as first-class values
-
-An ordinary evaluator returns the next term and throws the transition away.
-Here it returns a `Reduction` containing its source, target, rule, and the
-position of the contracted redex. This value plays the role of a generating
-2-cell.
-
-```haskell
-data Direction = InFunction | InArgument | InBody
+data Rule
+  = Beta
+  | Inside String Rule
   deriving (Eq, Show)
 
-data Reduction = Reduction
-  { source :: Term,
-    target :: Term,
-    rule :: String,
-    position :: [Direction]
-  }
-  deriving (Eq)
-
-instance Show Reduction where
-  show reduction =
-    pretty (source reduction)
-      ++ " --"
-      ++ rule reduction
-      ++ "@"
-      ++ location
-      ++ "→ "
-      ++ pretty (target reduction)
-    where
-      location = case position reduction of
-        [] -> "root"
-        path -> intercalate "/" (map show path)
-
-betaStep :: Term -> Maybe Reduction
-betaStep term = case term of
-  App (Lam parameter _ body) argument ->
-    Just (Reduction term (substitute body parameter argument) "β" [])
-
-  App function argument ->
-    case betaStep function of
-      Just step ->
-        Just
-          ( Reduction
-              term
-              (App (target step) argument)
-              (rule step)
-              (InFunction : position step)
-          )
-      Nothing -> case betaStep argument of
-        Just step ->
-          Just
-            ( Reduction
-                term
-                (App function (target step))
-                (rule step)
-                (InArgument : position step)
-            )
-        Nothing -> Nothing
-
-  Lam parameter parameterType body ->
-    case betaStep body of
-      Just step ->
-        Just
-          ( Reduction
-              term
-              (Lam parameter parameterType (target step))
-              (rule step)
-              (InBody : position step)
-          )
-      Nothing -> Nothing
-
-  Var _ -> Nothing
-```
-
-The strategy is normal order: it contracts the leftmost, outermost redex first.
-Other strategies produce different paths through the same space of terms.
-
-The recursive cases also expose horizontal structure. A reduction
-$\alpha:M\Rightarrow M'$ induces, among others,
-
-$$ \alpha\,N : M\,N \Rightarrow M'\,N $$
-
-and
-
-$$ \lambda x.\alpha : \lambda x.M \Rightarrow \lambda x.M'. $$
-
-In the code, `position` records the surrounding program context in which the
-local reduction occurs.
-
-### Vertical composition as an execution trace
-
-Successive 2-cells can now be collected instead of discarded. Composition is
-partial: the target of the first trace must equal the source of the second.
-
-```haskell
-data Trace = Trace
-  { start :: Term,
-    steps :: [Reduction]
+data Step = Step
+  { source :: Term
+  , target :: Term
+  , rule :: Rule
   }
   deriving (Eq, Show)
 
-end :: Trace -> Term
-end (Trace initial []) = initial
-end (Trace _ reductions) = target (last reductions)
+type Path = [Step]
 
-thenTrace :: Trace -> Trace -> Either String Trace
-thenTrace first second
-  | end first == start second =
-      Right (Trace (start first) (steps first ++ steps second))
-  | otherwise = Left "cannot compose traces with different boundaries"
+startOf :: Path -> Maybe Term
+startOf [] = Nothing
+startOf (step : _) = Just (source step)
 
-normalize :: Int -> Term -> Either String Trace
-normalize maximumSteps initial = go maximumSteps initial []
-  where
-    go remaining current history = case betaStep current of
-      Nothing -> Right (Trace initial (reverse history))
-      Just step
-        | remaining == 0 -> Left "reduction limit reached"
-        | otherwise -> go (remaining - 1) (target step) (step : history)
-```
+endOf :: Path -> Maybe Term
+endOf [] = Nothing
+endOf steps = Just (target (last steps))
 
-Finally, we type-check and evaluate
+valid :: Path -> Bool
+valid [] = True
+valid [_] = True
+valid (first : second : rest) =
+  target first == source second && valid (second : rest)
 
-$$ (\lambda x.x)\big((\lambda y.y)\,z\big). $$
+liftStep :: String -> (Term -> Term) -> Step -> Step
+liftStep context wrap step =
+  Step
+    (wrap (source step))
+    (wrap (target step))
+    (Inside context (rule step))
 
-```haskell
+sameBoundary :: Path -> Path -> Bool
+sameBoundary first second =
+  case (startOf first, endOf first, startOf second, endOf second) of
+    (Just a, Just b, Just c, Just d) -> a == c && b == d
+    _ -> False
+
 main :: IO ()
 main = do
-  let valueType = Base "A"
-      context = Map.singleton "z" valueType
-      identity name = Lam name valueType (Var name)
-      program = App (identity "x") (App (identity "y") (Var "z"))
+  let f = Const "f"
+      y = Var "y"
+      value = App f y
+      inner = App (Lam "v" (Var "v")) value
+      whole = App (Lam "u" (Var "u")) inner
 
-  programType <- either fail pure (infer context program)
-  trace <- either fail pure (normalize 1000 program)
+      innerBeta = Step inner value Beta
+      outerFirstStep = Step whole inner Beta
+      outerAfterInner = Step (App (Lam "u" (Var "u")) value) value Beta
 
-  putStrLn ("type: " ++ show programType)
-  putStrLn ("start: " ++ pretty (start trace))
-  mapM_ print (zipWith (,) [(1 :: Int) ..] (steps trace))
-  putStrLn ("normal form: " ++ pretty (end trace))
+      outerFirst =
+        [ outerFirstStep
+        , innerBeta
+        ]
+
+      innerFirst =
+        [ liftStep "argument of the outer application"
+            (App (Lam "u" (Var "u"))) innerBeta
+        , outerAfterInner
+        ]
+
+  print (valid outerFirst, valid innerFirst)
+  print (sameBoundary outerFirst innerFirst)
 ```
 
-Running the complete file produces:
+The program prints
 
 ```text
-type: A
-start: ((λx.x) ((λy.y) z))
-(1,((λx.x) ((λy.y) z)) --β@root→ ((λy.y) z))
-(2,((λy.y) z) --β@root→ z)
-normal form: z
+(True,True)
+True
 ```
 
-A conventional denotational model identifies the first term, the intermediate
-term, and `z` when the calculus declares them equal. The trace instead retains
-the directed composite
+`valid` checks that the steps in a path can be composed vertically by comparing
+adjacent boundaries.
+`liftStep` models the action of a term context on a conversion, which is the
+computational idea behind horizontal composition. `sameBoundary` confirms that
+the two paths are parallel.
 
-$$ ((\lambda x.x)((\lambda y.y)z)) \Rightarrow ((\lambda y.y)z) \Rightarrow z. $$
+Parallel paths are not automatically equal. It would be wrong to identify
+every pair of paths with the same endpoints. Seely's interchange equation
+justifies identifying this particular pair because it performs the same outer
+and substituted conversions in opposite orders.
 
-The endpoints give the extensional result; the composite gives the intensional
-history.
+## 8. What does the construction preserve, and where does it stop?
 
-## Different paths are meaningful
+The 2-category preserves more computational information than an equational
+model, but less than an operational trace semantics.
 
-Now consider a term with two independent redexes:
+### It does not preserve every scheduling choice
 
-$$ ((\lambda x.x)\,a)\;((\lambda y.y)\,b). $$
+Interchange already identified the two reductions of $T$. In the appendix,
+Seely also requires beta conversions at different logical occurrences to
+commute. He remarks that this is computationally questionable because an
+operational model may care about their order.
 
-We may reduce the function side first or the argument side first. Both paths
-reach $a\,b$, but they are different sequences of steps.
+The construction retains conversion cells modulo specified equations. It does
+not by itself record cost, evaluation strategy, concurrency, or every
+intermediate schedule.
 
-```text
-((λx.x) a) ((λy.y) b)  ──function──▶  a ((λy.y) b)
-          │                                  │
-       argument                           argument
-          │                                  │
-          ▼                                  ▼
-((λx.x) a) b             ──function──▶      a b
-```
+### The direction of eta is structural
 
-The commuting square is the computational face of interchange: independent
-local reductions can be composed in either order. In systems with effects,
-resources, concurrency, or non-confluence, retaining path information becomes
-even more important because evaluation order may change cost, observable
-behaviour, or the result itself.
+The unit in the hom-category adjunction points as
 
-## Where the analogy stops
+$$
+c\Rightarrow\lambda x.c(x).
+$$
 
-The Haskell program makes the main distinction executable, but it is not a full
-construction of Seely's 2-category.
+If eta is reversed,
 
-- It checks simply typed terms and generates beta reductions, but it does not
-  implement products, eta conversion, or all structural rules.
-- It chooses one evaluation strategy instead of constructing every possible
-  reduction between two terms.
-- It does not quotient reduction paths by the equations required for 2-cells or
-  prove the interchange law.
-- It does not construct 2-adjunctions or the lax universal properties in
-  Seely's development.
-- Named variables keep the presentation readable, but a formal development
-  would usually represent binding with de Bruijn indices or a verified binding
-  library.
+$$
+\lambda x.c(x)\Rightarrow c,
+$$
 
-For machine-checked metatheory, Lean or Agda is the natural next step. For seeing
-why a computation should be data rather than equality, this typed Haskell model
-keeps the structure visible without burying it under proof machinery.
+the same unit points the wrong way. Section 4 of the paper develops a different
+and less regular construction, called a **lax syntactic adjunction**, for that
+orientation. Changing a rewrite direction changes the categorical property
+available from it.
 
-## Why the 2D view matters
+### Optional background: where the directions come from
 
-The move from categories to 2-categories changes the semantic question. Instead
-of asking only
+Seely reaches directed beta and eta through models of the untyped lambda
+calculus. Such a model has a domain $D$ and maps
 
-> What morphism does this program denote?
+$$
+h:D\to[D\to D],
+\qquad
+k:[D\to D]\to D.
+$$
 
-we can also ask
+The map $h$ reads an element as a function, and $k$ encodes a function as an
+element. Replacing inverse equations by
 
-> Which computation transforms this program into that one, and how do such
-> computations compose?
+$$
+1_D\leq kh,
+\qquad
+hk\leq 1_{[D\to D]}
+$$
 
-That second question matters in compiler optimisation, proof transformation,
-rewriting systems, parallel evaluation, and provenance-aware pipelines. Each
-involves not just objects and maps, but **maps between maps**.
+makes $h$ left adjoint to $k$ in an ordered setting. One inequality gives eta
+expansion and the other beta contraction. A partial order is a thin category,
+so Seely's move from inequalities to general hom-categories replaces one
+possible comparison by a possibly non-thin category of conversions.
 
-Seely's insight is simple to state and far-reaching in consequence: do not
-force computation to become equality too early. Keep the path.
+This background explains the chosen directions, but it is not needed to follow
+the worked term or the currying calculation.
 
-## Further reading
+### Optional extension: polymorphism
 
-- R. A. G. Seely, [*Modelling Computations: A 2-Categorical Framework*](https://lics.siglog.org/archive/1987/Seely-ModellingComputatio.html), LICS 1987, pp. 65–71.
-- R. A. G. Seely, [publication list and related work](https://www.math.mcgill.ca/rags/).
+For second-order polymorphism, types also contain $\forall t.A$. Seely organizes
+the resulting terms and conversions into an indexed 2-category called
+POLYLAMBDA. If $W$ adds an unused type variable, the sketched lax adjunction is
+
+$$
+W\dashv\forall t.(-).
+$$
+
+Universal quantification is the lax right adjoint. The paper presents this
+final section as a mathematical sketch rather than a full development.
+
+## 9. What mental model should remain?
+
+The transferable idea is not simply that lambda calculus forms a 2-category.
+It is a sequence of consequences.
+
+Equality remembers that two terms coincide but forgets the conversion between
+them. Keeping conversions makes them 2-cells. Because a computation must remain
+valid when substituted into a larger term, those cells compose both vertically
+and horizontally. Interchange makes the two compositions compatible, at the
+price of identifying some raw reduction orders.
+
+Once beta and eta are directed cells, currying and uncurrying cannot remain
+strict inverses. Eta becomes the unit, beta becomes the counit, and the
+function-space constructor preserves composition through beta comparison cells.
+That is why laxity appears.
+
+When an equation in a semantic model hides a process, Seely's paper suggests a
+useful question: can the equation be lifted to a directed cell, and which
+coherence equations must then be imposed so that the process remains
+compositional?
+
+## Sources and further reading
+
+- R. A. G. Seely, [*Modelling Computations: A 2-Categorical
+  Framework*](https://www.math.mcgill.ca/~rags/WkAdj/LICS.pdf), LICS 1987,
+  pp. 65-71.
+- [LICS bibliographic entry and
+  abstract](https://lics.siglog.org/archive/1987/Seely-ModellingComputatio.html).
+- R. A. G. Seely, [publication list and related
+  papers](https://www.math.mcgill.ca/~rags/).

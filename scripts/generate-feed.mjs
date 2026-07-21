@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { Feed } from "feed";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,11 +33,15 @@ function absoluteUrl(pathname) {
 }
 
 async function loadPosts() {
-  const contentlayerUrl = pathToFileURL(
-    path.join(rootDir, ".contentlayer", "generated", "index.mjs")
-  ).href;
+  const postsPath = path.join(
+    rootDir,
+    ".contentlayer",
+    "generated",
+    "Post",
+    "_index.json"
+  );
   try {
-    const { allPosts } = await import(contentlayerUrl);
+    const allPosts = JSON.parse(await fs.readFile(postsPath, "utf8"));
     return Array.isArray(allPosts) ? allPosts : [];
   } catch (error) {
     throw new Error(

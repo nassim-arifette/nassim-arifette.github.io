@@ -33,7 +33,7 @@ export function SeriesBanner({ navigation, seriesData }: SeriesBannerProps) {
           <div className="text-base font-medium leading-tight text-foreground">
             <Link
               href={current.series.url}
-              className="underline-offset-4 transition hover:text-foreground/70 hover:underline"
+              className="inline-flex min-h-11 items-center underline-offset-4 transition hover:text-foreground/70 hover:underline [@media(pointer:coarse)]:min-h-12"
             >
               {current.series.title}
             </Link>
@@ -46,7 +46,7 @@ export function SeriesBanner({ navigation, seriesData }: SeriesBannerProps) {
               <span className="font-medium text-foreground/70">New here?</span>
               <Link
                 href={startPart.post.url}
-                className="inline-flex items-center gap-1 underline-offset-4 transition hover:text-foreground"
+                className="inline-flex min-h-11 items-center gap-1 underline-offset-4 transition hover:text-foreground [@media(pointer:coarse)]:min-h-12"
               >
                 Start at Part 1
                 <ChevronRight className="size-3.5" aria-hidden="true" />
@@ -58,7 +58,7 @@ export function SeriesBanner({ navigation, seriesData }: SeriesBannerProps) {
           {previous && previousUrl ? (
             <Link
               href={previousUrl}
-              className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 transition hover:-translate-y-0.5 hover:border-foreground/50 hover:bg-background/80"
+              className="inline-flex min-h-11 items-center gap-1 rounded-md border border-border/70 px-3 py-2 transition hover:-translate-y-0.5 hover:border-foreground/50 hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none motion-reduce:transition-none [@media(pointer:coarse)]:min-h-12"
               aria-label={`Previous: ${previous.title}`}
             >
               <ChevronLeft className="size-3.5" aria-hidden="true" />
@@ -67,7 +67,7 @@ export function SeriesBanner({ navigation, seriesData }: SeriesBannerProps) {
           ) : null}
           <Link
             href={current.series.url}
-            className="inline-flex items-center gap-1 rounded-md border border-transparent px-2 py-1 text-muted-foreground underline-offset-4 transition hover:-translate-y-0.5 hover:text-foreground hover:underline"
+            className="inline-flex min-h-11 items-center gap-1 rounded-md border border-transparent px-3 py-2 text-muted-foreground underline-offset-4 transition hover:-translate-y-0.5 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none motion-reduce:transition-none [@media(pointer:coarse)]:min-h-12"
             aria-label={`View all parts in ${current.series.title}`}
           >
             View all in this series
@@ -75,7 +75,7 @@ export function SeriesBanner({ navigation, seriesData }: SeriesBannerProps) {
           {next && nextUrl ? (
             <Link
               href={nextUrl}
-              className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 transition hover:-translate-y-0.5 hover:border-foreground/50 hover:bg-background/80"
+              className="inline-flex min-h-11 items-center gap-1 rounded-md border border-border/70 px-3 py-2 transition hover:-translate-y-0.5 hover:border-foreground/50 hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none motion-reduce:transition-none [@media(pointer:coarse)]:min-h-12"
               aria-label={`Next: ${next.title}`}
             >
               <span>Next</span>
@@ -172,8 +172,9 @@ export function SeriesPartsDesktop({ seriesData, currentSlug }: Omit<SeriesParts
           type="button"
           aria-expanded={!isCollapsed}
           aria-controls={contentId}
+          aria-label={isCollapsed ? 'Show series parts' : 'Hide series parts'}
           onClick={() => setIsCollapsed((previous) => !previous)}
-          className="inline-flex size-6 items-center justify-center rounded border border-border/70 text-base leading-none text-muted-foreground transition hover:border-foreground/50 hover:text-foreground"
+          className="inline-flex h-9 w-9 items-center justify-center rounded border border-border/70 text-base leading-none text-muted-foreground transition hover:border-foreground/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [@media(pointer:coarse)]:h-12 [@media(pointer:coarse)]:w-12"
         >
           <span aria-hidden="true">{isCollapsed ? '+' : '-'}</span>
         </button>
@@ -191,10 +192,10 @@ export function SeriesPartsMobile({ seriesData, currentSlug }: Omit<SeriesPartsL
   return (
     <div className="not-prose my-6 lg:hidden">
       <details className="group rounded-md border border-border/70 bg-muted/40 p-4">
-        <summary className="flex cursor-pointer select-none items-center justify-between text-sm font-medium text-muted-foreground outline-none">
+        <summary className="flex min-h-11 cursor-pointer select-none items-center justify-between text-sm font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [@media(pointer:coarse)]:min-h-12">
           <span>Show series parts</span>
           <ChevronDown
-            className="size-4 transition-transform duration-200 group-open:rotate-180"
+            className="size-4 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
             aria-hidden="true"
           />
         </summary>

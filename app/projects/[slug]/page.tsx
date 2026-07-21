@@ -44,9 +44,7 @@ export function generateMetadata({ params }: PageProps): Metadata {
       description: project.description,
       path: `/projects/${project.slug}`,
       ogImage,
-      type: 'article',
-      publishedTime: project.date,
-      modifiedTime: project.date,
+      type: 'website',
       tags: project.tags,
     }),
     authors: [{ name: 'Nassim Arifette', url: absoluteUrl('/') }],
@@ -72,8 +70,7 @@ export default function ProjectPage({ params }: PageProps) {
     name: project.title,
     description: project.description,
     url: absoluteUrl(`/projects/${project.slug}`),
-    datePublished: project.date,
-    dateModified: project.date,
+    dateCreated: project.date,
     mainEntityOfPage: absoluteUrl(`/projects/${project.slug}`),
     author: {
       '@type': 'Person',
@@ -87,19 +84,19 @@ export default function ProjectPage({ params }: PageProps) {
   const headings = (project.headings ?? []) as TocHeading[]
 
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(220px,1fr)] lg:gap-14 print:block">
-      <article className="prose max-w-none">
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.28fr)] lg:gap-16 print:block">
+      <article lang={project.language ?? 'en'} className="prose min-w-0 max-w-[78ch]">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        <header className="not-prose mb-14 border-b border-border/70 pb-10 pt-3">
-          <Link href="/projects" className="mb-10 inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"><ArrowLeft size={15} /> Project index</Link>
+        <header className="not-prose mb-14 border-b border-border pb-10 pt-3 sm:pb-12">
+          <Link href="/projects" className="mb-10 inline-flex min-h-11 items-center gap-2 border-b border-transparent text-sm text-muted-foreground transition-colors hover:border-current hover:text-signal"><ArrowLeft size={15} aria-hidden="true" /> Project index</Link>
           <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            <span className="text-[hsl(var(--signal))]">Case study</span><span aria-hidden="true">·</span><time dateTime={project.date}>{formatDate(project.date)}</time>
+            <span className="text-signal">Case study</span><span aria-hidden="true">·</span><time dateTime={project.date}>{formatDate(project.date)}</time>
           </div>
-          <h1 className="max-w-4xl text-[clamp(2.75rem,6vw,5.75rem)] font-semibold leading-[0.95] tracking-[-0.055em]">{project.title}</h1>
-          <p className="mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:text-xl">{project.description}</p>
+          <h1 className="max-w-[17ch] text-[clamp(2.8rem,6vw,5.6rem)] font-medium leading-[0.95] tracking-[-0.045em]">{project.title}</h1>
+          <p className="mt-6 max-w-[64ch] text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">{project.description}</p>
           {project.tags?.length ? (
             <div className="mt-7 flex flex-wrap gap-2">
               {project.tags.map((tag) => (
@@ -125,9 +122,9 @@ export default function ProjectPage({ params }: PageProps) {
                     href={href}
                     target="_blank"
                     rel="noreferrer"
-                    className="group inline-flex min-h-11 items-center gap-2 border border-border bg-background px-4 font-semibold text-foreground transition hover:border-foreground"
+                    className="group inline-flex min-h-11 items-center gap-2 border border-border bg-background px-4 font-semibold text-foreground transition-colors hover:border-signal hover:text-signal"
                   >
-                    <Icon size={16} /> {label}<ArrowUpRight size={13} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                    <Icon size={16} aria-hidden="true" /> {label}<ArrowUpRight size={13} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                   </a>
                 )
               })}
@@ -136,14 +133,14 @@ export default function ProjectPage({ params }: PageProps) {
         </header>
         {headings.length ? (
           <div className="not-prose my-8 lg:hidden print:hidden">
-            <TableOfContents headings={headings} />
+            <TableOfContents headings={headings} defaultCollapsed />
           </div>
         ) : null}
         <Mdx code={project.body.code} />
         {relatedProjects.length ? (
           <section className="not-prose mt-20 space-y-6 border-t border-border/70 pt-10 print:hidden">
-            <div><p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--signal))]">Continue exploring</p><h2 className="text-2xl font-semibold tracking-[-0.03em]">Related projects</h2></div>
-            <div className="grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-2">
+            <div><p className="manuscript-label mb-2 text-signal">Continue exploring</p><h2 className="text-3xl font-medium tracking-[-0.03em]">Related projects</h2></div>
+            <div className="divide-y divide-border border-y border-border">
               {relatedProjects.map((related, index) => (
                 <ProjectCard key={related.slug} project={related} index={index + 1} />
               ))}
@@ -153,7 +150,10 @@ export default function ProjectPage({ params }: PageProps) {
       </article>
       {headings.length ? (
         <aside className="relative hidden lg:block print:hidden">
-          <TableOfContents headings={headings} className="sticky top-24" />
+          <TableOfContents
+            headings={headings}
+            className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain pr-2"
+          />
         </aside>
       ) : null}
     </div>

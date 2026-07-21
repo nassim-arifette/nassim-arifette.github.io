@@ -1,7 +1,7 @@
 ---
-title: "Verification Neural Network (Ongoing work)"
+title: "Neural Network Verification via Set Analysis"
 date: "2024-03-26"
-description: "Abstraction-based verification of ReLU neural networks using zones (DBMs) and tropical geometry; with Julia implementations for safety-critical AI."
+description: "An exploratory study of abstraction-based ReLU verification using zones (DBMs), tropical geometry, and Julia prototypes."
 tags: ["Neural Networks","Verification","Abstract Interpretation","ReLU","Tropical Geometry","DBM","Julia","Safety"]
 links: { pdf: "/neural-network-verification-report.pdf" }
 ---
@@ -9,7 +9,7 @@ links: { pdf: "/neural-network-verification-report.pdf" }
 ## Verification Neural Network
 
 **Institution:** École Polytechnique, LIX  
-**Degree:** Master's Thesis  
+**Degree:** Master 1 research project <br />
 **Date:** March 26, 2024  
 **Author:** Nassim Arifette  
 **Supervisors:** Éric Goubault, Sylvie Putot
@@ -24,7 +24,7 @@ Neural networks are essentially black boxes that can make unpredictable decision
 
 ### Our Approach
 
-This work develops abstraction-based verification techniques that solve this problem by working with sets of inputs rather than individual data points. Instead of testing every possible image variation, we mathematically represent entire regions of similar inputs and verify properties over these regions simultaneously.
+This work investigates abstraction-based verification by working with sets of inputs rather than individual data points. Instead of testing every possible image variation, the study represents regions of similar inputs mathematically and asks which properties can be checked over those regions at once.
 
 The thesis explores two complementary mathematical frameworks. The first approach uses zone analysis with difference bound matrices, which efficiently represent relationships between neural network variables using systems of linear inequalities. This method tracks how sets of inputs propagate through the network layers, maintaining mathematical guarantees about the network's behavior.
 
@@ -32,14 +32,14 @@ The second approach leverages tropical geometry, a mathematical framework where 
 
 ### Technical Contributions
 
-The zone-based verification method represents neural network states using difference bound matrices and implements optimal closure algorithms to tighten these representations. For linear layers, the work provides precise mathematical characterizations of how input regions transform through matrix operations. The ReLU activation function is handled through specialized approximation techniques that preserve verification guarantees.
+The zone-based verification method represents neural network states using difference bound matrices and studies closure algorithms that tighten these representations. For linear layers, the report characterizes how input regions transform through matrix operations. The ReLU activation function is approached through approximations designed to preserve sound bounds.
 
 The tropical geometry approach demonstrates that ReLU networks correspond to tropical rational functions, where decision boundaries align with tropical hypersurfaces. This connection enables the development of verification algorithms that exploit the geometric structure of these networks, potentially offering computational advantages over traditional methods.
 
 ### Practical Implementation
 
-Both theoretical frameworks are implemented in Julia, providing practical tools for neural network verification. The implementations include efficient algorithms for zone closure, tropical arithmetic operations, and network forward propagation in the abstract domains.
+Selected operations were prototyped in Julia, including zone closure, tropical arithmetic, and abstract network propagation. The report documents an exploratory implementation, not a complete production verifier; the end-to-end tropical verification routine remained preliminary.
 
 ### Impact and Applications
 
-This verification methodology addresses safety concerns in autonomous vehicles where incorrect decisions could be fatal, medical diagnostic systems where misclassification affects patient care, and financial systems where algorithmic errors have economic consequences. The mathematical guarantees provided by these methods enable the deployment of neural networks in safety-critical applications with increased confidence.
+The study is motivated by safety-critical settings such as autonomous systems and medical decision support, where testing isolated examples is not enough. Its contribution is a mathematical and computational exploration of stronger guarantees, together with clear implementation work still required before deployment.

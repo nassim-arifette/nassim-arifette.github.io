@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
 type TagBarProps = {
   tags: string[]
@@ -18,33 +18,49 @@ export function TagBar({
   active,
   onToggle,
   onClear,
-  topN = 12,
+  topN = 6,
   label = 'Filter by tag',
 }: TagBarProps) {
   const labelId = useId()
+  const panelId = useId()
+  const searchId = useId()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const panelRef = useRef<HTMLDivElement>(null)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  const closeAndRestoreFocus = useCallback(() => {
+    setOpen(false)
+    requestAnimationFrame(() => moreButtonRef.current?.focus())
+  }, [])
 
   useEffect(() => {
     if (!open) return
+    const frame = requestAnimationFrame(() => searchRef.current?.focus())
     const handleDocumentClick = (event: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(event.target as Node) &&
+        !moreButtonRef.current?.contains(event.target as Node)
+      ) {
         setOpen(false)
       }
     }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setOpen(false)
+        event.preventDefault()
+        closeAndRestoreFocus()
       }
     }
     document.addEventListener('mousedown', handleDocumentClick)
     document.addEventListener('keydown', handleKeyDown)
     return () => {
+      cancelAnimationFrame(frame)
       document.removeEventListener('mousedown', handleDocumentClick)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [open])
+  }, [closeAndRestoreFocus, open])
 
   const normalize = (value: string) =>
     value.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
@@ -75,10 +91,10 @@ export function TagBar({
       <button
         type="button"
         onClick={() => onToggle(tag)}
-        className={`inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-xs font-medium transition [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12 [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-2 ${
+        className={`inline-flex min-h-9 items-center justify-center border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] transition-colors [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12 [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-2 ${
           selected
-            ? 'border-foreground bg-foreground text-background'
-            : 'border-border bg-muted text-foreground hover:border-foreground/50 hover:text-foreground'
+            ? 'border-signal bg-signal text-background'
+            : 'border-border bg-transparent text-muted-foreground hover:border-signal hover:text-foreground'
         }`}
         aria-pressed={selected}
       >
@@ -89,7 +105,7 @@ export function TagBar({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-labelledby={labelId}>
       <span className="sr-only" id={labelId}>
         {label}
       </span>
@@ -101,12 +117,14 @@ export function TagBar({
       {moreCount > 0 && (
         <div className="relative">
           <button
+            ref={moreButtonRef}
             type="button"
             aria-haspopup="dialog"
             aria-expanded={open}
-            aria-labelledby={labelId}
+            aria-controls={panelId}
+            aria-label={`${label}. Show ${moreCount} more tags`}
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-xs font-medium text-foreground transition hover:border-foreground/50 hover:text-foreground [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12 [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-2"
+            className="inline-flex min-h-9 items-center justify-center border border-border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:border-signal hover:text-foreground [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12 [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-2"
             title="Show all tags"
           >
             +{moreCount} more
@@ -114,20 +132,25 @@ export function TagBar({
 
           {open && (
             <div
+              id={panelId}
               ref={panelRef}
               role="dialog"
-              aria-modal="true"
               aria-label="All tags"
-              className="absolute right-0 z-50 mt-2 w-72 rounded-lg border bg-background p-3 shadow-lg"
+              className="fixed inset-x-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col border border-border bg-popover p-3 shadow-lg sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 sm:max-h-[min(24rem,calc(100dvh-8rem))]"
             >
+              <label htmlFor={searchId} className="sr-only">
+                Search all tags
+              </label>
               <input
+                id={searchId}
+                ref={searchRef}
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search tags..."
-                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="h-11 w-full border border-border bg-background px-3 text-sm outline-none focus:border-signal"
               />
-              <div className="mt-2 max-h-64 overflow-auto pr-1">
+              <div className="mt-2 min-h-0 flex-1 overflow-auto pr-1">
                 {filteredPanelTags.length === 0 ? (
                   <p className="p-2 text-sm text-muted-foreground">No matching tags.</p>
                 ) : (
@@ -137,7 +160,7 @@ export function TagBar({
                     return (
                       <label
                         key={`row-${tag}`}
-                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-accent"
+                        className="flex min-h-11 cursor-pointer items-center gap-2 px-2 py-1 text-sm hover:bg-accent"
                       >
                         <input
                           type="checkbox"
@@ -162,7 +185,7 @@ export function TagBar({
                       onClear()
                       setQuery('')
                     }}
-                    className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+                    className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline-offset-4 hover:underline"
                   >
                     Clear all
                   </button>
@@ -171,10 +194,10 @@ export function TagBar({
                 )}
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-                >
-                  Done
+                  onClick={closeAndRestoreFocus}
+                    className="min-h-11 border border-border px-3 py-1.5 text-sm hover:bg-accent [@media(pointer:coarse)]:min-h-12"
+                  >
+                    Close filters
                 </button>
               </div>
             </div>
