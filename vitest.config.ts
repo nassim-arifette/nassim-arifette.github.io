@@ -16,7 +16,6 @@ export default defineConfig({
       '!**/node_modules/**',
       '!**/out/**',
     ],
-    globals: true,
     setupFiles: ['vitest.setup.ts'],
   },
   resolve: {

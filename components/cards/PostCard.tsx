@@ -1,6 +1,7 @@
 import type { Post } from 'contentlayer/generated'
 import { getPreviewText } from '@/lib/preview'
 import { getSeriesPartForPostSlug } from '@/lib/series'
+import { formatDate } from '@/lib/mdx'
 import Link from 'next/link'
 import { TagLink } from '@/components/tags/TagLink'
 
@@ -31,7 +32,7 @@ export function PostCard({ post }: { post: Post }) {
             </Link>
           </h3>
           <span className="shrink-0 text-xs text-muted-foreground sm:text-right">
-            {new Date(post.date).toLocaleDateString()}
+            {formatDate(post.date)}
           </span>
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{post.description}</p>

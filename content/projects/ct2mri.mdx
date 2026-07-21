@@ -1,6 +1,6 @@
 ---
 title: "CT → MRI Synthesis (3D CycleGAN)"
-date: "2025-06-30"
+date: "2025-09-12"
 description: "Unpaired 3D medical image translation with custom losses."
 tags: [
   "Computer Vision",
@@ -13,7 +13,33 @@ tags: [
   "Unpaired"
 ]
 featured: false
-links: { github: "https://github.com/you/ct2mri", pdf: "https://arxiv.org/..." }
+links: { pdf: "/ct-to-mri-synthesis-report.pdf" }
 ---
 
-Short overview, challenges, results, and links.
+## Overview
+
+During my internship with the MRI group at BioMaps, I studied **unpaired, fully volumetric CT-to-UTE-MRI translation of the thorax**. The practical goal was label transfer: generate MRI-like volumes from annotated CT scans while keeping the original anatomy and voxel geometry intact, so that scarce MRI segmentation data can be supplemented without spatially warping the labels.
+
+## What I built
+
+- A reproducible 3D preprocessing pipeline covering orientation unification, 1 mm isotropic resampling, shape-safe padding, and modality-specific intensity normalization.
+- A controlled comparison of 3D CycleGAN variants using ResNet-9b, U-Net++, and an adapted DC-CycleGAN backbone.
+- Experiments with LSGAN and WGAN-GP objectives, cycle consistency, and structure-aware losses.
+- **Hist-CycleGAN**, which adds a differentiable histogram loss to align the generated and real MRI intensity distributions during training.
+
+## Main finding
+
+The models generally preserved anatomy and volumetric coherence, but realistic UTE-MRI contrast was the harder problem. Standard objectives produced global intensity shifts, scale drift, saturation, or mode collapse even when cycle-reconstruction scores were strong. This made the intensity-distribution gap—not geometric fidelity—the main bottleneck.
+
+| Model | FID ↓ | KID ↓ |
+| --- | ---: | ---: |
+| ResNet-LSGAN baseline | 225.96 | 0.1158 |
+| Hist-CycleGAN | **217.89** | **0.0969** |
+
+The histogram-aware objective improved both distributional metrics while retaining anatomical fidelity. Residual contrast bias remains, so the work points toward region-conditioned histogram supervision, CDF-based distances, MRI noise modelling, and downstream validation on vascular-tree segmentation.
+
+## Report
+
+The full report documents the datasets, preprocessing safeguards, architectures, ablations, qualitative comparisons, and training details.
+
+**[Read the full CT-to-MRI synthesis report (PDF)](/ct-to-mri-synthesis-report.pdf)**

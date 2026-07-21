@@ -15,12 +15,12 @@ export const metadata: Metadata = buildMetadata({
 })
 
 export default function CvPage() {
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
-  const pdfUrl = `${basePath}/cv.pdf`
+  const pdfUrl = '/cv.pdf'
   const name = 'Nassim Arifette'
   const role = 'ML Engineer — Computer Vision • 3D • Medical Imaging'
   const cityCountry = 'Lisses, France'
-  const email = 'nassim dot ari at gmail dot com'
+  const emailAddress = 'nassim.ari@gmail.com'
+  const emailLabel = 'nassim dot ari at gmail dot com'
   const linkedIn = 'https://www.linkedin.com/in/nassim-arifette'
   const github = 'https://github.com/nassim-arifette'
   const website = 'https://nassim-arifette.github.io'
@@ -38,7 +38,7 @@ export default function CvPage() {
             name,
             url: website,
             sameAs: [linkedIn, github, website],
-            email: `mailto:${email}`,
+            email: `mailto:${emailAddress}`,
             jobTitle: 'ML Engineer (Computer Vision, 3D, Medical Imaging)',
             //telephone: phone,
             address: { '@type': 'PostalAddress', addressLocality: 'Lisses', addressCountry: 'FR' },
@@ -52,7 +52,7 @@ export default function CvPage() {
         <p className="text-muted-foreground">{role} • {cityCountry}</p>
 
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <a href={`mailto:${email}`} className="underline underline-offset-4">{email}</a>
+          <a href={`mailto:${emailAddress}`} className="underline underline-offset-4">{emailLabel}</a>
           <span aria-hidden className="text-muted-foreground">•</span>
           <a href={linkedIn} target="_blank" rel="noreferrer" className="underline underline-offset-4">LinkedIn</a>
           <span aria-hidden className="text-muted-foreground">•</span>

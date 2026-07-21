@@ -1,4 +1,10 @@
 import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
+
+afterEach(() => {
+  cleanup()
+})
 
 // Some DOM-like runtimes omit SharedArrayBuffer/Atomics; stub them so libraries that
 // feature-detect SAB do not crash during unit tests.
