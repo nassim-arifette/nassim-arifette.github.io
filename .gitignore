@@ -19,6 +19,9 @@ public/og/*.png
 .env*
 !.env.example
 
+# Local writing references
+pedagogical-research-writing-guide.md
+
 # Logs
 *.log
 npm-debug.log*

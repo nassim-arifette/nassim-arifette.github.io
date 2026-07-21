@@ -98,6 +98,12 @@ export function ZoomableImage({
     event.stopPropagation()
   }, [])
 
+  const handleDialogKeyDown = React.useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Tab') return
+    event.preventDefault()
+    closeButtonRef.current?.focus()
+  }, [])
+
   const previewProps = React.useMemo(() => {
     const props: ZoomableImageProps = { ...rest }
     if (!props.loading) {
@@ -113,12 +119,13 @@ export function ZoomableImage({
       aria-label={alt ? `Expanded view of ${alt}` : 'Expanded image'}
       className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4 backdrop-blur-sm"
       onClick={handleOverlayClick}
+      onKeyDown={handleDialogKeyDown}
     >
       <div className="relative max-h-[90vh] w-full max-w-4xl" onClick={handleContentClick}>
         <button
           ref={closeButtonRef}
           type="button"
-          className="absolute right-4 top-4 rounded-full border border-transparent bg-background/80 px-3 py-1 text-sm text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="absolute right-4 top-4 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-transparent bg-background/80 px-3 py-2 text-sm text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:min-w-12"
           onClick={closeLightbox}
         >
           Close
@@ -139,6 +146,7 @@ export function ZoomableImage({
         ref={imageRef}
         alt={alt}
         role="button"
+        aria-label={alt ? `Expand image: ${alt}` : 'Expand image'}
         tabIndex={0}
         onClick={handlePreviewClick}
         onKeyDown={handlePreviewKeyDown}

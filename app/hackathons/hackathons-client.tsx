@@ -1,13 +1,13 @@
 'use client'
 
-import type { Project } from 'contentlayer/generated'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ProjectCard } from '@/components/cards/ProjectCard'
+import type { ProjectCardData } from '@/lib/content-projections'
 
 type HackathonsClientProps = {
-  projects: Project[]
+  projects: ProjectCardData[]
 }
 
 export function HackathonsClient({ projects }: HackathonsClientProps) {
@@ -20,17 +20,21 @@ export function HackathonsClient({ projects }: HackathonsClientProps) {
   )
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-3">
-        <h1 className="text-3xl font-semibold">Hackathons</h1>
-        <p className="text-sm text-muted-foreground">
+    <div className="pb-8">
+      <header className="grid gap-8 border-b border-border pb-12 pt-3 md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.45fr)] md:items-end lg:pt-8">
+        <div>
+          <p className="manuscript-label text-signal">Rapid prototypes · Field constraints</p>
+          <h1 className="mt-5 text-[clamp(3.4rem,7vw,6.6rem)] font-medium leading-[0.92] tracking-[-0.05em]">Hackathon work.</h1>
+        </div>
+        <div>
+        <p className="text-sm leading-6 text-muted-foreground">
           A collection of the hackathons I have participated in and the projects shipped during those events.
         </p>
-        <div className="flex items-center gap-3 text-sm">
+        <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
           <Link
             href={winnersOnly ? '/hackathons' : '/hackathons?winners=1'}
-            className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 transition ${
-              winnersOnly ? 'border-foreground bg-foreground text-background' : 'border-border hover:border-foreground/50'
+            className={`inline-flex min-h-11 items-center gap-2 border px-3 py-1.5 transition-colors ${
+              winnersOnly ? 'border-signal bg-signal text-background' : 'border-border hover:border-signal hover:text-signal'
             }`}
           >
             <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden />
@@ -42,17 +46,20 @@ export function HackathonsClient({ projects }: HackathonsClientProps) {
             </span>
           )}
         </div>
+        </div>
       </header>
 
+      <section className="pt-10 sm:pt-12" aria-label="Hackathon projects">
       {filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground">No hackathon projects available yet.</p>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((project) => (
-            <ProjectCard key={project.slug} project={project} idAnchor />
+        <div className="divide-y divide-border border-y border-border">
+          {filtered.map((project, index) => (
+            <ProjectCard key={project.slug} project={project} idAnchor index={index + 1} headingLevel={2} />
           ))}
         </div>
       )}
+      </section>
     </div>
   )
 }

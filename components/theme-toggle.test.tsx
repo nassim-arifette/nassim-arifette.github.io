@@ -29,7 +29,7 @@ describe('ThemeToggle', () => {
   it('shows the sun icon when the current theme is dark and toggles to light on click', async () => {
     const setTheme = vi.fn()
     const { container } = renderWithTheme({ resolvedTheme: 'dark', setTheme })
-    const button = screen.getByRole('button', { name: /toggle theme/i })
+    const button = screen.getByRole('button', { name: /switch to light theme/i })
 
     await waitFor(() => expect(container.querySelector('svg.lucide-sun')).toBeInTheDocument())
 
@@ -41,7 +41,7 @@ describe('ThemeToggle', () => {
   it('toggles from light to dark on click', async () => {
     const setTheme = vi.fn()
     renderWithTheme({ resolvedTheme: 'light', setTheme })
-    const button = screen.getByRole('button', { name: /toggle theme/i })
+    const button = screen.getByRole('button', { name: /switch to dark theme/i })
     fireEvent.click(button)
 
     expect(setTheme).toHaveBeenCalledWith('dark')

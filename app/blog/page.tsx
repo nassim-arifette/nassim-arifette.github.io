@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
+import { ArrowRight } from 'lucide-react'
 import { PostsList } from '@/components/blog/PostsList'
 import { getSeriesPartForPostSlug, listSeries } from '@/lib/series'
 import { absoluteUrl } from '@/lib/seo'
@@ -8,10 +10,11 @@ import { getOgImageUrl } from '@/lib/og'
 import { getPublishedPosts } from '@/lib/content'
 import { getTagAggregates } from '@/lib/tags'
 import { TagLink } from '@/components/tags/TagLink'
+import { toPostListItem } from '@/lib/content-projections'
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Blog',
-  description: 'Analyses, research notes, and engineering write-ups from Nassim Arifette.',
+  title: 'Research Notes',
+  description: 'A searchable notebook of analyses, mathematical readings, experiments, and engineering write-ups from Nassim Arifette.',
   path: '/blog',
   ogImage: getOgImageUrl(),
 })
@@ -44,7 +47,7 @@ export default function BlogIndex() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'Nassim Arifette - Blog',
+    name: 'Nassim Arifette - Research Notes',
     url: absoluteUrl('/blog'),
     about: 'Research notes and engineering write-ups from Nassim Arifette.',
     blogPost: posts.map((post) => ({
@@ -57,23 +60,40 @@ export default function BlogIndex() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="pb-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
-        <div className="space-y-6">
-          <h1 className="text-3xl font-semibold">Blog</h1>
-          <PostsList posts={posts} seriesInfo={seriesInfo} />
+      <header className="grid border-b border-border pb-12 pt-3 lg:grid-cols-[3rem_minmax(0,1fr)] lg:gap-10 lg:pb-16 lg:pt-8">
+        <div className="hidden border-r border-border pr-3 lg:block">
+          <span className="block text-center font-serif text-lg text-signal">01</span>
+          <span className="mx-auto mt-5 block h-16 w-px bg-border" aria-hidden="true" />
         </div>
-        <aside className="space-y-4 self-start lg:sticky lg:top-24">
+        <div className="grid gap-8 md:grid-cols-[minmax(0,1.2fr)_minmax(17rem,0.55fr)] md:items-end">
+          <div>
+            <p className="manuscript-label text-signal">Notes · Derivations · Experiment logs</p>
+            <h1 className="mt-5 max-w-[12ch] text-[clamp(3.4rem,7vw,6.6rem)] font-medium leading-[0.92] tracking-[-0.05em]">
+              A research notebook, not a content feed.
+            </h1>
+          </div>
+          <p className="max-w-[48ch] border-t border-border pt-5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+            Longer explanations, implementation notes, and guided mathematical readings.
+            Search by question, technique, or series and follow the reasoning in full.
+          </p>
+        </div>
+      </header>
+
+      <div className="grid gap-12 pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(250px,0.3fr)] lg:pt-12">
+        <section aria-label="Search and browse notes">
+          <Suspense fallback={<p className="py-8 text-sm text-muted-foreground">Loading notes…</p>}>
+            <PostsList posts={posts.map(toPostListItem)} seriesInfo={seriesInfo} />
+          </Suspense>
+        </section>
+        <aside className="space-y-10 self-start border-t border-border pt-5 lg:sticky lg:top-24">
           {tagHighlights.length > 0 ? (
             <div className="space-y-3">
-              <div className="space-y-1">
-                <h2 className="text-xl font-semibold">Tags</h2>
-                <p className="text-sm text-muted-foreground">Browse posts by topic.</p>
-              </div>
+              <p className="manuscript-label">Index terms</p>
               <div className="flex flex-wrap gap-2">
                 {tagHighlights.map((tag) => (
                   <TagLink
@@ -84,16 +104,16 @@ export default function BlogIndex() {
                   />
                 ))}
               </div>
-              <Link href="/tags" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-                View all tags
+              <Link href="/tags" className="editorial-link min-h-9 text-xs">
+                View all index terms <ArrowRight size={13} aria-hidden="true" />
               </Link>
             </div>
           ) : null}
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold">Series</h2>
-            <p className="text-sm text-muted-foreground">Follow related posts in order.</p>
+          <div>
+            <p className="manuscript-label">Guided series</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Follow related notes in order.</p>
           </div>
-          <div className="space-y-3">
+          <div className="divide-y divide-border border-y border-border">
             {seriesList.length === 0 ? (
               <p className="text-sm text-muted-foreground">No series yet.</p>
             ) : (
@@ -101,17 +121,17 @@ export default function BlogIndex() {
                 <Link
                   key={series.slug}
                   href={series.url}
-                  className="block rounded-lg border border-border/70 bg-card p-4 transition hover:-translate-y-1 hover:border-foreground/40 hover:shadow-md"
+                  className="group block py-4 transition-colors hover:text-signal"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span className="text-sm font-semibold leading-snug text-foreground">{series.title}</span>
-                    <span className="text-xs text-muted-foreground">{parts.length} parts</span>
+                    <span className="font-serif text-sm tabular-nums text-muted-foreground">{parts.length}</span>
                   </div>
                   {series.description ? (
                     <p className="mt-1 text-sm text-muted-foreground">{series.description}</p>
                   ) : null}
                   {startPart ? (
-                    <span className="mt-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-primary/70">
+                    <span className="mt-3 inline-flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-signal">
                       {startPart.post ? `Start with ${startPart.title}` : 'Coming soon'}
                     </span>
                   ) : null}
@@ -120,8 +140,8 @@ export default function BlogIndex() {
             )}
           </div>
           {seriesList.length > 0 ? (
-            <Link href="/series" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-              View all series
+            <Link href="/series" className="editorial-link min-h-9 text-xs">
+              View all series <ArrowRight size={13} aria-hidden="true" />
             </Link>
           ) : null}
         </aside>

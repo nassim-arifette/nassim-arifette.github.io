@@ -192,6 +192,7 @@ const Project = defineDocumentType(() => ({
     description: { type: 'string', required: true },
     links: { type: 'json', required: false }, // { github, website, demo, paper, pdf }
     tags: { type: 'list', of: { type: 'string' } },
+    language: { type: 'string', default: 'en' },
     featured: { type: 'boolean', default: false },
     placement: { type: 'string', required: false }, // e.g., "1st place"
     winner: { type: 'boolean', required: false, default: false },

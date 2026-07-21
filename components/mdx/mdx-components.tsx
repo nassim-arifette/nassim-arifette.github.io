@@ -139,7 +139,8 @@ const HeadingAnchor = React.forwardRef<HTMLAnchorElement, React.AnchorHTMLAttrib
           const targetId = hash.slice(1)
           const element = document.getElementById(targetId)
           if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            element.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
           }
         }
       },
@@ -173,19 +174,19 @@ HeadingAnchor.displayName = 'HeadingAnchor'
 
 export const mdxComponents = {
   h1: ({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h1 className={cn('group mt-2 scroll-m-20 text-3xl font-semibold tracking-tight', className)} {...props} />
+    <h1 className={cn('group mt-2 scroll-m-20 text-4xl font-medium tracking-tight', className)} {...props} />
   ),
   h2: ({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h2
       className={cn(
-        'group mt-10 scroll-m-20 border-b pb-1 text-2xl font-semibold tracking-tight first:mt-0',
+        'group mt-12 scroll-m-20 border-b border-border pb-2 text-3xl font-medium tracking-tight first:mt-0',
         className,
       )}
       {...props}
     />
   ),
   h3: ({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h3 className={cn('group mt-8 scroll-m-20 text-xl font-semibold tracking-tight', className)} {...props} />
+    <h3 className={cn('group mt-9 scroll-m-20 text-2xl font-medium tracking-tight', className)} {...props} />
   ),
   p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
     <p className="leading-7 [&:not(:first-child)]:mt-6" {...props} />
@@ -197,7 +198,7 @@ export const mdxComponents = {
     <ol className="my-6 ml-6 list-decimal" {...props} />
   ),
   blockquote: (props: React.HTMLAttributes<HTMLQuoteElement>) => (
-    <blockquote className="mt-6 border-l-2 pl-6 italic text-muted-foreground" {...props} />
+    <blockquote className="mt-7 border-l-2 border-signal pl-6 italic text-muted-foreground" {...props} />
   ),
   a: ({
     href = '',

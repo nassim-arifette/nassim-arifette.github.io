@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import { Resvg } from '@resvg/resvg-js'
 import satori from 'satori'
 
@@ -10,25 +10,36 @@ const rootDir = path.resolve(__dirname, '..')
 
 const CANVAS = { width: 1200, height: 630 }
 const SITE_NAME = 'Nassim Arifette'
-const BACKGROUND = 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #111827 100%)'
+const BACKGROUND = 'linear-gradient(135deg, #faf7ef 0%, #f2eadc 100%)'
+const INK = '#101722'
+const MUTED_INK = '#52606f'
+const SIGNAL = '#155fc2'
+const RULE = '#d2c8b7'
+const ANNOTATION = '#b8662c'
 const RESERVED_BASENAME = 'default'
 
 async function loadContentlayer() {
-  const contentlayerUrl = pathToFileURL(path.join(rootDir, '.contentlayer', 'generated', 'index.mjs')).href
   try {
-    const { allPosts = [], allProjects = [] } = await import(contentlayerUrl)
-    return { posts: allPosts, projects: allProjects }
+    const [postsSource, projectsSource] = await Promise.all([
+      fs.readFile(path.join(rootDir, '.contentlayer', 'generated', 'Post', '_index.json'), 'utf8'),
+      fs.readFile(path.join(rootDir, '.contentlayer', 'generated', 'Project', '_index.json'), 'utf8'),
+    ])
+    return {
+      posts: JSON.parse(postsSource),
+      projects: JSON.parse(projectsSource),
+    }
   } catch (error) {
     throw new Error(
-      `Unable to load Contentlayer data from .contentlayer/generated/index.mjs. Run "npm run content:build" first.\n${
+      `Unable to load Contentlayer data. Run "npm run content:build" first.\n${
         error instanceof Error ? error.message : error
       }`,
     )
   }
 }
 
-async function fetchFont(weight) {
-  const cssUrl = `https://fonts.googleapis.com/css2?family=Inter:wght@${weight}`
+async function fetchFont(family, weight) {
+  const cssFamily = family.replace(/ /g, '+')
+  const cssUrl = `https://fonts.googleapis.com/css2?family=${cssFamily}:wght@${weight}&display=swap`
   const headers = {
     'User-Agent': 'Mozilla/5.0 (compatible; og-generator/1.0)',
     Accept: 'text/css,*/*;q=0.1',
@@ -36,7 +47,7 @@ async function fetchFont(weight) {
 
   const cssResponse = await fetch(cssUrl, { headers })
   if (!cssResponse.ok) {
-    throw new Error(`Failed to fetch Inter ${weight} CSS: ${cssResponse.status} ${cssResponse.statusText}`)
+    throw new Error(`Failed to fetch ${family} ${weight} CSS: ${cssResponse.status} ${cssResponse.statusText}`)
   }
   const css = await cssResponse.text()
   const fontUrlMatch = css.match(/https:[^')]+/)
@@ -50,13 +61,16 @@ async function fetchFont(weight) {
   }
 
   const fontBuffer = Buffer.from(await fontResponse.arrayBuffer())
-  return { name: 'Inter', data: fontBuffer, weight, style: 'normal' }
+  return { name: family, data: fontBuffer, weight, style: 'normal' }
 }
 
 let fontCache
 async function getFonts() {
   if (fontCache) return fontCache
-  fontCache = await Promise.all([fetchFont(600), fetchFont(800)])
+  fontCache = await Promise.all([
+    fetchFont('Instrument Sans', 600),
+    fetchFont('Newsreader', 600),
+  ])
   return fontCache
 }
 
@@ -93,10 +107,10 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
         flexDirection: 'column',
         gap: 28,
         padding: '64px',
-        color: '#e2e8f0',
+        color: INK,
         background: BACKGROUND,
         overflow: 'hidden',
-        fontFamily: 'Inter',
+        fontFamily: 'Instrument Sans',
       },
       children: [
         {
@@ -112,11 +126,12 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
                 type: 'div',
                 props: {
                   style: {
-                    fontSize: 26,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
-                    color: '#cbd5e1',
+                  fontSize: 26,
+                  letterSpacing: '-0.02em',
+                  fontWeight: 600,
+                  color: INK,
+                  fontFamily: 'Newsreader',
+                  width: 400,
                   },
                   children: SITE_NAME,
                 },
@@ -129,12 +144,14 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
                     alignItems: 'center',
                     gap: 10,
                     padding: '10px 18px',
-                    borderRadius: 9999,
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    background: 'rgba(255,255,255,0.06)',
-                    color: '#f8fafc',
-                    fontSize: 20,
+                    borderRadius: 2,
+                    border: `1px solid ${SIGNAL}`,
+                    background: 'rgba(21,95,194,0.04)',
+                    color: SIGNAL,
+                    fontSize: 17,
                     fontWeight: 700,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
                   },
                   children: typeLabel,
                 },
@@ -146,11 +163,13 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
           type: 'div',
           props: {
             style: {
-              fontSize: 68,
-              fontWeight: 800,
-              lineHeight: 1.08,
-              color: '#f8fafc',
+              fontSize: 72,
+              fontWeight: 600,
+              lineHeight: 1.02,
+              letterSpacing: '-0.035em',
+              color: INK,
               maxWidth: '1000px',
+              fontFamily: 'Newsreader',
             },
             children: title,
           },
@@ -162,7 +181,7 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
                 style: {
                   fontSize: 26,
                   fontWeight: 600,
-                  color: '#cbd5e1',
+                  color: MUTED_INK,
                 },
                 children: metaLine,
               },
@@ -184,12 +203,12 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
                   props: {
                     style: {
                       padding: '10px 14px',
-                      borderRadius: 9999,
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      fontSize: 22,
+                      borderRadius: 2,
+                      background: 'rgba(255,255,255,0.22)',
+                      border: `1px solid ${RULE}`,
+                      fontSize: 19,
                       fontWeight: 600,
-                      color: '#e2e8f0',
+                      color: MUTED_INK,
                     },
                     children: `#${tag}`,
                   },
@@ -203,8 +222,8 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
             style: {
               position: 'absolute',
               inset: 30,
-              borderRadius: 28,
-              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 8,
+              border: `1px solid ${RULE}`,
               pointerEvents: 'none',
             },
           },
@@ -214,12 +233,11 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
           props: {
             style: {
               position: 'absolute',
-              width: 420,
-              height: 420,
-              right: -80,
-              top: -60,
-              background: 'radial-gradient(circle at center, rgba(124,58,237,0.25), rgba(14,165,233,0) 60%)',
-              filter: 'blur(2px)',
+              left: 64,
+              right: 64,
+              top: 126,
+              height: 1,
+              background: RULE,
             },
           },
         },
@@ -228,12 +246,40 @@ function buildOgTree({ title, typeLabel, metaLine, tags }) {
           props: {
             style: {
               position: 'absolute',
-              width: 380,
-              height: 380,
-              left: -120,
-              bottom: -80,
-              background: 'radial-gradient(circle at center, rgba(14,165,233,0.22), rgba(124,58,237,0) 60%)',
-              filter: 'blur(2px)',
+              width: 390,
+              height: 390,
+              right: -125,
+              bottom: -180,
+              borderRadius: 9999,
+              border: '1px solid rgba(21,95,194,0.16)',
+            },
+          },
+        },
+        {
+          type: 'div',
+          props: {
+            style: {
+              position: 'absolute',
+              width: 245,
+              height: 245,
+              right: -15,
+              bottom: -105,
+              borderRadius: 9999,
+              border: '1px solid rgba(21,95,194,0.13)',
+            },
+          },
+        },
+        {
+          type: 'div',
+          props: {
+            style: {
+              position: 'absolute',
+              width: 13,
+              height: 13,
+              right: 112,
+              bottom: 101,
+              borderRadius: 9999,
+              background: ANNOTATION,
             },
           },
         },
@@ -284,7 +330,7 @@ async function generateAll() {
       title: post.title,
       metaLine: formatDate(post.date),
       tags: clampTags(post.tags),
-      typeLabel: 'Blog post',
+      typeLabel: 'Research note',
     }))
 
   const projectEntries = (projects ?? []).map((project) => ({
@@ -300,6 +346,16 @@ async function generateAll() {
     console.log('No posts or projects found; skipping OG generation.')
     return
   }
+
+  await writeOgImage(
+    path.join(ogDir, `${RESERVED_BASENAME}.png`),
+    buildOgTree({
+      title: 'Building systems that preserve structure on difficult data.',
+      typeLabel: 'Research portfolio',
+      metaLine: 'Machine learning · computer vision · reliable systems',
+      tags: [],
+    }),
+  )
 
   const expectedBasenames = new Set([RESERVED_BASENAME])
   let written = 0

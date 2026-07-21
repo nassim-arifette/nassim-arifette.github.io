@@ -3,13 +3,13 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Search } from 'lucide-react'
-import type { Project } from 'contentlayer/generated'
+import type { ProjectCardData } from '@/lib/content-projections'
 import { ProjectCard } from '@/components/cards/ProjectCard'
 import { TagBar } from '@/components/filters/TagBar'
 import { normalizeText } from '@/lib/search'
 
 type ProjectsGridProps = {
-  projects: Project[]
+  projects: ProjectCardData[]
 }
 
 const arraysEqual = (a: string[], b: string[]) => {
@@ -24,7 +24,6 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
 
   const [query, setQuery] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
-  const [activeIndex, setActiveIndex] = useState(-1)
 
   const hasHydrated = useRef(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -105,21 +104,6 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
       .map((entry) => entry.ref)
   }, [indexedProjects, activeTags, normalizedQuery])
 
-  const filteredProjectsRef = useRef(filteredProjects)
-
-  useEffect(() => {
-    filteredProjectsRef.current = filteredProjects
-    setActiveIndex((current) => {
-      if (filteredProjects.length === 0) return -1
-      if (current < 0) return current
-      return Math.min(current, filteredProjects.length - 1)
-    })
-  }, [filteredProjects])
-
-  useEffect(() => {
-    setActiveIndex(-1)
-  }, [normalizedQuery, activeTags])
-
   const toggleTag = (tag: string) => {
     setActiveTags((current) =>
       current.includes(tag) ? current.filter((value) => value !== tag) : [...current, tag],
@@ -133,72 +117,44 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey || event.altKey) return
+      if (event.metaKey || event.ctrlKey || event.altKey || event.key !== '/') return
       const target = event.target as HTMLElement | null
-      const isInteractive = target?.closest('a, button, input, textarea, select, [contenteditable]') != null
+      const isInteractive =
+        target?.closest('a, button, input, textarea, select, [contenteditable]') != null
+      if (isInteractive && target !== searchInputRef.current) return
 
-      if (event.key === '/') {
-        if (isInteractive && target !== searchInputRef.current) return
-        event.preventDefault()
-        if (document.activeElement === searchInputRef.current && query) {
-          setQuery('')
-        } else {
-          searchInputRef.current?.focus()
-          searchInputRef.current?.select()
-        }
-        return
-      }
-
-      const key = event.key.toLowerCase()
-      const results = filteredProjectsRef.current
-
-      if ((key === 'j' || key === 'k') && results.length > 0) {
-        if (isInteractive) return
-        event.preventDefault()
-        setActiveIndex((current) => {
-          if (key === 'j') {
-            if (current < 0) return 0
-            return Math.min(current + 1, results.length - 1)
-          }
-          if (current < 0) return results.length - 1
-          if (current <= 0) return 0
-          return Math.max(current - 1, 0)
-        })
-        return
-      }
-
-      if (event.key === 'Enter' && results.length > 0) {
-        if (isInteractive) return
-        event.preventDefault()
-        const selected = results[activeIndex] ?? results[0]
-        if (selected) {
-          router.push(selected.url)
-        }
-      }
+      event.preventDefault()
+      searchInputRef.current?.focus()
+      searchInputRef.current?.select()
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeIndex, router, query])
+  }, [])
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 border-b border-border/70 pb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex flex-col">
-          <label htmlFor="projects-search" className="sr-only">
+    <div className="space-y-7">
+      <div className="flex flex-col gap-4 border-y border-border py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full max-w-md flex-col gap-2">
+          <label
+            htmlFor="projects-search"
+            className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground"
+          >
             Search projects
           </label>
-          <input
-            id="projects-search"
-            type="search"
-            ref={searchInputRef}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search title, method, or field"
-            className="h-11 w-full border-0 border-b border-border bg-transparent pl-8 pr-10 text-sm outline-none transition focus:border-foreground focus-visible:ring-0 sm:w-80"
-          />
-          <Search aria-hidden="true" className="absolute bottom-3 left-0 text-muted-foreground" size={16} />
-          <kbd className="pointer-events-none absolute bottom-2.5 right-1 hidden border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground sm:block">/</kbd>
+          <div className="relative">
+            <input
+              id="projects-search"
+              type="search"
+              ref={searchInputRef}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Title, method, or field"
+              className="h-11 w-full border-0 border-b border-foreground/40 bg-transparent pl-7 pr-10 text-sm transition-colors focus:border-signal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+            <Search aria-hidden="true" className="absolute bottom-3 left-0 text-muted-foreground" size={16} />
+            <kbd className="pointer-events-none absolute bottom-2.5 right-1 hidden border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground sm:block">/</kbd>
+          </div>
         </div>
         {(query || activeTags.length > 0) && (
           <button
@@ -220,34 +176,17 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
           label="Filter projects by tag"
         />
       )}
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground" aria-live="polite">
+      <p className="manuscript-label" aria-live="polite">
         {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projects'} shown
       </p>
       <div>
         {filteredProjects.length === 0 ? (
           <p className="text-sm text-muted-foreground">No projects match your filters.</p>
         ) : (
-          <div className="grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project, index) => {
-              const selected = index === activeIndex
-              return (
-                <div
-                  key={project.slug}
-                  className="h-full"
-                  onMouseEnter={() => setActiveIndex(index)}
-                  onMouseLeave={() => setActiveIndex((current) => (current === index ? -1 : current))}
-                >
-                  <ProjectCard
-                    project={project}
-                    idAnchor
-                    className={
-                      selected ? 'h-full bg-accent/65 ring-1 ring-inset ring-foreground/30' : 'h-full'
-                    }
-                    index={index + 1}
-                  />
-                </div>
-              )
-            })}
+          <div className="divide-y divide-border border-y border-border">
+            {filteredProjects.map((project, index) => (
+              <ProjectCard key={project.slug} project={project} idAnchor index={index + 1} headingLevel={2} />
+            ))}
           </div>
         )}
       </div>
