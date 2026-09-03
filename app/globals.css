@@ -4,237 +4,148 @@
 
 @layer base {
   :root {
-    --background: 97.2% 0.015 83;
-    --foreground: 20.5% 0.025 257;
-    --signal: 49% 0.16 258;
-    --annotation: 66% 0.12 70;
-
-    --card: 98.1% 0.011 83;
-    --card-foreground: 20.5% 0.025 257;
-
-    --popover: 98.6% 0.01 83;
-    --popover-foreground: 20.5% 0.025 257;
-
-    --primary: 27% 0.075 258;
-    --primary-foreground: 97.2% 0.015 83;
-
-    --secondary: 93.8% 0.018 83;
-    --secondary-foreground: 24% 0.04 257;
-
-    --muted: 93.5% 0.016 83;
-    --muted-foreground: 46% 0.03 257;
-
-    --accent: 91.5% 0.025 82;
-    --accent-foreground: 24% 0.04 257;
-
-    --destructive: 53% 0.19 27;
-    --destructive-foreground: 97.5% 0.012 83;
-
-    --border: 82.5% 0.025 78;
-    --input: 85% 0.022 80;
-    --ring: 49% 0.16 258;
-
-    --radius: 0.3rem;
+    --background: 99.4% 0.003 90;
+    --foreground: 22% 0.012 260;
+    --muted: 96% 0.005 260;
+    --muted-foreground: 50% 0.015 260;
+    --border: 89% 0.006 260;
+    --accent: 45% 0.14 255;
   }
 
   .dark {
-    --background: 17.5% 0.026 258;
-    --foreground: 91.5% 0.018 82;
-    --signal: 71% 0.13 253;
-    --annotation: 72% 0.105 72;
-
-    --card: 20% 0.028 258;
-    --card-foreground: 91.5% 0.018 82;
-
-    --popover: 22% 0.03 258;
-    --popover-foreground: 91.5% 0.018 82;
-
-    --primary: 88% 0.022 82;
-    --primary-foreground: 18% 0.028 258;
-
-    --secondary: 24% 0.032 258;
-    --secondary-foreground: 91% 0.018 82;
-
-    --muted: 24% 0.03 258;
-    --muted-foreground: 70% 0.025 250;
-
-    --accent: 27% 0.038 255;
-    --accent-foreground: 93% 0.018 82;
-
-    --destructive: 58% 0.18 27;
-    --destructive-foreground: 96% 0.014 82;
-
-    --border: 33% 0.035 255;
-    --input: 31% 0.034 255;
-    --ring: 71% 0.13 253;
+    --background: 19% 0.01 260;
+    --foreground: 92% 0.008 90;
+    --muted: 25% 0.01 260;
+    --muted-foreground: 68% 0.015 260;
+    --border: 32% 0.012 260;
+    --accent: 74% 0.11 250;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
   html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 6rem;
+    scroll-padding-top: 5rem;
   }
   body {
     @apply bg-background text-foreground antialiased;
     min-width: 20rem;
-    background-image:
-      radial-gradient(circle at 8% 0%, oklch(var(--signal) / 0.045), transparent 30rem),
-      radial-gradient(circle at 94% 22%, oklch(var(--annotation) / 0.035), transparent 24rem);
-    font-feature-settings: "ss01" 1, "cv11" 1;
-    font-kerning: normal;
   }
   h1,
   h2,
   h3 {
-    @apply font-serif;
     text-wrap: balance;
   }
   p {
     text-wrap: pretty;
   }
   ::selection {
-    background: oklch(var(--signal) / 0.2);
+    background: oklch(var(--accent) / 0.18);
   }
   :where(a, button, input, summary, [tabindex]):focus-visible {
-    outline: 2px solid oklch(var(--ring));
+    outline: 2px solid oklch(var(--accent));
     outline-offset: 3px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
 }
 
 @layer components {
-  .manuscript-label {
-    @apply text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground;
-    font-variant-numeric: tabular-nums;
+  /* Plain text link used for navigation and inline links outside prose. */
+  .link {
+    @apply text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:decoration-accent;
   }
 
-  .manuscript-rule {
-    @apply border-t border-border/80;
-  }
-
-  .marginalia {
-    @apply border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground;
-  }
-
-  .editorial-link {
-    @apply inline-flex min-h-11 items-center gap-2 border-b border-current text-sm font-medium text-signal transition-colors hover:text-foreground;
+  /* Small uppercase heading used for section titles on list pages. */
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground;
   }
 }
 
-
-/* Typography defaults */
+/* Long-form MDX content (posts and project pages) */
 .prose {
   @apply prose-neutral dark:prose-invert;
-  max-width: 74ch;
-  font-size: 1.02rem;
+  max-width: none;
+  font-size: 1rem;
   line-height: 1.75;
 }
 
-.prose :where(h1, h2, h3, h4):not(:where([class~="not-prose"] *)) {
-  font-family: var(--font-editorial), Georgia, serif;
+.prose :where(h1, h2, h3, h4):not(:where([class~='not-prose'] *)) {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.prose :where(a):not(:where([class~='not-prose'] *)) {
+  color: oklch(var(--accent));
   font-weight: 500;
-  letter-spacing: -0.025em;
+  text-decoration-color: oklch(var(--accent) / 0.4);
 }
 
-.prose :where(p, li):not(:where([class~="not-prose"] *)) {
-  color: oklch(var(--foreground) / 0.86);
-}
-
-.prose :where(blockquote):not(:where([class~="not-prose"] *)) {
-  border-color: oklch(var(--signal));
+.prose :where(blockquote):not(:where([class~='not-prose'] *)) {
+  border-color: oklch(var(--border));
   color: oklch(var(--muted-foreground));
-  font-family: var(--font-editorial), Georgia, serif;
-  font-size: 1.12em;
   font-weight: 400;
 }
 
-.prose :where(table):not(:where([class~="not-prose"] *)) {
+.prose :where(table):not(:where([class~='not-prose'] *)) {
   display: block;
   max-width: 100%;
   overflow-x: auto;
   font-variant-numeric: tabular-nums;
 }
 
-.prose :where(.katex-display):not(:where([class~="not-prose"] *)) {
+.prose :where(.katex-display):not(:where([class~='not-prose'] *)) {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding-block: 0.25rem;
-  overscroll-behavior-inline: contain;
 }
 
-/* Syntax highlighting (rehype-pretty-code) */
-/* Hide all theme variants by default */
+/* Heading anchors injected by rehype-autolink-headings */
+.prose :where(.heading-anchor) {
+  text-decoration: none;
+}
+
+/* Syntax highlighting (rehype-pretty-code). Both themes are emitted; show the one matching the site theme. */
 [data-rehype-pretty-code-figure] code,
 [data-rehype-pretty-code-fragment] code {
   display: none;
 }
 
-/* Show only the code node that matches the active theme */
 html:not(.dark) [data-rehype-pretty-code-figure] code[data-theme*='light'],
-html:not(.dark) [data-rehype-pretty-code-fragment] code[data-theme*='light'] {
-  display: grid;
-}
-
+html:not(.dark) [data-rehype-pretty-code-fragment] code[data-theme*='light'],
 .dark [data-rehype-pretty-code-figure] code[data-theme*='dark'],
 .dark [data-rehype-pretty-code-fragment] code[data-theme*='dark'] {
   display: grid;
 }
 
-/* Code block container styling */
 [data-rehype-pretty-code-figure] pre,
-[data-rehype-pretty-code-fragment] pre {
-  background: var(--shiki-color-background) !important;
-  color: var(--shiki-color-text) !important;
-  border: 1px solid oklch(var(--border));
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  overflow-x: auto;
-}
-
-/* If the plugin emits <figure><code> without a <pre>, treat <code> as the container */
+[data-rehype-pretty-code-fragment] pre,
 [data-rehype-pretty-code-figure] > code,
 [data-rehype-pretty-code-fragment] > code {
+  --shiki-color-background: oklch(18% 0.02 260);
+  --shiki-color-text: oklch(93% 0.012 90);
   background: var(--shiki-color-background) !important;
   color: var(--shiki-color-text) !important;
   border: 1px solid oklch(var(--border));
-  border-radius: var(--radius);
+  border-radius: 0.375rem;
   padding: 0.75rem 1rem;
-  display: grid;
   overflow-x: auto;
 }
 
-/* Force the dark theme palette even in light mode (site design choice) */
-html:not(.dark) [data-rehype-pretty-code-figure] pre,
-html:not(.dark) [data-rehype-pretty-code-fragment] pre,
-html:not(.dark) [data-rehype-pretty-code-figure] > code,
-html:not(.dark) [data-rehype-pretty-code-fragment] > code {
-  --shiki-color-background: oklch(18% 0.026 258);
-  --shiki-color-text: oklch(93% 0.015 82);
-  background: oklch(18% 0.026 258) !important;
-  color: oklch(93% 0.015 82) !important;
-  border-color: rgba(255, 255, 255, 0.08);
+[data-rehype-pretty-code-figure] > code,
+[data-rehype-pretty-code-fragment] > code {
+  display: grid;
 }
 
-/* Map token variables to actual colors */
 html:not(.dark) [data-rehype-pretty-code-figure] span[style*='--shiki-'],
 html:not(.dark) [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
   color: var(--shiki-light);
@@ -245,161 +156,78 @@ html:not(.dark) [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
   color: var(--shiki-dark);
 }
 
-/* Code lines */
 [data-rehype-pretty-code-figure] [data-line],
 [data-rehype-pretty-code-fragment] [data-line] {
   padding-inline: 0.25rem;
 }
 
-/* Highlighted lines */
 [data-rehype-pretty-code-figure] [data-highlighted-line],
 [data-rehype-pretty-code-fragment] [data-highlighted-line] {
-  /* Fallback */
-  background: oklch(var(--accent) / 0.12);
-  /* Better contrast if supported */
-  background: color-mix(in oklab, var(--shiki-color-background) 85%, oklch(var(--accent)) 15%);
-  border-left: 2px solid oklch(var(--accent-foreground));
+  background: oklch(var(--accent) / 0.18);
+  border-left: 2px solid oklch(var(--accent));
 }
 
-/* Inline code (non-pre) */
-:not(pre) > code {
-  background: oklch(var(--muted));
-  color: oklch(var(--foreground));
+/* Inline code */
+.prose :where(code):not(:where(pre code)) {
+  @apply rounded bg-muted px-1 py-0.5 font-normal;
   border: 1px solid oklch(var(--border));
-  border-radius: 0.375rem;
-  padding: 0.125rem 0.375rem;
+}
+.prose :where(code):not(:where(pre code))::before,
+.prose :where(code):not(:where(pre code))::after {
+  content: none;
 }
 
-@layer components {
-  /* Inline code chips (not inside <pre>) */
-  .prose :where(code):not(:where(pre code)) {
-    @apply rounded bg-muted px-1 py-0.5;
-  }
-
-  /* Inside code blocks: no chip background, let the <pre> control colors */
-  .prose :where(pre code),
-  [data-rehype-pretty-code-figure] pre code,
-  [data-rehype-pretty-code-fragment] pre code,
-  [data-rehype-pretty-code-figure] > code,
-  [data-rehype-pretty-code-fragment] > code {
-    background: transparent !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Fallback styling for <pre><code> blocks NOT processed by rehype-pretty-code */
-  .prose :where(pre):not(:where([data-rehype-pretty-code-figure] pre, [data-rehype-pretty-code-fragment] pre)) {
-    @apply rounded-lg border border-slate-200 bg-white p-4 text-slate-900;
-  }
-  .dark .prose :where(pre):not(:where([data-rehype-pretty-code-figure] pre, [data-rehype-pretty-code-fragment] pre)) {
-    @apply border-zinc-800 bg-zinc-950 text-zinc-100;
-  }
+.prose :where(pre code),
+[data-rehype-pretty-code-figure] pre code,
+[data-rehype-pretty-code-fragment] pre code {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
 }
 
-
-/* Print styles */
+/* Print */
 @media print {
   @page {
     size: A4;
     margin: 12mm;
   }
-
   html {
-    font-size: 12pt;
     color-scheme: light;
   }
-
-  body {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    background: white !important;
-    color: #0f172a !important;
-  }
-
-  /* Force light palette even if the runtime theme is dark */
   :root,
   .dark {
-    --background: 99% 0.005 83;
-    --foreground: 20.5% 0.025 257;
-    --signal: 43% 0.15 258;
-    --annotation: 60% 0.11 70;
-    --card: 99% 0.005 83;
-    --card-foreground: 20.5% 0.025 257;
-    --popover: 99% 0.005 83;
-    --popover-foreground: 20.5% 0.025 257;
-    --primary: 27% 0.075 258;
-    --primary-foreground: 99% 0.005 83;
-    --secondary: 94% 0.012 83;
-    --secondary-foreground: 24% 0.04 257;
-    --muted: 94% 0.012 83;
-    --muted-foreground: 42% 0.028 257;
-    --accent: 93% 0.016 82;
-    --accent-foreground: 24% 0.04 257;
-    --destructive: 48% 0.18 27;
-    --destructive-foreground: 99% 0.005 83;
-    --border: 83% 0.018 78;
-    --input: 86% 0.016 80;
-    --ring: 43% 0.15 258;
+    --background: 100% 0 0;
+    --foreground: 15% 0 0;
+    --muted: 95% 0 0;
+    --muted-foreground: 40% 0 0;
+    --border: 80% 0 0;
+    --accent: 35% 0.12 255;
   }
-
-  /* Hide chrome that isn't part of the printed content */
   .no-print {
     display: none !important;
   }
-
   a {
     color: inherit;
     text-decoration: underline;
   }
-
-  /* Remove heavy decoration */
-  * {
-    box-shadow: none !important;
-    text-shadow: none !important;
-    background-image: none !important;
-  }
-
-  /* Avoid page breaks inside important blocks */
-  h1, h2, h3, .prose h1, .prose h2, .prose h3 {
+  h1,
+  h2,
+  h3 {
     break-after: avoid;
   }
-  header {
-    break-inside: avoid;
-  }
-
-  /* Keep MDX content readable on paper */
-  .prose {
-    color: inherit;
-  }
-
   .prose img,
-  .prose video,
   .prose pre,
   .prose table,
   .prose figure,
   .prose blockquote {
     break-inside: avoid;
   }
-
-  /* Lighten code blocks for print */
   [data-rehype-pretty-code-figure] pre,
-  [data-rehype-pretty-code-fragment] pre,
-  [data-rehype-pretty-code-figure] > code,
-  [data-rehype-pretty-code-fragment] > code,
-  .prose :where(pre):not(:where([data-rehype-pretty-code-figure] pre, [data-rehype-pretty-code-fragment] pre)) {
+  [data-rehype-pretty-code-fragment] pre {
     --shiki-color-background: #f6f8fa !important;
     --shiki-color-text: #0f172a !important;
-    background: #f6f8fa !important;
-    color: #0f172a !important;
-    border-color: #d0d7de !important;
   }
-
-  .prose :where(code):not(:where(pre code)) {
-    background: #f1f5f9 !important;
-    color: #0f172a !important;
-    border-color: #d0d7de !important;
-  }
-
   [data-rehype-pretty-code-figure] span[style*='--shiki-'],
   [data-rehype-pretty-code-fragment] span[style*='--shiki-'] {
     color: currentColor !important;

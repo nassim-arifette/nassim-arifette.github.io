@@ -1,48 +1,15 @@
+import { site } from '@/lib/site'
+
 export default function Footer() {
   return (
-    <footer className="no-print border-t border-border/80">
-      <div className="container grid gap-8 py-10 sm:grid-cols-[1fr_auto] sm:items-end">
-        <div>
-          <p className="font-serif text-lg tracking-[-0.015em] text-foreground">Nassim Arifette</p>
-          <p className="mt-1 text-xs tracking-[0.04em] text-muted-foreground">
-            Machine learning research &amp; engineering
-          </p>
-          <p className="mt-5 text-xs tabular-nums text-muted-foreground">
-            © {new Date().getFullYear()} Nassim Arifette
-          </p>
-        </div>
-
-        <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground sm:justify-end">
-          <a
-            href="https://github.com/nassim-arifette"
-            target="_blank"
-            rel="noreferrer"
-            className="border-b border-transparent pb-0.5 transition-colors hover:border-border hover:text-foreground"
-          >
-            GitHub
-          </a>
-          <a
-            href="https://www.linkedin.com/in/nassim-arifette"
-            target="_blank"
-            rel="noreferrer"
-            className="border-b border-transparent pb-0.5 transition-colors hover:border-border hover:text-foreground"
-          >
-            LinkedIn
-          </a>
-          <a
-            href="mailto:nassim.ari@gmail.com"
-            className="border-b border-transparent pb-0.5 transition-colors hover:border-border hover:text-foreground"
-          >
-            Email
-          </a>
-          <a
-            href="/cv.pdf"
-            target="_blank"
-            rel="noreferrer"
-            className="border-b border-transparent pb-0.5 transition-colors hover:border-border hover:text-foreground"
-          >
-            CV (PDF)
-          </a>
+    <footer className="no-print mx-auto w-full max-w-2xl px-5 pb-8">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-border pt-5 text-xs text-muted-foreground">
+        <span>© {new Date().getFullYear()} {site.name}</span>
+        <nav aria-label="Footer" className="flex gap-4">
+          <a href={site.github} target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
+          <a href={site.linkedin} target="_blank" rel="noreferrer" className="hover:text-foreground">LinkedIn</a>
+          <a href={`mailto:${site.email}`} className="hover:text-foreground">Email</a>
+          <a href="/feed.xml" className="hover:text-foreground">RSS</a>
         </nav>
       </div>
     </footer>

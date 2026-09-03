@@ -1,6 +1,6 @@
 # Nassim Arifette — Portfolio
 
-Static research portfolio built with Next.js, Contentlayer, Tailwind CSS, and MDX. It is deployed to the root GitHub Pages site at `nassim-arifette.github.io`.
+Personal academic site built with Next.js, Contentlayer, Tailwind CSS, and MDX. It is deployed to the root GitHub Pages site at `nassim-arifette.github.io`.
 
 ## Requirements
 
@@ -35,24 +35,28 @@ Set `NEXT_PUBLIC_SITE_URL` when testing canonical URLs against a non-production 
 ## Repository structure
 
 ```text
-app/                    Next.js App Router pages and metadata
+app/                    Next.js App Router pages (home, projects, blog, cv)
 components/
-  blog/                 Blog listing and reading UI
-  cards/                Project and post summaries
-  filters/              Search/filter controls
-  mdx/                  MDX rendering, code, TOC, and images
-  series/               Series navigation and progress
-  tags/                 Tag links
-  ui/                   Shared primitives that are actually reused
+  mdx/                  MDX rendering, code blocks, table of contents, images
+  header.tsx, footer.tsx, theme-toggle.tsx
+  project-list.tsx      Project list used on the home and /projects pages
+  post-list.tsx         Note list used on the home and /blog pages
 content/
   posts/<series>/       Blog posts and optional _series.mdx manifests
-  projects/             Project case studies
-lib/                    Content indexes, SEO, search, tags, and relations
+  projects/             Project pages
+lib/
+  site.ts               Name, bio, links, and publication list (edit this first)
+  content.ts            Sorted content indexes from Contentlayer
+  series.ts             Previous/next navigation for multi-part posts
 public/                 CV, project reports, media, feeds, and OG images
 scripts/                Feed and OG generation
 ```
 
 Generated directories such as `.contentlayer/`, `.next/`, `out/`, and `.vitest/` are ignored.
+
+## Editing the personal information
+
+`lib/site.ts` holds the name, role, affiliation, bio paragraphs, contact links, and the publications list shown on the home page. Update it there rather than in the page components.
 
 ## Content
 
