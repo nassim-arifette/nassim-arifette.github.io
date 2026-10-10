@@ -11,6 +11,8 @@ import { getAllProjects, getProjectBySlug } from '@/lib/content'
 import { absoluteUrl } from '@/lib/seo'
 import { isProjectLinkReady } from '@/lib/project-links'
 import { site } from '@/lib/site'
+import { ProjectResults } from '@/components/project-results'
+import { ProjectPreview } from '@/components/project-preview'
 
 interface PageProps {
   params: { slug: string }
@@ -73,6 +75,7 @@ export default function ProjectPage({ params }: PageProps) {
         </Link>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">{project.title}</h1>
         <p className="mt-3 text-muted-foreground">{project.description}</p>
+        <ProjectResults project={project} />
         <p className="mt-3 text-sm text-muted-foreground">
           <time dateTime={project.date}>{formatDate(project.date)}</time>
           {project.tags?.length ? <> · {project.tags.join(', ')}</> : null}
@@ -93,6 +96,7 @@ export default function ProjectPage({ params }: PageProps) {
           </p>
         ) : null}
       </header>
+      <ProjectPreview project={project} />
       <div className="prose">
         <TableOfContents headings={headings} />
         <Mdx code={project.body.code} />
