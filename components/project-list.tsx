@@ -16,7 +16,7 @@ export function ProjectList({ projects }: { projects: Project[] }) {
       {projects.map((project) => {
         const year = new Date(project.date).getFullYear()
         const links = linkLabels.filter(([key]) => isProjectLinkReady(project.links?.[key]))
-        const placement = project.winner ? 'Winner' : project.placement
+        const placement = project.placement || (project.winner ? 'Winner' : undefined)
 
         return (
           <li key={project.slug} className="py-5">

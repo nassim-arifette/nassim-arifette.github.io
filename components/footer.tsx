@@ -9,7 +9,7 @@ export default function Footer() {
           <a href={site.github} target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
           <a href={site.linkedin} target="_blank" rel="noreferrer" className="hover:text-foreground">LinkedIn</a>
           <a href={`mailto:${site.email}`} className="hover:text-foreground">Email</a>
-          <a href="/feed.xml" className="hover:text-foreground">RSS</a>
+          <a href={site.twitter} target="_blank" rel="noreferrer" className="hover:text-foreground">X / Twitter</a>
         </nav>
       </div>
     </footer>
