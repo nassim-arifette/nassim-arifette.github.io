@@ -7,8 +7,8 @@ import { site } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 const nav = [
-  { href: '/#projects', label: 'Projects' },
-  { href: '/blog', label: 'Notes' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/research', label: 'Research / Papers' },
   { href: '/cv', label: 'CV' },
 ]
 
@@ -23,11 +23,11 @@ export default function Header() {
 
   return (
     <header className="no-print mx-auto w-full max-w-2xl px-5 pt-6 sm:pt-8">
-      <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
         <Link href="/" className="text-base font-semibold tracking-tight">
           {site.name}
         </Link>
-        <nav aria-label="Primary" className="flex items-center gap-4 text-sm sm:gap-5">
+        <nav aria-label="Primary" className="flex items-center flex-wrap gap-3 text-sm sm:gap-5">
           {nav.map((item) => {
             const active = isActive(pathname, item.href)
             return (

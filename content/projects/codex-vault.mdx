@@ -1,0 +1,20 @@
+---
+title: "Codex Vault"
+date: "2026-09-05"
+description: "A Rust CLI for archiving and restoring Codex conversations, with SQLite search and a read-only MCP interface."
+category: project
+tags: ["Rust","Developer Tools","SQLite","MCP"]
+links: {"github":"https://github.com/nassim-arifette/codex-vault"}
+---
+
+## What I built
+
+Codex Vault manages local Codex conversation archives: compact transcripts, search the archive, and restore the original sessions.
+
+The implementation combines a Rust command-line tool, a SQLite index, and a read-only MCP interface for searching archived conversations. Release binaries are available for Windows and Linux.
+
+## Why it matters
+
+Conversation history contains the reasoning and context behind code changes. The archive is designed to preserve the original transcripts while making that history easier to recover.
+
+The repository documents the preview release, restoration guarantees, and operational limits.
