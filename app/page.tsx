@@ -5,7 +5,7 @@ import { absoluteUrl } from '@/lib/seo'
 import { buildMetadata } from '@/lib/metadata'
 import { getOgImageUrl } from '@/lib/og'
 import { getAllProjects } from '@/lib/content'
-import { site } from '@/lib/site'
+import { selectedWork, site } from '@/lib/site'
 
 export const metadata: Metadata = buildMetadata({
   title: site.name,
@@ -27,8 +27,11 @@ function Section({ id, title, children }: { id: string; title: string; children:
 
 export default function HomePage() {
   const allProjects = getAllProjects()
-  const projects = allProjects.filter((project) => ['jevgrep', 'codex-vault', 'ragots'].includes(project.slug))
-  const research = allProjects.filter((project) => ['tropical-precision', 'ct2mri'].includes(project.slug))
+  // Keep the editorial order instead of selecting the newest entries.
+  const select = (slugs: readonly string[]) =>
+    slugs.flatMap((slug) => allProjects.filter((project) => project.slug === slug))
+  const projects = select(selectedWork.projects)
+  const research = select(selectedWork.research)
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -92,7 +95,7 @@ export default function HomePage() {
         <p className="mt-4 text-sm"><Link href="/projects" className="link">All projects →</Link></p>
       </Section>
 
-      <Section id="research" title="Research / Papers">
+      <Section id="research" title="Selected research & reports">
         <ProjectList projects={research} />
         <p className="mt-4 text-sm"><Link href="/research" className="link">Research work, papers & reports →</Link></p>
       </Section>

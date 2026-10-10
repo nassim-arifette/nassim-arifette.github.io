@@ -86,3 +86,9 @@ export const publications: Publication[] = [
     links: { pdf: '/voiced-unvoiced-classification-report.pdf' },
   },
 ]
+
+// Homepage highlights, ordered by significance rather than publication date.
+export const selectedWork = {
+  projects: ['ragots', 'jevgrep', 'predi-care'],
+  research: ['ct2mri', 'm1-ter-verification', 'm1-internship-kg'],
+} as const
