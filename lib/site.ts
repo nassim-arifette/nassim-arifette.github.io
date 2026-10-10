@@ -62,7 +62,6 @@ export const publications: Publication[] = [
     authors: 'N. Arifette',
     venue: 'Master’s internship report, LISN, Université Paris-Saclay',
     year: 2024,
-    links: { pdf: '/knowledge-graph-entity-alignment-report.pdf' },
   },
   {
     title: 'Neural Network Verification via Set Analysis',
@@ -90,5 +89,5 @@ export const publications: Publication[] = [
 // Homepage highlights, ordered by significance rather than publication date.
 export const selectedWork = {
   projects: ['ragots', 'jevgrep', 'predi-care'],
-  research: ['ct2mri', 'm1-ter-verification', 'm1-internship-kg'],
+  research: ['ct2mri', 'm1-ter-verification', 'l3-internship-phyloformer'],
 } as const
