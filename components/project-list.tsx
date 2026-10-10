@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Project } from 'contentlayer/generated'
 import { isProjectLinkReady } from '@/lib/project-links'
+import { ProjectResults } from './project-results'
+import { ProjectPreview } from './project-preview'
 
 const linkLabels: Array<[string, string]> = [
   ['pdf', 'PDF'],
@@ -16,7 +18,6 @@ export function ProjectList({ projects }: { projects: Project[] }) {
       {projects.map((project) => {
         const year = new Date(project.date).getFullYear()
         const links = linkLabels.filter(([key]) => isProjectLinkReady(project.links?.[key]))
-        const placement = project.placement || (project.winner ? 'Winner' : undefined)
 
         return (
           <li key={project.slug} className="py-5">
@@ -25,13 +26,12 @@ export function ProjectList({ projects }: { projects: Project[] }) {
                 <Link href={project.url} className="hover:text-accent">
                   {project.title}
                 </Link>
-                {placement ? (
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">{placement}</span>
-                ) : null}
               </h3>
               <span className="shrink-0 text-sm tabular-nums text-muted-foreground">{year}</span>
             </div>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
+            <ProjectResults project={project} />
+            <ProjectPreview project={project} compact />
             {links.length ? (
               <p className="mt-2 flex flex-wrap gap-x-3 text-sm">
                 {links.map(([key, label]) => (

@@ -196,6 +196,10 @@ const Project = defineDocumentType(() => ({
     category: { type: 'enum', options: ['project', 'research'], default: 'project' },
     featured: { type: 'boolean', default: false },
     placement: { type: 'string', required: false }, // e.g., "1st place"
+    contribution: { type: 'string', required: false },
+    githubStars: { type: 'number', required: false },
+    githubStarsCheckedAt: { type: 'string', required: false },
+    preview: { type: 'json', required: false },
     winner: { type: 'boolean', required: false, default: false },
   },
   computedFields: {
