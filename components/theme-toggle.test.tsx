@@ -1,5 +1,7 @@
 import React from 'react'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { renderToString } from 'react-dom/server'
+import { hydrateRoot } from 'react-dom/client'
 import { useTheme } from 'next-themes'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -26,6 +28,29 @@ afterEach(() => {
 })
 
 describe('ThemeToggle', () => {
+  it('hydrates without mismatched markup when the saved theme is dark', async () => {
+    const setTheme = vi.fn()
+    mockedUseTheme.mockReturnValue({ setTheme } as ReturnType<typeof useTheme>)
+    const container = document.createElement('div')
+    container.innerHTML = renderToString(<ThemeToggle />)
+    document.body.appendChild(container)
+    mockedUseTheme.mockReturnValue({ resolvedTheme: 'dark', setTheme } as ReturnType<typeof useTheme>)
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+    let root: ReturnType<typeof hydrateRoot> | undefined
+
+    try {
+      await act(async () => {
+        root = hydrateRoot(container, <ThemeToggle />)
+      })
+      expect(container.querySelector('button')).toHaveAttribute('aria-label', 'Switch to light theme')
+      expect(errors.mock.calls.map((call) => call.join(' ')).join('\n')).not.toMatch(/did not match|hydration|server HTML/i)
+    } finally {
+      await act(async () => root?.unmount())
+      container.remove()
+      errors.mockRestore()
+    }
+  })
+
   it('shows the sun icon when the current theme is dark and toggles to light on click', async () => {
     const setTheme = vi.fn()
     const { container } = renderWithTheme({ resolvedTheme: 'dark', setTheme })
