@@ -21,22 +21,19 @@ export const metadata: Metadata = {
     template: `%s | ${site.name}`,
   },
   description: site.description,
-  icons: [],
+  icons: { icon: '/favicon.svg' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const rssUrl = `${getSiteUrl()}/feed.xml`
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fdfdfc" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1d22" />
-        <link rel="alternate" type="application/rss+xml" href={rssUrl} title="RSS feed" />
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+          content="default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'"
         />
         <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
         <meta name="google-site-verification" content="p3YI81qttzelRtR5pVdQ5jPsaSk2QrVTS43TRC68y58" />

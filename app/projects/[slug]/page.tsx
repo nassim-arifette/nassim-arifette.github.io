@@ -69,7 +69,7 @@ export default function ProjectPage({ params }: PageProps) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <header className="mb-10 border-b border-border pb-8">
         <Link href={project.category === 'research' ? '/research' : '/projects'} className="text-sm text-muted-foreground hover:text-foreground">
-          ← {project.category === 'research' ? 'Research / Papers' : 'Projects'}
+          ← {project.category === 'research' ? 'Research' : 'Projects'}
         </Link>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">{project.title}</h1>
         <p className="mt-3 text-muted-foreground">{project.description}</p>

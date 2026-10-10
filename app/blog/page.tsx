@@ -10,6 +10,7 @@ export const metadata: Metadata = buildMetadata({
   title: 'Notes',
   description: 'Research notes, mathematical readings, and engineering write-ups.',
   path: '/blog',
+  noIndex: getPublishedPosts().length === 0,
   ogImage: getOgImageUrl(),
 })
 

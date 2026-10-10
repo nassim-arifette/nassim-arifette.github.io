@@ -93,30 +93,30 @@ export default function CvPage() {
             </li>
           </ul>
           <p className="mt-2">
-            <Link href="/projects/ct2mri" className="link">
-              Project page
+            <Link href="/research/ct2mri" className="link">
+              Research page
             </Link>
           </p>
         </Entry>
         <Entry title="Research intern" org="LISN, Université Paris-Saclay" period="Jun – Jul 2024">
           Comparative study of knowledge-graph embedding models (TransE, TransH, DistMult, ComplEx, ConvE) for entity
           alignment across YAGO, Wikidata, and DBpedia.{' '}
-          <Link href="/projects/m1-internship-kg" className="link">
-            Project page
+          <Link href="/research/m1-internship-kg" className="link">
+            Research page
           </Link>
         </Entry>
         <Entry title="Research project" org="LIX, École Polytechnique" period="2024">
           Abstraction-based verification of ReLU networks with zones (DBMs) and tropical geometry, evaluated on ACAS
           Xu.{' '}
-          <Link href="/projects/m1-ter-verification" className="link">
-            Project page
+          <Link href="/research/m1-ter-verification" className="link">
+            Research page
           </Link>
         </Entry>
         <Entry title="Research intern" org="CIRB, Collège de France" period="Jun – Aug 2023">
           Added triangle-inequality constraints to Phyloformer; cut constraint violations from 15% to under 1% while
           preserving RF distance.{' '}
-          <Link href="/projects/l3-internship-phyloformer" className="link">
-            Project page
+          <Link href="/research/l3-internship-phyloformer" className="link">
+            Research page
           </Link>
         </Entry>
       </CvSection>
