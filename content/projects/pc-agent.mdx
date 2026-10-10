@@ -1,0 +1,27 @@
+---
+title: "PC Agent"
+date: "2026-09-25"
+description: "A Windows desktop app and Rust CLI for investigating slowdowns through real system measurements and optional AI analysis."
+category: project
+tags: ["Rust", "Tauri", "Windows", "AI Agents", "System Diagnostics"]
+---
+
+## The problem
+
+Understanding why a PC is slow requires connecting observations about memory, CPU, graphics, storage, and individual processes. A useful explanation needs to distinguish a measured symptom from a possible cause.
+
+## What I built
+
+PC Agent combines a Rust command-line interface with a Tauri desktop application, both using the same diagnostic core. It collects Windows system and process measurements, investigates storage usage, and presents answers with citations back to the observations.
+
+The desktop interface includes saved local conversations, a live PC-status panel, measurement details, and progress for each investigation step.
+
+## Optional AI investigation
+
+Local analysis is the default. With explicit opt-in, an AI agent can request bounded inspection tools and explain the observations. The controller checks numeric claims and citations against the collected measurements; unavailable data and uncertain conclusions remain visible.
+
+Actions require separate local approval, and the prototype distinguishes investigation from execution.
+
+## Status
+
+This is an early prototype, with source code currently in a private repository. It is not a finished optimizer; diagnostic accuracy and performance still need validation beyond the development machine.
