@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ProjectList } from '@/components/project-list'
-import { PostList } from '@/components/post-list'
 import { absoluteUrl } from '@/lib/seo'
 import { buildMetadata } from '@/lib/metadata'
 import { getOgImageUrl } from '@/lib/og'
-import { getAllProjects, getPublishedPosts } from '@/lib/content'
-import { publications, site } from '@/lib/site'
+import { getAllProjects } from '@/lib/content'
+import { site } from '@/lib/site'
 
 export const metadata: Metadata = buildMetadata({
   title: site.name,
@@ -14,8 +13,6 @@ export const metadata: Metadata = buildMetadata({
   path: '/',
   ogImage: getOgImageUrl(),
 })
-
-const RECENT_POSTS = 4
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
@@ -29,8 +26,9 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 export default function HomePage() {
-  const projects = getAllProjects()
-  const posts = getPublishedPosts()
+  const allProjects = getAllProjects()
+  const projects = allProjects.filter((project) => ['jevgrep', 'codex-vault', 'ragots'].includes(project.slug))
+  const research = allProjects.filter((project) => ['tropical-precision', 'ct2mri'].includes(project.slug))
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -39,7 +37,7 @@ export default function HomePage() {
     url: absoluteUrl('/'),
     jobTitle: site.role,
     affiliation: { '@type': 'Organization', name: site.affiliation.name, url: site.affiliation.url },
-    sameAs: [site.linkedin, site.github],
+    sameAs: [site.linkedin, site.github, site.twitter],
     description: site.description,
     knowsAbout: site.interests,
   }
@@ -48,6 +46,7 @@ export default function HomePage() {
     { label: 'Email', href: `mailto:${site.email}`, external: false },
     { label: 'GitHub', href: site.github, external: true },
     { label: 'LinkedIn', href: site.linkedin, external: true },
+    { label: 'X / Twitter', href: site.twitter, external: true },
     ...(site.scholar ? [{ label: 'Google Scholar', href: site.scholar, external: true }] : []),
     { label: 'CV', href: site.cvPdf, external: false },
   ]
@@ -88,53 +87,14 @@ export default function HomePage() {
         </p>
       </section>
 
-      <Section id="projects" title="Projects">
+      <Section id="projects" title="Selected projects">
         <ProjectList projects={projects} />
+        <p className="mt-4 text-sm"><Link href="/projects" className="link">All projects →</Link></p>
       </Section>
 
-      {publications.length ? (
-        <Section id="publications" title="Publications & reports">
-          <ul className="divide-y divide-border">
-            {publications.map((publication) => (
-              <li key={publication.title} className="py-4">
-                <p className="font-medium leading-snug">{publication.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {publication.authors} · {publication.venue}, {publication.year}
-                </p>
-                {publication.links ? (
-                  <p className="mt-1 flex gap-x-3 text-sm">
-                    {publication.links.pdf ? (
-                      <a href={publication.links.pdf} className="link">
-                        PDF
-                      </a>
-                    ) : null}
-                    {publication.links.paper ? (
-                      <a href={publication.links.paper} target="_blank" rel="noreferrer" className="link">
-                        Paper
-                      </a>
-                    ) : null}
-                    {publication.links.code ? (
-                      <a href={publication.links.code} target="_blank" rel="noreferrer" className="link">
-                        Code
-                      </a>
-                    ) : null}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </Section>
-      ) : null}
-
-      <Section id="notes" title="Recent notes">
-        <PostList posts={posts.slice(0, RECENT_POSTS)} />
-        {posts.length > RECENT_POSTS ? (
-          <p className="mt-4 text-sm">
-            <Link href="/blog" className="link">
-              All notes →
-            </Link>
-          </p>
-        ) : null}
+      <Section id="research" title="Research / Papers">
+        <ProjectList projects={research} />
+        <p className="mt-4 text-sm"><Link href="/research" className="link">Research work, papers & reports →</Link></p>
       </Section>
 
       <Section id="contact" title="Contact">
