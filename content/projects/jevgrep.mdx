@@ -1,0 +1,22 @@
+---
+title: "JevGrep"
+date: "2026-09-20"
+description: "A semantic search CLI and MCP server that gives coding agents relevant source excerpts with exact file locations."
+category: project
+tags: ["Developer Tools","Semantic Search","MCP","TypeScript"]
+links: {"github":"https://github.com/nassim-arifette/jevgrep","website":"https://www.npmjs.com/package/@nassim-arifette/jevgrep"}
+---
+
+## The problem
+
+Coding agents need to find the relevant part of a codebase before changing it. Keyword search can miss the right implementation when the query and source use different vocabulary.
+
+## What I built
+
+JevGrep combines semantic retrieval with a command-line interface and an MCP server. Results include source excerpts and precise locations, so an agent can follow the evidence back to the original file.
+
+The tool supports configurable embedding providers and explicit search scopes. It is distributed as an npm package, with implementation and usage examples in the repository.
+
+## Scope
+
+This is a developer tool for code discovery. Retrieval results still need to be checked against the source; no universal speed or accuracy improvement is claimed.

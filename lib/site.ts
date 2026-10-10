@@ -11,6 +11,7 @@ export const site = {
   url: 'https://nassim-arifette.github.io',
   email: 'nassim.ari@gmail.com',
   github: 'https://github.com/nassim-arifette',
+  twitter: 'https://x.com/NassimArifette',
   linkedin: 'https://www.linkedin.com/in/nassim-arifette',
   // Set to a Google Scholar URL to show the link on the home page.
   scholar: undefined as string | undefined,
@@ -40,11 +41,28 @@ export type Publication = {
 // Peer-reviewed papers go first; theses and technical reports follow.
 export const publications: Publication[] = [
   {
+    title: 'Tropical Precision',
+    authors: 'N. Arifette',
+    venue: 'Research manuscript (not peer-reviewed)',
+    year: 2026,
+    links: {
+      pdf: 'https://github.com/nassim-arifette/tropical-precision/blob/main/paper/main.pdf',
+      code: 'https://github.com/nassim-arifette/tropical-precision',
+    },
+  },
+  {
     title: 'Unpaired 3D CT-to-MRI Synthesis with Histogram-Aware CycleGANs',
     authors: 'N. Arifette',
     venue: 'Research internship report, BioMaps (CEA / Université Paris-Saclay)',
     year: 2025,
     links: { pdf: '/ct-to-mri-synthesis-report.pdf' },
+  },
+  {
+    title: 'Knowledge Graph Entity Alignment',
+    authors: 'N. Arifette',
+    venue: 'Master’s internship report, LISN, Université Paris-Saclay',
+    year: 2024,
+    links: { pdf: '/knowledge-graph-entity-alignment-report.pdf' },
   },
   {
     title: 'Neural Network Verification via Set Analysis',

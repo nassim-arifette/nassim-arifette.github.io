@@ -1,0 +1,22 @@
+---
+title: "Tropical Precision"
+date: "2026-09-10"
+description: "Exact-arithmetic studies of how refined tropical abstractions can recover ReLU verification precision on constructed examples."
+category: research
+tags: ["Neural Network Verification","Tropical Geometry","Python","Julia"]
+links: {"github":"https://github.com/nassim-arifette/tropical-precision","pdf":"https://github.com/nassim-arifette/tropical-precision/blob/main/paper/main.pdf"}
+---
+
+## Research question
+
+How much precision can be lost when a neural-network verifier coarsens its abstract representation, and when can a refinement recover it?
+
+## Method
+
+The repository contains constructed ReLU examples, exact rational computations in Python, and independent checks in Julia. The accompanying manuscript studies the distinction between true margins, coarse abstraction bounds, and refined bounds.
+
+For two explicit examples, the true and refined margins are positive while the coarse bound is negative. This makes the loss of certification precision directly inspectable.
+
+## Status and scope
+
+This is a **research manuscript, not a peer-reviewed publication**. Its results concern the explicit constructions and studies in the repository; they do not establish performance on general trained networks or a production verification benchmark.

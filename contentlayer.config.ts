@@ -193,6 +193,7 @@ const Project = defineDocumentType(() => ({
     links: { type: 'json', required: false }, // { github, website, demo, paper, pdf }
     tags: { type: 'list', of: { type: 'string' } },
     language: { type: 'string', default: 'en' },
+    category: { type: 'enum', options: ['project', 'research'], default: 'project' },
     featured: { type: 'boolean', default: false },
     placement: { type: 'string', required: false }, // e.g., "1st place"
     winner: { type: 'boolean', required: false, default: false },
@@ -201,7 +202,7 @@ const Project = defineDocumentType(() => ({
     slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath.replace('projects/','') },
     url:  {
       type: 'string',
-      resolve: (doc) => `/projects/${doc._raw.flattenedPath.replace('projects/','')}`,
+      resolve: (doc) => `/${doc.category === 'research' ? 'research' : 'projects'}/${doc._raw.flattenedPath.replace('projects/','')}`,
     },
     headings: {
       type: 'json',
