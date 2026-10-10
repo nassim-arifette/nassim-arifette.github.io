@@ -88,6 +88,6 @@ export const publications: Publication[] = [
 
 // Homepage highlights, ordered by significance rather than publication date.
 export const selectedWork = {
-  projects: ['ragots', 'jevgrep', 'predi-care'],
+  projects: ['ragots', 'jevgrep', 'pc-agent', 'predi-care'],
   research: ['ct2mri', 'm1-ter-verification', 'l3-internship-phyloformer'],
 } as const
