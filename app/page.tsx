@@ -40,6 +40,7 @@ export default function HomePage() {
     url: absoluteUrl('/'),
     jobTitle: site.role,
     affiliation: { '@type': 'Organization', name: site.affiliation.name, url: site.affiliation.url },
+    worksFor: { '@type': 'Organization', name: site.lab.name, url: site.lab.url },
     sameAs: [site.linkedin, site.github, site.twitter],
     description: site.description,
     knowsAbout: site.interests,
@@ -59,30 +60,60 @@ export default function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
       <section aria-labelledby="intro-title">
-        <h1 id="intro-title" className="text-3xl font-semibold tracking-tight">
+        <p className="section-title">{site.tagline}</p>
+        <h1 id="intro-title" className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
           {site.name}
         </h1>
-        <p className="mt-1 text-muted-foreground">
+        <p className="mt-3 text-lg text-muted-foreground">
           {site.role} ·{' '}
+          <a href={site.lab.url} target="_blank" rel="noreferrer" className="hover:text-foreground">
+            {site.lab.name}
+          </a>
+          ,{' '}
           <a href={site.affiliation.url} target="_blank" rel="noreferrer" className="hover:text-foreground">
             {site.affiliation.name}
           </a>
         </p>
 
-        <div className="mt-6 space-y-4 leading-relaxed">
-          {site.bio.map((paragraph) => (
+        <div className="mt-8 rounded-xl border bg-muted/50 p-5">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+            </span>
+            Currently
+          </p>
+          <p className="mt-2 leading-relaxed">{site.bio[0]}</p>
+        </div>
+
+        <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {site.highlights.map((item) => (
+            <div key={item.label} className="rounded-xl border p-4">
+              <dt className="sr-only">{item.label}</dt>
+              <dd className="text-2xl font-semibold tracking-tight text-accent">{item.value}</dd>
+              <dd className="mt-1 text-xs leading-snug text-muted-foreground">{item.label}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-8 space-y-4 leading-relaxed">
+          {site.bio.slice(1).map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
         </div>
 
-        <p className="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        <p className="mt-8 flex flex-wrap gap-2 text-sm">
           {contactLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
               target={link.external ? '_blank' : undefined}
               rel={link.external ? 'noreferrer' : undefined}
-              className="link"
+              className={
+                link.label === 'CV'
+                  ? 'rounded-full bg-accent px-4 py-1.5 font-medium text-background transition-opacity hover:opacity-90'
+                  : 'rounded-full border px-4 py-1.5 transition-colors hover:border-accent hover:text-accent'
+              }
             >
               {link.label}
             </a>

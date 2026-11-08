@@ -77,9 +77,9 @@ export default function CvPage() {
       </header>
 
       <CvSection id="research" title="Research">
-        <Entry title="PhD student" org={site.affiliation.name} period="Oct 2026 –">
-          Thesis on RNA–RNA interactions, in particular in the influenza A virus, using machine-learning and
-          computational methods.
+        <Entry title="PhD student" org={`${site.lab.name}, ${site.affiliation.name}`} period="Nov 2026 –">
+          RNA–RNA interactions in the influenza A virus, advised by Philippe Nghe. Coevolution (DCA) and generative
+          (VAE) models with physical constraints, trained on high-throughput data from the Flu-PREDICT consortium.
         </Entry>
         <Entry title="Research intern" org="BioMaps, CEA & Université Paris-Saclay" period="2025">
           <ul className="list-disc space-y-1 pl-5">

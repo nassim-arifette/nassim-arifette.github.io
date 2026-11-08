@@ -1,0 +1,23 @@
+---
+category: research
+title: "Answer it, or compute it? LLM spatial reasoning on LiDAR scenes"
+date: "2026-10-20"
+description: "A frozen LLM answers spatial questions about nuScenes driving scenes either directly or by writing a program that gets executed. Interactive article."
+contribution: "Qwen2.5-7B: 50.5 % direct → 82.5 % with executed programs"
+tags: ["LLM", "Program Synthesis", "LiDAR", "nuScenes", "Interactive Article"]
+links: {"github":"https://github.com/nassim-arifette/lidar-llm-spatial-reasoning","website":"https://nassim-arifette.github.io/lidar-llm-spatial-reasoning/"}
+---
+
+## Question
+
+[LiDAR-LLM](https://arxiv.org/abs/2312.14074) turns 3D scene understanding into text generation. This study holds perception fixed and asks something narrower: given the list of objects in a nuScenes scene, is the same frozen model more reliable when it produces the answer itself, or when it writes a small program that computes it?
+
+## Main result
+
+The test set is 200 questions from three drives I never looked at during development. Qwen2.5-1.5B-Instruct gets 50.5 % right when it answers directly and 68.5 % when it writes a program, and its counting error drops from 2.16 to 0.68. Refusals and broken programs count as wrong. With the 7B model the gap is bigger: 50.5 % against 82.5 %.
+
+It is not a universal rule, though. One hosted reasoning model scores about the same both ways (84.0 % and 84.5 %).
+
+## The article
+
+In the [interactive article](https://nassim-arifette.github.io/lidar-llm-spatial-reasoning/) you can browse the test scenes over the real LiDAR sweep, click an object to see how the NuScenes-QA direction sectors are measured from it, and write a program and run it on any scene.

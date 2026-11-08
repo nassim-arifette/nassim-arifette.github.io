@@ -1,0 +1,20 @@
+---
+category: research
+title: "Docking by denoising: choosing among DiffDock poses"
+date: "2026-10-21"
+description: "DiffDock-L proposes ligand poses by reversing a diffusion. Can physical checks or another scorer pick a better pose than its own confidence? Interactive article and a frozen pilot."
+tags: ["Diffusion Models", "Molecular Docking", "Geometric Deep Learning", "PoseBusters", "Interactive Article"]
+links: {"github":"https://github.com/nassim-arifette/diffdock-geometric-diffusion-docking","website":"https://nassim-arifette.github.io/diffdock-geometric-diffusion-docking/"}
+---
+
+## Question
+
+DiffDock-L places a ligand in its protein pocket by reversing a diffusion, and it gives you several candidate poses. This project is about the step after that. With the pool fixed, do physical validity checks, an independent scorer (GNINA) or local refinement pick a better pose than DiffDock's own confidence score?
+
+## The article
+
+The [interactive article](https://nassim-arifette.github.io/diffdock-geometric-diffusion-docking/) uses one archived DiffDock-L run on PDB 1A0Q. You can move and twist the crystal ligand yourself, scrub through the recorded denoising frames of each candidate, and see which PoseBusters checks every pose fails. On that example none of the ten candidates is within 2 Å of the crystal pose, which is why the pilot measures generation and selection separately.
+
+## The pilot
+
+The protocol was frozen before running it. It compares four ways to choose a pose on fixed DiffDock-L candidates (20 per complex and seed, 3 seeds) from the PoseBusters set.

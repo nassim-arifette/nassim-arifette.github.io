@@ -3,7 +3,9 @@
 
 export const site = {
   name: 'Nassim Arifette',
-  role: 'PhD student (from October 2026)',
+  role: 'PhD student',
+  lab: { name: 'BIOC, Synthetic BioSystems Laboratory', url: 'https://portail.polytechnique.edu/bioc/en' },
+  tagline: 'Machine learning for RNA biology',
   affiliation: {
     name: 'École Polytechnique',
     url: 'https://www.polytechnique.edu/',
@@ -17,13 +19,22 @@ export const site = {
   scholar: undefined as string | undefined,
   cvPdf: '/cv.pdf',
   description:
-    'PhD student at École Polytechnique working on RNA–RNA interactions, in particular in the influenza A virus, with machine-learning and computational methods.',
+    'PhD student at École Polytechnique (BIOC). I model RNA–RNA interactions in the influenza A virus with machine learning, as part of the Flu-PREDICT consortium.',
   bio: [
-    'I am starting a PhD at École Polytechnique in October 2026. My thesis studies RNA–RNA interactions, in particular in the influenza A virus, using machine-learning and computational methods.',
-    'Before that, I completed the MVA master’s programme at ENS Paris-Saclay and did research internships in 3D medical imaging (BioMaps, CEA / Université Paris-Saclay), neural-network verification (LIX, École Polytechnique), knowledge graphs (LISN), and computational phylogenetics (CIRB, Collège de France).',
+    'I started a PhD at École Polytechnique in November 2026, in the BIOC lab (Synthetic BioSystems Laboratory), advised by Philippe Nghe. I work on RNA–RNA interactions in the influenza A virus. I build coevolution (DCA) and generative (VAE) models, add physical constraints on how RNA segments pair, and train them on high-throughput data from the Flu-PREDICT consortium. The goal is to predict which mutations break or keep those interactions, including in strains that have not circulated yet.',
+    'Before that I did the MVA master at ENS Paris-Saclay and four research internships: 3D CT-to-MRI translation (BioMaps, CEA / Université Paris-Saclay), neural network verification (LIX, École Polytechnique), knowledge graphs (LISN), and constrained learning for phylogenetics (CIRB, Collège de France).',
+    'I also write a fair amount of software. JevGrep, a code search tool for coding agents, has 110 stars on GitHub. PC Agent explains why a Windows PC is slow and backs every number with a measurement. Last summer I built most of the MVP of a fintech platform, backend and frontend.',
+  ],
+  highlights: [
+    { value: 'PhD', label: 'École Polytechnique, since Nov. 2026' },
+    { value: '110', label: 'GitHub stars on JevGrep' },
+    { value: '1st', label: 'Devin track, Paris AI Gaming Hackathon' },
+    { value: '€100k', label: 'prototype funding for PREDI-Care' },
   ],
   interests: [
     'RNA–RNA interactions',
+    'Influenza virus',
+    'Generative models',
     'Computational biology',
     'Medical imaging',
     'Reliable machine learning',
@@ -88,6 +99,6 @@ export const publications: Publication[] = [
 
 // Homepage highlights, ordered by significance rather than publication date.
 export const selectedWork = {
-  projects: ['ragots', 'jevgrep', 'pc-agent', 'predi-care'],
-  research: ['ct2mri', 'm1-ter-verification', 'l3-internship-phyloformer'],
+  projects: ['jevgrep', 'pc-agent', 'ragots', 'predi-care'],
+  research: ['ct2mri', 'lidar-llm-spatial-reasoning', 'diffdock-geometric-diffusion-docking', 'm1-ter-verification'],
 } as const
