@@ -198,6 +198,7 @@ const Project = defineDocumentType(() => ({
     placement: { type: 'string', required: false }, // e.g., "1st place"
     contribution: { type: 'string', required: false },
     githubStars: { type: 'number', required: false },
+    thumbnail: { type: 'string', required: false }, // static image for list views (e.g. a still of an animated preview)
     githubStarsCheckedAt: { type: 'string', required: false },
     preview: { type: 'json', required: false },
     winner: { type: 'boolean', required: false, default: false },

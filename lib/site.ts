@@ -5,7 +5,6 @@ export const site = {
   name: 'Nassim Arifette',
   role: 'PhD student',
   lab: { name: 'BIOC, Synthetic BioSystems Laboratory', url: 'https://portail.polytechnique.edu/bioc/en' },
-  tagline: 'Machine learning for RNA biology',
   affiliation: {
     name: 'École Polytechnique',
     url: 'https://www.polytechnique.edu/',
@@ -24,12 +23,6 @@ export const site = {
     'I started a PhD at École Polytechnique in November 2026, in the BIOC lab (Synthetic BioSystems Laboratory), advised by Philippe Nghe. I work on RNA–RNA interactions in the influenza A virus. I build coevolution (DCA) and generative (VAE) models, add physical constraints on how RNA segments pair, and train them on high-throughput data from the Flu-PREDICT consortium. The goal is to predict which mutations break or keep those interactions, including in strains that have not circulated yet.',
     'Before that I did the MVA master at ENS Paris-Saclay and four research internships: 3D CT-to-MRI translation (BioMaps, CEA / Université Paris-Saclay), neural network verification (LIX, École Polytechnique), knowledge graphs (LISN), and constrained learning for phylogenetics (CIRB, Collège de France).',
     'I also write a fair amount of software. JevGrep, a code search tool for coding agents, has 110 stars on GitHub. PC Agent explains why a Windows PC is slow and backs every number with a measurement. Last summer I built most of the MVP of a fintech platform, backend and frontend.',
-  ],
-  highlights: [
-    { value: 'PhD', label: 'École Polytechnique, since Nov. 2026' },
-    { value: '110', label: 'GitHub stars on JevGrep' },
-    { value: '1st', label: 'Devin track, Paris AI Gaming Hackathon' },
-    { value: '€100k', label: 'prototype funding for PREDI-Care' },
   ],
   interests: [
     'RNA–RNA interactions',

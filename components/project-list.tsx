@@ -2,7 +2,6 @@ import Link from 'next/link'
 import type { Project } from 'contentlayer/generated'
 import { isProjectLinkReady } from '@/lib/project-links'
 import { ProjectResults } from './project-results'
-import { ProjectPreview } from './project-preview'
 
 const linkLabels: Array<[string, string]> = [
   ['pdf', 'PDF'],
@@ -20,7 +19,15 @@ export function ProjectList({ projects }: { projects: Project[] }) {
         const links = linkLabels.filter(([key]) => isProjectLinkReady(project.links?.[key]))
 
         return (
-          <li key={project.slug} className="py-5">
+          <li key={project.slug} className="py-5 sm:flex sm:gap-5">
+            {project.preview?.type === 'image' ? (
+              <Link href={project.url} tabIndex={-1} aria-hidden="true" className="mb-3 block shrink-0 sm:mb-0 sm:w-36">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={project.thumbnail ?? project.preview.src} alt="" loading="lazy" decoding="async"
+                  className="aspect-[4/3] w-full border border-border object-cover object-top" />
+              </Link>
+            ) : null}
+            <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-4">
               <h3 className="text-base font-medium leading-snug">
                 <Link href={project.url} className="hover:text-accent">
@@ -31,7 +38,6 @@ export function ProjectList({ projects }: { projects: Project[] }) {
             </div>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{project.description}</p>
             <ProjectResults project={project} />
-            <ProjectPreview project={project} compact />
             {links.length ? (
               <p className="mt-2 flex flex-wrap gap-x-3 text-sm">
                 {links.map(([key, label]) => (
@@ -47,6 +53,7 @@ export function ProjectList({ projects }: { projects: Project[] }) {
                 ))}
               </p>
             ) : null}
+            </div>
           </li>
         )
       })}
