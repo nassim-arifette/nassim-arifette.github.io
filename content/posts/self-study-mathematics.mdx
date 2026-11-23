@@ -1,0 +1,575 @@
+---
+title: "Self-study mathematics: the order, the books, and when to move on"
+date: "2026-11-23"
+description: "A full undergraduate curriculum you can follow alone, from calculus to measure theory and manifolds, with the chapters each book really requires before you open the next one."
+tags: ["mathematics", "self-study", "books"]
+---
+
+Most people who try to learn mathematics on their own don't fail because the material is too hard. They fail because they read textbooks the way you read novels: first page to last page, every exercise, then the next book. That's how you spend eight months inside a 1,300-page calculus book and give up before you ever meet a real proof.
+
+No university course works like that. A first course in analysis covers maybe two thirds of its textbook, and the lecturer decides which two thirds. Alone, nobody decides for you. So this guide does three things for every subject:
+
+1. It puts the subject in a clear place in the order, with what it needs and what it opens.
+2. It tells you which chapters to read now, which to come back to, and which to skip.
+3. It gives you a short closed-book test. Pass it and you move on.
+
+Chapter numbers refer to the edition named each time. If you have another edition, go by the chapter titles, they rarely change.
+
+## The map
+
+Five levels. Each level roughly matches one year of a strong undergraduate programme, except Level 4, which is the overlap with a first year of graduate school. Colors are tracks. Dashed subjects depend on what you want to do. Click any subject to jump to it.
+
+<Roadmap />
+
+You don't finish a level before starting the next. Inside a level, subjects mostly run in parallel. Between levels, the dependencies are specific: complex analysis needs the first half of real analysis, not all of Level 2. Each subject's card says exactly what it needs.
+
+## Four rules for moving on
+
+These apply everywhere, so I'll say them once.
+
+**Stop at about 80%.** If you can do roughly four exercises out of five in a section without help, you have it. The last fifth are usually either tricks you'll learn later or problems that secretly need the next course. Grinding them is the most common way people stall.
+
+**The test is closed-book.** Following a proof is not knowing it. Close the book, write the statement, write the proof. Stuck? Look, close the book, start again from the top. When you can do the main theorems of a chapter this way, the chapter is done.
+
+**Later courses re-teach earlier ones.** Real analysis proves calculus properly. Abstract algebra redoes linear algebra over any field. Complex analysis is where power series finally make sense. So a shaky grasp of the previous book is normal, as long as the shakiness is in details and not in the core definitions.
+
+**Go back narrowly.** If the new book keeps losing you on the *same* missing idea, return to that idea only. One section, ten exercises, back to where you were. Never restart a whole book.
+
+## Level 0: before you start
+
+<Stage id="precalculus" level="Level 0" track="foundations" hours="20 to 60" unlocks="Calculus" />
+
+You need high school algebra to be automatic: fractions and exponents, factoring, quadratics and inequalities, functions and their graphs, logarithms, the unit circle, the standard trig identities.
+
+If you're missing pieces, use any precalculus book (Stewart, Redlin and Watson's *Precalculus* is fine) as a repair kit. Find what you failed, do those sections, test again. Don't read it front to back. Two good companions if you want to see this material done beautifully: Gelfand and Shen's *Algebra* and Gelfand and Saul's *Trigonometry*.
+
+<Ready to="calculus">
+
+- sketch the graph of 2 ln(x - 1) + 3 straight from the formula,
+- solve x² - 5x + 4 ≥ 0 without guessing,
+- write sin(2x) and cos(2x) in terms of sin x and cos x,
+- solve a system of two linear equations in two ways.
+
+</Ready>
+
+## Level 1: the first year
+
+Three subjects, all started within a few weeks of each other. Calculus is the long one. Proofs and the first round of linear algebra need almost no calculus, so there's no reason to wait.
+
+### Calculus in one variable
+
+<Stage id="calculus-1" level="Level 1" track="analysis" hours="180" needs="Level 0" parallel="Proofs, from week 4 or so. Linear algebra I, from about Chapter 5." unlocks="Everything" />
+
+**Book:** James Stewart, *Calculus: Early Transcendentals* (8th or 9th edition).
+
+Stewart is long, clear, and full of exercises at every level. It is not elegant, and that's fine: this first pass is about fluency. Elegance comes in Level 2.
+
+<Chapters book="Stewart, Calculus: Early Transcendentals" core="1 Functions (skim) · 2 Limits and derivatives · 3 Differentiation rules · 4 Applications of differentiation · 5 Integrals · 6 Applications of integration (areas, volumes) · 7 Techniques of integration, including improper integrals" later="10 Parametric and polar (Level 2) · 11 Series (Level 2)" skip="8 Further applications · 9 Differential equations (you'll do them properly later)" />
+
+Chapters 2 to 5 are the heart, so don't skip anything there. In Chapter 7, integration by parts, trig substitution and partial fractions matter, and improper integrals matter a lot, because they come back in probability and in series. Approximate integration can wait forever.
+
+If you want a second voice, Silvanus Thompson's *Calculus Made Easy* is a hundred years old and still the friendliest explanation of what a derivative is.
+
+<Ready>
+
+- differentiate any elementary function and explain the chain rule with a picture,
+- find the maximum of a function on a closed interval and justify that it is one,
+- compute the integral of x eˣ, of 1/(x² - 1), of √(1 - x²),
+- decide whether the integral of 1/xᵖ from 1 to infinity converges, for every p.
+
+</Ready>
+
+### Proofs
+
+<Stage id="proofs" level="Level 1" track="foundations" hours="80" needs="Level 0 only" parallel="Calculus" unlocks="Every proof-based course, starting with real analysis, Linear algebra II and Abstract algebra" />
+
+**Book:** Daniel Velleman, *How to Prove It* (3rd edition). Free alternative: Richard Hammack, *Book of Proof*.
+
+The shortest subject on the map and the one with the best return. Without it, every book after Level 1 reads like a foreign language. With it, you can at least read the language, even when you can't yet speak it.
+
+<Chapters book="Velleman, How to Prove It" core="1 Sentential logic · 2 Quantificational logic · 3 Proofs (all of it, slowly) · 4 Relations · 5 Functions · 6 Induction" later="8 Infinite sets (read it just before real analysis)" skip="7 Number theory, unless you enjoy it: abstract algebra covers what you need" />
+
+Go fast through the logic chapters if they come easily. But do the exercises on negating quantified statements. That one skill is half of real analysis.
+
+<Ready>
+
+- negate "for every ε > 0 there is a δ > 0 such that, for all x, |x - a| is less than δ implies |f(x) - f(a)| is less than ε",
+- prove two sets equal by double inclusion,
+- prove that a composition of injections is an injection,
+- prove that there are infinitely many primes, and that √2 is irrational.
+
+</Ready>
+
+### Linear algebra I: computation
+
+<Stage id="linear-algebra-1" level="Level 1" track="algebra" hours="120" needs="Level 0" parallel="Calculus, any part" unlocks="Differential equations, Probability, Linear algebra II, Numerical analysis" />
+
+**Book:** Gilbert Strang, *Introduction to Linear Algebra* (5th edition), with his MIT 18.06 lectures, free online.
+
+Linear algebra is the one subject I'd deliberately learn twice. First as computation, then as structure. Doing both at once is why so many people find Axler hard and Strang shallow. They are two books for two moments.
+
+<Chapters book="Strang, Introduction to Linear Algebra (5th ed.)" core="1 Vectors · 2 Solving linear equations · 3 Vector spaces and subspaces · 4 Orthogonality, least squares · 5 Determinants · 6 Eigenvalues, including the section on systems of differential equations" later="7 Singular value decomposition (now if you care about data or machine learning)" skip="8 onward for now: Linear algebra II does linear maps better" />
+
+<Ready>
+
+- find bases for the four fundamental subspaces of a 3 × 4 matrix,
+- compute A¹⁰⁰ for a diagonalizable 2 × 2 matrix by hand,
+- explain why least squares is an orthogonal projection, with a drawing,
+- say why a symmetric matrix has orthogonal eigenvectors.
+
+</Ready>
+
+### Discrete mathematics (optional)
+
+<Stage id="discrete" level="Level 1" track="logic" hours="60" needs="Proofs, Chapters 1 to 6" parallel="Anything in Level 1 or 2" unlocks="Combinatorics, algorithms, probability with counting" />
+
+**Book:** Ronald Graham, Donald Knuth and Oren Patashnik, *Concrete Mathematics*.
+
+Take this if you program, or if you like counting things. It's harder than its reputation, so treat it as a slow side project, not a course to finish.
+
+<Chapters book="Graham, Knuth and Patashnik, Concrete Mathematics" core="1 Recurrent problems · 2 Sums · 5 Binomial coefficients · 7 Generating functions" later="3 Integer functions · 4 Number theory · 8 Discrete probability · 9 Asymptotics" skip="6 Special numbers, unless you got hooked" />
+
+<Ready>
+
+- solve the Tower of Hanoi recurrence and prove the closed form by induction,
+- compute a sum like the sum of k 2ᵏ by perturbation,
+- find the generating function of the Fibonacci numbers and extract a closed formula from it.
+
+</Ready>
+
+## Level 2: the second year
+
+This is where mathematics changes character. Level 1 was about computing. Level 2 is about proving. Expect the first few weeks of real analysis to feel slow. That's normal.
+
+### Series and several variables
+
+<Stage id="calculus-2" level="Level 2" track="analysis" hours="160" needs="Calculus in one variable" parallel="Linear algebra I, Proofs" unlocks="Real analysis (series), Probability (multiple integrals), Differential equations, Complex analysis (line integrals)" />
+
+**Book:** Stewart again, the second half.
+
+<Chapters book="Stewart, Calculus: Early Transcendentals" core="10 Parametric curves and polar coordinates (skip conics) · 11 Sequences and series, all of it · 12 Vectors and space · 13 Vector functions · 14 Partial derivatives · 15 Multiple integrals" later="16 Vector calculus: needed for complex analysis and PDEs, can wait if you're heading to algebra" />
+
+People hate Chapter 11 because it feels like a bag of convergence tests with no reason behind them. The reason arrives in real analysis. Get through it anyway, real analysis assumes you've seen it once.
+
+<Ready>
+
+- find the radius and interval of convergence of a power series,
+- write the Taylor series of eˣ, sin x and ln(1 + x) from memory, with where they converge,
+- compute a double integral in polar coordinates,
+- optimize a function under a constraint with Lagrange multipliers,
+- verify Green's theorem on a concrete region (once you've done Chapter 16).
+
+</Ready>
+
+### Real analysis
+
+<Stage id="analysis-1" level="Level 2" track="analysis" hours="220" needs="Proofs, and Stewart through Chapter 11" parallel="Abstract algebra I, Linear algebra II" unlocks="Function spaces and several variables, Complex analysis, Topology, Measure theory" />
+
+**Main book:** Charles Pugh, *Real Mathematical Analysis* (2nd edition).
+
+**Gentle on-ramp, if you need one:** Stephen Abbott, *Understanding Analysis* (2nd edition).
+
+Pugh is the book I'd build the whole analysis track on. It's more complete and much more geometric than the usual alternatives: it does analysis in metric spaces from Chapter 2, it's full of pictures, and the exercise sets are enormous, from routine to qualifying-exam level. One book carries you from the real numbers to Lebesgue integration.
+
+Abbott is more elementary and covers much less. It stays on the real line, it doesn't do several variables, and it doesn't do measure theory. What it does very well is explain *why* the definitions look the way they do. Use it if proofs are still new to you, as a first pass through Chapters 1 to 6 (count another 80 hours or so), then switch to Pugh. If Velleman went well, start directly with Pugh.
+
+<Chapters book="Abbott, Understanding Analysis (optional first pass)" core="1 The real numbers · 2 Sequences and series · 3 Basic topology of R, up to compact sets · 4 Continuity · 5 The derivative · 6 Sequences and series of functions" later="7 The Riemann integral (Pugh does it too)" skip="8 Additional topics · the end of Chapter 3 (Baire, perfect sets)" />
+
+<Chapters book="Pugh, Real Mathematical Analysis (2nd ed.)" core="1 Real numbers · 2 A taste of topology: metric spaces, compactness, connectedness · 3 Functions of a real variable: derivatives, the Riemann integral, series" later="4 Function spaces and 5 Multivariable calculus (Level 3) · 6 Lebesgue theory (Level 4)" />
+
+Chapter 2 is where Pugh earns its place. Compactness in a general metric space, done with pictures, is the single idea you'll use most in everything after. Take your time there. With Pugh you won't do every exercise, there are hundreds. Do a third, chosen across the difficulty range, and come back to the starred ones a few months later. You'll be surprised how many have become easy.
+
+What about Rudin's *Principles of Mathematical Analysis*? It's famous, terse and excellent, and if you work through Pugh you don't need it. Keep it as a second source when a Pugh proof doesn't click.
+
+<Ready to="complex analysis and Level 3">
+
+- prove the least upper bound property gives you the convergence of monotone bounded sequences,
+- prove Bolzano–Weierstrass, then prove that compact metric spaces are sequentially compact,
+- prove that a continuous function on a compact set is bounded, attains its bounds, and is uniformly continuous,
+- prove that a continuous function is Riemann integrable, and state the fundamental theorem of calculus with its hypotheses.
+
+</Ready>
+
+### Linear algebra II: structure
+
+<Stage id="linear-algebra-2" level="Level 2" track="algebra" hours="120" needs="Linear algebra I, Proofs" parallel="Real analysis, Abstract algebra I" unlocks="Functional analysis, Abstract algebra II (modules), Differential geometry, Numerical analysis" />
+
+**Book:** Sheldon Axler, *Linear Algebra Done Right* (4th edition, free on his website).
+
+This round is all proofs, and determinants arrive at the very end on purpose. Run it alongside analysis and algebra: the three keep reinforcing each other.
+
+<Chapters book="Axler, Linear Algebra Done Right (4th ed.)" core="1 Vector spaces · 2 Finite-dimensional spaces · 3 Linear maps · 5 Eigenvalues and eigenvectors · 6 Inner product spaces · 7 Operators on inner product spaces (the spectral theorem)" later="4 Polynomials (read it when Chapter 5 sends you there) · 8 Operators on complex spaces, Jordan form · 9 Multilinear algebra and determinants" />
+
+<Ready>
+
+- prove the rank–nullity theorem,
+- prove that eigenvectors for distinct eigenvalues are linearly independent,
+- prove that every operator on a finite-dimensional complex space has an eigenvalue, without determinants,
+- state and prove the real spectral theorem.
+
+</Ready>
+
+### Abstract algebra I
+
+<Stage id="algebra-1" level="Level 2" track="algebra" hours="150" needs="Proofs" parallel="Real analysis, Linear algebra II" unlocks="Abstract algebra II, Number theory, Logic" />
+
+**Book:** Charles Pinter, *A Book of Abstract Algebra* (2nd edition, Dover).
+
+Cheap, short, gentle, and the exercise sets are well designed: they build each new idea from small steps. Algebra and analysis don't depend on each other, so run them side by side. Alternating weeks works well for a lot of people.
+
+<Chapters book="Pinter, A Book of Abstract Algebra" core="1–16 Groups, up to the fundamental homomorphism theorem · 17–25 Rings, ideals, integral domains, polynomials" later="26–33 Field extensions, ruler and compass, Galois theory (nicer the second time, in Abstract algebra II)" />
+
+If your goal is applied mathematics, you can stop algebra after Chapter 25. That's more algebra than most analysts ever use.
+
+<Ready>
+
+- prove Lagrange's theorem,
+- list all subgroups of the symmetries of a square,
+- prove the first isomorphism theorem and use it to show that Z/nZ is the quotient you think it is,
+- explain exactly when Z/nZ is a field.
+
+</Ready>
+
+### Differential equations
+
+<Stage id="odes" level="Level 2" track="applied" hours="100" needs="Calculus in one variable, Linear algebra I through eigenvalues" parallel="Anything in Level 2" unlocks="Dynamical systems, PDEs" />
+
+**Book:** William Boyce and Richard DiPrima, *Elementary Differential Equations and Boundary Value Problems* (10th edition or later).
+
+This needs no analysis at all. If you're a physicist or an engineer, do it right after Level 1, before anything else here.
+
+<Chapters book="Boyce and DiPrima" core="1 Introduction · 2 First-order equations · 3 Second-order linear equations · 7 Systems of first-order linear equations · 9 Nonlinear equations and stability" later="5 Series solutions (before PDEs, for Bessel functions) · 6 Laplace transform (now, if you're an engineer)" skip="4 Higher-order equations (skim: it's Chapter 3 with more indices) · 8 Numerical methods (write a Runge–Kutta solver instead) · 10–11 PDEs (the PDE course does it better)" />
+
+<Ready>
+
+- solve a damped, forced spring and explain resonance,
+- solve a 2 × 2 linear system with eigenvalues, real or complex,
+- classify an equilibrium from the trace and determinant of the linearization,
+- draw the phase portrait of the pendulum.
+
+</Ready>
+
+### Probability
+
+<Stage id="probability" level="Level 2" track="probability" hours="150" needs="Stewart through Chapter 15 (joint densities are double integrals)" parallel="Anything in Level 2" unlocks="Statistics, Measure-theoretic probability" />
+
+**Book:** Joseph Blitzstein and Jessica Hwang, *Introduction to Probability* (2nd edition, free PDF), with Blitzstein's Stat 110 lectures.
+
+The best first probability book I know: it's all about thinking in stories, not formulas. It doesn't need analysis. The rigorous version, with measure theory, is a separate later step.
+
+<Chapters book="Blitzstein and Hwang, Introduction to Probability" core="1 Probability and counting · 2 Conditional probability · 3 Random variables · 4 Expectation · 5 Continuous random variables · 6 Moments · 7 Joint distributions · 8 Transformations · 9 Conditional expectation · 10 Inequalities and limit theorems" later="11 Markov chains · 12 Markov chain Monte Carlo · 13 Poisson processes" />
+
+For statistics afterwards, Larry Wasserman's *All of Statistics* covers a full course in a few hundred dense pages. Read Part II, on inference, once Blitzstein and Hwang is done.
+
+<Ready>
+
+- solve the Monty Hall problem three ways, and explain why the intuition fails,
+- compute the expectation of a geometric random variable with and without its distribution,
+- use the law of total expectation on a problem where conditioning is the only sane route,
+- state the central limit theorem precisely and use it to approximate a binomial probability.
+
+</Ready>
+
+## Level 3: the third year
+
+Now the tracks separate. You don't need everything here. Pick based on where you're going (there's a section on that below), but don't skip the analysis.
+
+### Function spaces and several variables
+
+<Stage id="analysis-2" level="Level 3" track="analysis" hours="150" needs="Real analysis (Pugh 1–3), Linear algebra II" parallel="Complex analysis, Topology" unlocks="Measure theory, Functional analysis, Differential geometry, PDEs" />
+
+**Book:** Pugh, the second half. Same book, which is exactly why it's worth choosing.
+
+<Chapters book="Pugh, Real Mathematical Analysis" core="4 Function spaces: uniform convergence, Arzelà–Ascoli, Stone–Weierstrass, the contraction principle and existence for ODEs · 5 Multivariable calculus: the derivative as a linear map, the inverse and implicit function theorems" later="The end of Chapter 5 on differential forms and Stokes' theorem: read it before differential geometry" />
+
+This is where ODEs from Level 2 get their existence theorem and where the derivative stops being a number. If several-variable analysis feels heavy here, Rudin's Chapter 9 is a good second explanation.
+
+<Ready>
+
+- prove that a uniform limit of continuous functions is continuous, and give a counterexample for pointwise limits,
+- prove the Banach fixed point theorem and use it to get Picard–Lindelöf,
+- state Arzelà–Ascoli and use it on a concrete family of functions,
+- prove the inverse function theorem, or at least explain each step of the proof.
+
+</Ready>
+
+### Complex analysis
+
+<Stage id="complex" level="Level 3" track="analysis" hours="140" needs="Real analysis (Pugh 1–3 or Abbott 1–6), Stewart Chapter 16" parallel="Function spaces, Algebra II" unlocks="Analytic number theory, PDEs, Fourier analysis" />
+
+**Book:** Elias Stein and Rami Shakarchi, *Complex Analysis*. For intuition alongside it, Tristan Needham, *Visual Complex Analysis*.
+
+Stein and Shakarchi is dense but complete. Needham has no "required" chapters: open the matching part whenever a formula in Stein and Shakarchi makes no geometric sense to you.
+
+<Chapters book="Stein and Shakarchi, Complex Analysis" core="1 Preliminaries · 2 Cauchy's theorem and its applications · 3 Meromorphic functions and the logarithm" later="4 The Fourier transform (before PDEs) · 8 Conformal mappings · 7 The zeta function and the prime number theorem, just to see it done" skip="5, 6, 9, 10 on a first pass (entire functions, gamma, elliptic and theta functions)" />
+
+<Ready>
+
+- derive the Cauchy–Riemann equations,
+- prove Cauchy's integral formula from Cauchy's theorem,
+- prove Liouville's theorem and get the fundamental theorem of algebra from it,
+- compute the integral of sin(x)/x over the real line with residues.
+
+</Ready>
+
+### Abstract algebra II
+
+<Stage id="algebra-2" level="Level 3" track="algebra" hours="200" needs="Abstract algebra I through Pinter Chapter 25, Linear algebra II" parallel="Complex analysis, Topology" unlocks="Galois theory, Algebraic number theory, Algebraic topology, Representation theory" />
+
+**Book:** David Dummit and Richard Foote, *Abstract Algebra* (3rd edition).
+
+Nine hundred pages and nobody reads it all. Treat it as a course, not a book.
+
+<Chapters book="Dummit and Foote, Abstract Algebra" core="1–4 Groups, quotients, group actions, Sylow · 5 Direct products and abelian groups, first sections · 7–9 Rings, Euclidean domains, PIDs, UFDs, polynomial rings · 13–14 Field theory and Galois theory" later="10–12 Modules (before algebraic topology or representation theory) · 18–19 Representations of finite groups" skip="6 · 15 onward (graduate material)" />
+
+<Ready>
+
+- prove the orbit–stabilizer theorem and use it to count the rotations of a cube,
+- prove that a group of order 15 is cyclic using Sylow,
+- show that Z[i] is a Euclidean domain,
+- compute the Galois group of x³ - 2 over Q and draw its lattice of subfields.
+
+</Ready>
+
+### Topology
+
+<Stage id="topology" level="Level 3" track="geometry" hours="120" needs="Real analysis, especially Pugh Chapter 2" parallel="Algebra II, Complex analysis" unlocks="Algebraic topology, Differential geometry, Functional analysis" />
+
+**Book:** James Munkres, *Topology* (2nd edition).
+
+After Pugh's Chapter 2, metric topology is familiar, so Munkres goes faster than people expect. The new part is topology without a metric.
+
+<Chapters book="Munkres, Topology" core="2 Topological spaces and continuous functions · 3 Connectedness and compactness · 4 Countability and separation axioms" later="7 Complete metric spaces and function spaces · 9 The fundamental group (this begins algebraic topology)" skip="1 Set theory (skim, you know it from Velleman) · 5, 6, 8 on a first pass" />
+
+<Ready>
+
+- prove that a continuous image of a compact space is compact, and of a connected space connected,
+- prove that the product of two compact spaces is compact,
+- explain why the product topology and the box topology differ, with an example,
+- prove that a compact Hausdorff space is normal.
+
+</Ready>
+
+### Dynamical systems (optional)
+
+<Stage id="dynamics" level="Level 3" track="applied" hours="80" needs="Differential equations" parallel="Anything" unlocks="Applied mathematics, mathematical biology, physics" />
+
+**Book:** Steven Strogatz, *Nonlinear Dynamics and Chaos*.
+
+Strogatz reads like a great lecture course, and you can do most of it. It's also the most fun book on this page.
+
+<Chapters book="Strogatz, Nonlinear Dynamics and Chaos" core="2–4 Flows on the line and circle, bifurcations · 5–8 Linear systems, the phase plane, limit cycles, bifurcations in two dimensions" later="9 Lorenz equations · 10 One-dimensional maps" skip="11–12 Fractals and strange attractors, unless you got hooked" />
+
+<Ready>
+
+- classify the bifurcations of x' = r + x² and x' = rx - x³,
+- use a nullcline sketch to find a limit cycle,
+- explain period doubling in the logistic map and estimate where chaos starts.
+
+</Ready>
+
+### Number theory (optional)
+
+<Stage id="number-theory" level="Level 3" track="algebra" hours="80" needs="Proofs; Abstract algebra I helps" parallel="Algebra II" unlocks="Algebraic number theory, cryptography" />
+
+**Book:** Joseph Silverman, *A Friendly Introduction to Number Theory*. After Algebra II, Ireland and Rosen's *A Classical Introduction to Modern Number Theory*.
+
+Silverman is made of short chapters. Read everything through quadratic reciprocity, then take whichever later chapters catch your eye (sums of squares, Pell's equation and elliptic curves are the classics).
+
+<Ready>
+
+- prove Fermat's little theorem and Euler's generalization,
+- solve a system of congruences with the Chinese remainder theorem,
+- explain RSA and why it works,
+- decide whether 3 is a square modulo 101 using quadratic reciprocity.
+
+</Ready>
+
+## Level 4: the doorway to graduate work
+
+Each subject here is the first course of a whole field. You won't do them all. Pick two or three that point where you want to go.
+
+### Measure and integration
+
+<Stage id="measure" level="Level 4" track="analysis" hours="150" needs="Real analysis and Function spaces (Pugh 1–5), Linear algebra II" parallel="Functional analysis" unlocks="Functional analysis, Measure-theoretic probability, PDEs, harmonic analysis" />
+
+**Books:** Pugh's Chapter 6 for a short first view. Sheldon Axler, *Measure, Integration & Real Analysis* (free PDF), for the full course.
+
+<Chapters book="Axler, Measure, Integration & Real Analysis" core="1 Riemann integration (why it isn't enough) · 2 Measures · 3 Integration · 5 Product measures and Fubini" later="4 Differentiation · 9 Real and complex measures · 12 Probability measures (before Durrett)" />
+
+<Ready>
+
+- construct Lebesgue measure on R, or at least explain each step and why outer measure alone fails,
+- state and prove the monotone and dominated convergence theorems,
+- give a function that is Lebesgue integrable but not Riemann integrable,
+- use Fubini–Tonelli correctly and give a case where swapping the integrals fails.
+
+</Ready>
+
+### Functional analysis
+
+<Stage id="functional" level="Level 4" track="analysis" hours="150" needs="Function spaces, Linear algebra II; measure theory for the L^p spaces" parallel="Measure, PDEs" unlocks="PDEs at graduate level, quantum mechanics, optimization, learning theory" />
+
+**Books:** Axler's *Measure, Integration & Real Analysis*, Chapters 6 to 10. Or, without measure theory, Erwin Kreyszig, *Introductory Functional Analysis with Applications*.
+
+<Chapters book="Axler, Measure, Integration & Real Analysis" core="6 Banach spaces · 7 L^p spaces · 8 Hilbert spaces" later="10 Linear maps on Hilbert spaces, the spectral theorem for compact operators · 11 Fourier analysis" />
+
+<Chapters book="Kreyszig, Introductory Functional Analysis (alternative)" core="1 Metric spaces · 2 Normed and Banach spaces · 3 Inner product and Hilbert spaces · 4 The fundamental theorems: Hahn–Banach, uniform boundedness, open mapping, closed graph" later="5 Banach fixed point · 7–9 Spectral theory and compact operators" skip="10–11 Unbounded operators and quantum mechanics, unless that's your field" />
+
+<Ready>
+
+- prove that L² is complete, or that ℓ² is if you took Kreyszig's route,
+- prove the projection theorem in a Hilbert space and get the Riesz representation theorem from it,
+- state the four big theorems of Banach space theory and give one application of each.
+
+</Ready>
+
+### Partial differential equations
+
+<Stage id="pdes" level="Level 4" track="applied" hours="140" needs="Several variables including Stewart 16, Differential equations, Function spaces (uniform convergence)" parallel="Functional analysis" unlocks="Mathematical physics, numerical PDEs, graduate PDE (Evans)" />
+
+**Book:** Walter Strauss, *Partial Differential Equations: An Introduction* (2nd edition). Get the solutions manual.
+
+<Chapters book="Strauss, Partial Differential Equations" core="1 Where PDEs come from · 2 Waves and diffusions · 3 Reflections and sources · 4 Boundary problems · 5 Fourier series · 6 Harmonic functions · 7 Green's identities and Green's functions" later="9 Waves in space · 10 Boundaries in the plane and in space · 11 General eigenvalue problems · 12 Distributions and transforms (after functional analysis)" skip="8 Computation (write a finite-difference solver instead) · 13–14 on a first pass" />
+
+This is where uniform convergence stops being abstract: Fourier series are the reason it was invented.
+
+<Ready>
+
+- solve the heat equation on an interval by separation of variables,
+- derive d'Alembert's formula for the wave equation,
+- state and prove the maximum principle for harmonic functions,
+- explain the Gibbs phenomenon with a picture.
+
+</Ready>
+
+### Differential geometry
+
+<Stage id="differential-geometry" level="Level 4" track="geometry" hours="150" needs="Function spaces and several variables (the inverse function theorem), Linear algebra II, Topology" parallel="Algebraic topology" unlocks="Riemannian geometry, general relativity, geometric analysis, information geometry" />
+
+**Books:** Manfredo do Carmo, *Differential Geometry of Curves and Surfaces*, then John Lee, *Introduction to Smooth Manifolds* (2nd edition).
+
+Do Carmo first, because curvature of a surface you can picture is much easier than curvature of an abstract manifold.
+
+<Chapters book="do Carmo, Curves and Surfaces" core="1 Curves · 2 Regular surfaces · 3 The geometry of the Gauss map · 4 Intrinsic geometry, up to Gauss–Bonnet" later="5 Global differential geometry" />
+
+<Chapters book="Lee, Introduction to Smooth Manifolds" core="1 Smooth manifolds · 2 Smooth maps · 3 Tangent vectors · 4 Submersions, immersions, embeddings · 5 Submanifolds · 8 Vector fields · 11 The cotangent bundle · 14–16 Differential forms, orientations, integration and Stokes" later="7 Lie groups · 9 Flows · 12 Tensors · 13 Riemannian metrics · 17 de Rham cohomology" />
+
+<Ready>
+
+- compute the Gaussian curvature of a torus,
+- explain why the Theorema Egregium means you can't flatten an orange peel,
+- prove that the regular level set of a smooth map is a submanifold,
+- state Stokes' theorem on manifolds and recover Green's theorem from it.
+
+</Ready>
+
+### Algebraic topology (optional)
+
+<Stage id="algebraic-topology" level="Level 4" track="geometry" hours="150" needs="Topology, Abstract algebra II (groups, modules)" parallel="Differential geometry" unlocks="Homological algebra, topological data analysis, category theory" />
+
+**Books:** Munkres, Chapters 9 to 12, as a gentle start. Then Allen Hatcher, *Algebraic Topology* (free PDF).
+
+<Chapters book="Hatcher, Algebraic Topology" core="0 Some underlying geometric notions · 1 The fundamental group, van Kampen, covering spaces · 2 Homology, up to Mayer–Vietoris" later="3 Cohomology" skip="4 Homotopy theory, on a first pass" />
+
+<Ready>
+
+- compute the fundamental group of the circle, and prove Brouwer's fixed point theorem in dimension 2 from it,
+- compute the homology of the torus and of the real projective plane,
+- use Mayer–Vietoris on a concrete space.
+
+</Ready>
+
+### Measure-theoretic probability (optional)
+
+<Stage id="probability-2" level="Level 4" track="probability" hours="150" needs="Probability, Measure and integration" parallel="Functional analysis" unlocks="Stochastic processes, stochastic calculus, statistical learning theory" />
+
+**Book:** Rick Durrett, *Probability: Theory and Examples* (5th edition, free PDF).
+
+<Chapters book="Durrett, Probability: Theory and Examples" core="1 Measure theory (a fast review) · 2 Laws of large numbers · 3 Central limit theorems · 4 Martingales" later="5 Markov chains · 7 Brownian motion" skip="6 Ergodic theorems, on a first pass" />
+
+<Ready>
+
+- prove the weak law of large numbers, then the strong law with the Borel–Cantelli lemmas,
+- prove the central limit theorem with characteristic functions,
+- use the optional stopping theorem on the gambler's ruin.
+
+</Ready>
+
+### Numerical analysis (optional)
+
+<Stage id="numerical" level="Level 4" track="logic" hours="100" needs="Linear algebra I and II, some programming" parallel="Anything" unlocks="Scientific computing, optimization, machine learning systems" />
+
+**Book:** Lloyd Trefethen and David Bau, *Numerical Linear Algebra*.
+
+The book is written as forty short lectures in five parts. It changes how you see Strang's material: the question is no longer what the answer is, but how much of it survives floating point.
+
+<Chapters book="Trefethen and Bau, Numerical Linear Algebra" core="I Fundamentals · II QR factorization and least squares · III Conditioning and stability · IV Systems of equations" later="V Eigenvalues · VI Iterative methods" />
+
+<Ready>
+
+- explain the difference between conditioning and stability with an example of each,
+- implement Householder QR and use it for least squares,
+- say why Gaussian elimination without pivoting fails, and how pivoting fixes it.
+
+</Ready>
+
+### Mathematical logic (optional)
+
+<Stage id="logic" level="Level 4" track="logic" hours="80" needs="Proofs, Abstract algebra I (for the feel of structures)" parallel="Anything" unlocks="Set theory, model theory, computability, proof assistants" />
+
+**Book:** Herbert Enderton, *A Mathematical Introduction to Logic* (2nd edition).
+
+<Chapters book="Enderton, A Mathematical Introduction to Logic" core="1 Sentential logic · 2 First-order logic, through the completeness theorem" later="3 Undecidability and Gödel's incompleteness theorems" skip="4 Second-order logic" />
+
+For the practical side of logic, try a proof assistant at the same time. The Lean community's *Mathematics in Lean* is a good place to start, and it will show you very quickly which of your proofs were really proofs.
+
+<Ready>
+
+- state and explain the compactness theorem, and use it to build a nonstandard model of arithmetic,
+- explain the difference between "true in every model" and "provable", and why completeness says they coincide,
+- explain what Gödel's first incompleteness theorem says, and what it doesn't.
+
+</Ready>
+
+## Choosing your route
+
+Nobody needs the whole map. Here are three routes, each a subset in order.
+
+**Pure mathematics.** All of Levels 1 to 3 except the optional subjects you don't enjoy, then measure theory, functional analysis or algebraic topology, and differential geometry. This is close to a full undergraduate degree. At 10 hours a week, count about four years.
+
+**Machine learning and data.** Calculus (both parts), Proofs, Linear algebra I with the SVD, Probability, then Real analysis (Pugh 1–3) and Linear algebra II. After that: Measure and integration, Functional analysis, Measure-theoretic probability, Numerical analysis. Algebra, complex analysis and PDEs can wait until a specific problem asks for them. Around two and a half years at 10 hours a week.
+
+**Physics and engineering.** Calculus, Linear algebra I, Differential equations as early as possible, then Complex analysis (you can take Abbott as your analysis), PDEs and Dynamical systems. Add Functional analysis through Kreyszig if you're going toward quantum mechanics. Around two years.
+
+## The whole map in one table
+
+| Subject | Book | Read before moving on | Opens |
+| --- | --- | --- | --- |
+| Calculus, one variable | Stewart | Ch. 1–7 | Everything |
+| Proofs | Velleman | Ch. 1–6 | All proof-based courses |
+| Linear algebra I | Strang | Ch. 1–6 | ODEs, probability, LA II |
+| Series, several variables | Stewart | Ch. 10–15, then 16 | Analysis, probability, complex |
+| Real analysis | Pugh (Abbott first if needed) | Pugh Ch. 1–3 | Level 3 analysis, topology |
+| Linear algebra II | Axler | Ch. 1–3, 5–7 | Functional analysis, algebra II |
+| Abstract algebra I | Pinter | Ch. 1–25 | Algebra II, number theory |
+| Differential equations | Boyce and DiPrima | Ch. 1–3, 7, 9 | Dynamics, PDEs |
+| Probability | Blitzstein and Hwang | Ch. 1–10 | Statistics, Durrett |
+| Function spaces | Pugh | Ch. 4–5 | Measure, functional analysis, geometry |
+| Complex analysis | Stein and Shakarchi | Ch. 1–3 | Number theory, PDEs |
+| Abstract algebra II | Dummit and Foote | Ch. 1–5, 7–9, 13–14 | Algebraic topology |
+| Topology | Munkres | Ch. 2–4 | Algebraic topology, geometry |
+| Measure | Axler (MIRA) | Ch. 1–3, 5 | Probability, functional analysis |
+| Functional analysis | Axler (MIRA) or Kreyszig | MIRA 6–8 or Kreyszig 1–4 | Graduate analysis |
+| PDEs | Strauss | Ch. 1–7 | Graduate PDE |
+| Differential geometry | do Carmo, then Lee | do Carmo 1–4 | Riemannian geometry |
+
+## Moving on too early, or too late
+
+Too early looks like this: in the new book, the new ideas make sense but the old ones keep tripping you. Every proof in Pugh stalls on a quantifier you can't negate. Every eigenvalue in Boyce and DiPrima takes twenty minutes. The fix is narrow: one section of the old book, ten exercises, back.
+
+Too late looks different. You've been on the same book for months, you're on the hardest starred exercises, and you dread opening it. Or you're starting a third read of a chapter "to really get it". That's the signal. Move on. The next book will either show you that you understood it after all, or show you exactly which part you didn't.
+
+A two-week break costs a few days of review, not the course. A six-month break costs more, but less than you fear: the second time through a chapter is always faster than the first.
+
+If I had to fit this whole post in one sentence: finish fewer books, and finish the right chapters of them.

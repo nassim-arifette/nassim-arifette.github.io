@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ZoomableImage } from './zoomable-image'
+import { Chapters, Ready, Roadmap, Stage } from './study-guide'
 
 const CodeBlock = ({ className = '', ...props }: React.HTMLAttributes<HTMLPreElement>) => {
   const preRef = React.useRef<HTMLPreElement | null>(null)
@@ -173,6 +174,10 @@ const HeadingAnchor = React.forwardRef<HTMLAnchorElement, React.AnchorHTMLAttrib
 HeadingAnchor.displayName = 'HeadingAnchor'
 
 export const mdxComponents = {
+  Roadmap,
+  Stage,
+  Chapters,
+  Ready,
   h1: ({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h1 className={cn('group mt-2 scroll-m-20 text-3xl font-semibold tracking-tight', className)} {...props} />
   ),

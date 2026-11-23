@@ -4,7 +4,8 @@ import rehypePrettyCode from 'rehype-pretty-code'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
-import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
+import { defaultSchema } from 'rehype-sanitize'
+import { sanitize } from 'hast-util-sanitize'
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import GithubSlugger from 'github-slugger'
@@ -119,6 +120,49 @@ for (const tag of mathMLTags) {
   sanitizeSchema.attributes[tag] = tagAttributes
 }
 
+
+// rehype-sanitize drops every MDX JSX element. This keeps the components listed here
+// (see components/mdx/mdx-components.tsx) and still sanitizes the markdown inside them.
+const allowedComponents = new Set(['Roadmap', 'Stage', 'Chapters', 'Ready'])
+
+function rehypeSanitizeKeepingComponents(schema: typeof defaultSchema) {
+  const slotSchema = { ...schema, tagNames: [...(schema.tagNames ?? []), 'mdx-slot'] }
+  const isComponent = (node: any) =>
+    (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && allowedComponents.has(node.name)
+
+  const clean = (tree: any): any => {
+    const stash: any[] = []
+    const hide = (node: any) => {
+      if (!node.children) return
+      node.children = node.children.map((child: any) => {
+        if (!isComponent(child)) return hide(child), child
+        stash.push(child)
+        return { type: 'element', tagName: 'mdx-slot', properties: {}, children: [] }
+      })
+    }
+    hide(tree)
+    const safe: any = sanitize(tree, slotSchema)
+    let next = 0
+    const restore = (node: any) => {
+      if (!node.children) return
+      node.children = node.children.map((child: any) => {
+        if (child.type !== 'element' || child.tagName !== 'mdx-slot') return restore(child), child
+        const component = stash[next++]
+        // Only plain string attributes survive; expressions could run arbitrary code.
+        component.attributes = (component.attributes ?? []).filter(
+          (attr: any) => attr.type === 'mdxJsxAttribute' && (typeof attr.value === 'string' || attr.value == null),
+        )
+        component.children = clean({ type: 'root', children: component.children ?? [] }).children
+        return component
+      })
+    }
+    restore(safe)
+    return safe
+  }
+
+  return () => (tree: any) => clean(tree)
+}
+
 const Post = defineDocumentType(() => ({
   name: 'Post',
   filePathPattern: `posts/**/[^_]*.mdx`,
@@ -220,7 +264,7 @@ const Project = defineDocumentType(() => ({
 
 const rehypePlugins = [
   // Sanitize first
-  [rehypeSanitize, sanitizeSchema] as unknown as Pluggable,
+  rehypeSanitizeKeepingComponents(sanitizeSchema) as unknown as Pluggable,
 
   rehypeSlug as unknown as Pluggable,
   [rehypeAutolinkHeadings, {
