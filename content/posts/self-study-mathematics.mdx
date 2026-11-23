@@ -17,9 +17,9 @@ Chapter numbers refer to the edition named each time. If you have another editio
 
 ## The map
 
-Five levels. Each level roughly matches one year of a strong undergraduate programme, except Level 4, which is the overlap with a first year of graduate school. Colors are tracks. Dashed subjects depend on what you want to do. Click any subject to jump to it.
+Five levels, read left to right. Each level is roughly one year of a strong undergraduate programme, except Level 4, which overlaps with a first year of graduate school.
 
-<Roadmap />
+<DependencyMap />
 
 You don't finish a level before starting the next. Inside a level, subjects mostly run in parallel. Between levels, the dependencies are specific: complex analysis needs the first half of real analysis, not all of Level 2. Each subject's card says exactly what it needs.
 
@@ -64,11 +64,15 @@ Three subjects, all started within a few weeks of each other. Calculus is the lo
 
 Stewart is long, clear, and full of exercises at every level. It is not elegant, and that's fine: this first pass is about fluency. Elegance comes in Level 2.
 
-<Chapters book="Stewart, Calculus: Early Transcendentals" core="1 Functions (skim) · 2 Limits and derivatives · 3 Differentiation rules · 4 Applications of differentiation · 5 Integrals · 6 Applications of integration (areas, volumes) · 7 Techniques of integration, including improper integrals" later="10 Parametric and polar (Level 2) · 11 Series (Level 2)" skip="8 Further applications · 9 Differential equations (you'll do them properly later)" />
+<Chapters book="Stewart, Calculus: Early Transcendentals" core="1 Functions (skim) · 2 Limits and derivatives · 3 Differentiation rules · 4 Applications of differentiation · 5 Integrals · 6 Applications of integration (areas, volumes) · 7 Techniques of integration, including improper integrals" later="10 Parametric and polar (Level 2) · 11 Series (Level 2) · 12–16 Several variables (Level 2)" skip="8 Further applications · 9 Differential equations (you'll do them properly later)" />
 
 Chapters 2 to 5 are the heart, so don't skip anything there. In Chapter 7, integration by parts, trig substitution and partial fractions matter, and improper integrals matter a lot, because they come back in probability and in series. Approximate integration can wait forever.
 
 If you want a second voice, Silvanus Thompson's *Calculus Made Easy* is a hundred years old and still the friendliest explanation of what a derivative is.
+
+![Riemann sums with 4, 8 and 32 rectangles under the same curve](/media/blog/self-study-mathematics/riemann-sums.svg)
+
+*The integral as a limit of Riemann sums. Chapter 5 is this picture, made precise.*
 
 <Ready>
 
@@ -108,7 +112,11 @@ Go fast through the logic chapters if they come easily. But do the exercises on 
 
 Linear algebra is the one subject I'd deliberately learn twice. First as computation, then as structure. Doing both at once is why so many people find Axler hard and Strang shallow. They are two books for two moments.
 
-<Chapters book="Strang, Introduction to Linear Algebra (5th ed.)" core="1 Vectors · 2 Solving linear equations · 3 Vector spaces and subspaces · 4 Orthogonality, least squares · 5 Determinants · 6 Eigenvalues, including the section on systems of differential equations" later="7 Singular value decomposition (now if you care about data or machine learning)" skip="8 onward for now: Linear algebra II does linear maps better" />
+![The unit circle and its image under a matrix, an ellipse, with singular vectors](/media/blog/self-study-mathematics/linear-map-svd.svg)
+
+*Every matrix sends the unit circle to an ellipse. The singular value decomposition (Chapter 7) tells you its axes. Most of Strang is about reading pictures like this off a matrix.*
+
+<Chapters book="Strang, Introduction to Linear Algebra (5th ed.)" total="12" core="1 Vectors · 2 Solving linear equations · 3 Vector spaces and subspaces · 4 Orthogonality, least squares · 5 Determinants · 6 Eigenvalues, including the section on systems of differential equations" later="7 Singular value decomposition (now if you care about data or machine learning)" skip="8 onward for now: Linear algebra II does linear maps better" />
 
 <Ready>
 
@@ -151,6 +159,10 @@ This is where mathematics changes character. Level 1 was about computing. Level 
 
 People hate Chapter 11 because it feels like a bag of convergence tests with no reason behind them. The reason arrives in real analysis. Get through it anyway, real analysis assumes you've seen it once.
 
+![The sine function and its Taylor polynomials of degree 1 to 9](/media/blog/self-study-mathematics/taylor-sin.svg)
+
+*Each Taylor polynomial hugs sin x on a wider interval. Chapter 11 is about why, and how wide.*
+
 <Ready>
 
 - find the radius and interval of convergence of a power series,
@@ -171,11 +183,15 @@ People hate Chapter 11 because it feels like a bag of convergence tests with no 
 
 Pugh is the book I'd build the whole analysis track on. It's more complete and much more geometric than the usual alternatives: it does analysis in metric spaces from Chapter 2, it's full of pictures, and the exercise sets are enormous, from routine to qualifying-exam level. One book carries you from the real numbers to Lebesgue integration.
 
+![The epsilon-delta definition of continuity drawn as a band around f(a) and an interval around a](/media/blog/self-study-mathematics/epsilon-delta.svg)
+
+*Continuity at a: whatever band of height 2ε you draw around f(a), some interval around a stays inside it. Most of Level 2 is learning to argue with this picture.*
+
 Abbott is more elementary and covers much less. It stays on the real line, it doesn't do several variables, and it doesn't do measure theory. What it does very well is explain *why* the definitions look the way they do. Use it if proofs are still new to you, as a first pass through Chapters 1 to 6 (count another 80 hours or so), then switch to Pugh. If Velleman went well, start directly with Pugh.
 
 <Chapters book="Abbott, Understanding Analysis (optional first pass)" core="1 The real numbers · 2 Sequences and series · 3 Basic topology of R, up to compact sets · 4 Continuity · 5 The derivative · 6 Sequences and series of functions" later="7 The Riemann integral (Pugh does it too)" skip="8 Additional topics · the end of Chapter 3 (Baire, perfect sets)" />
 
-<Chapters book="Pugh, Real Mathematical Analysis (2nd ed.)" core="1 Real numbers · 2 A taste of topology: metric spaces, compactness, connectedness · 3 Functions of a real variable: derivatives, the Riemann integral, series" later="4 Function spaces and 5 Multivariable calculus (Level 3) · 6 Lebesgue theory (Level 4)" />
+<Chapters book="Pugh, Real Mathematical Analysis (2nd ed.)" core="1 Real numbers · 2 A taste of topology: metric spaces, compactness, connectedness · 3 Functions of a real variable: derivatives, the Riemann integral, series" later="4 Function spaces (Level 3) · 5 Multivariable calculus (Level 3) · 6 Lebesgue theory (Level 4)" />
 
 Chapter 2 is where Pugh earns its place. Compactness in a general metric space, done with pictures, is the single idea you'll use most in everything after. Take your time there. With Pugh you won't do every exercise, there are hundreds. Do a third, chosen across the difficulty range, and come back to the starred ones a few months later. You'll be surprised how many have become easy.
 
@@ -238,6 +254,10 @@ If your goal is applied mathematics, you can stop algebra after Chapter 25. That
 
 This needs no analysis at all. If you're a physicist or an engineer, do it right after Level 1, before anything else here.
 
+![Phase portrait of the pendulum with its separatrices](/media/blog/self-study-mathematics/pendulum-phase-portrait.svg)
+
+*The pendulum in the phase plane. Inside the blue curves it swings, outside it spins over the top. Chapter 9 teaches you to draw this without solving anything.*
+
 <Chapters book="Boyce and DiPrima" core="1 Introduction · 2 First-order equations · 3 Second-order linear equations · 7 Systems of first-order linear equations · 9 Nonlinear equations and stability" later="5 Series solutions (before PDEs, for Bessel functions) · 6 Laplace transform (now, if you're an engineer)" skip="4 Higher-order equations (skim: it's Chapter 3 with more indices) · 8 Numerical methods (write a Runge–Kutta solver instead) · 10–11 PDEs (the PDE course does it better)" />
 
 <Ready>
@@ -256,6 +276,10 @@ This needs no analysis at all. If you're a physicist or an engineer, do it right
 **Book:** Joseph Blitzstein and Jessica Hwang, *Introduction to Probability* (2nd edition, free PDF), with Blitzstein's Stat 110 lectures.
 
 The best first probability book I know: it's all about thinking in stories, not formulas. It doesn't need analysis. The rigorous version, with measure theory, is a separate later step.
+
+![Density of the mean of 1, 2, 4 and 16 uniform random variables, approaching a normal curve](/media/blog/self-study-mathematics/central-limit.svg)
+
+*The mean of n uniform variables. By n = 16 it is almost exactly the dashed normal curve. That's the central limit theorem, and Chapter 10 proves it.*
 
 <Chapters book="Blitzstein and Hwang, Introduction to Probability" core="1 Probability and counting · 2 Conditional probability · 3 Random variables · 4 Expectation · 5 Continuous random variables · 6 Moments · 7 Joint distributions · 8 Transformations · 9 Conditional expectation · 10 Inequalities and limit theorems" later="11 Markov chains · 12 Markov chain Monte Carlo · 13 Poisson processes" />
 
@@ -282,7 +306,11 @@ Now the tracks separate. You don't need everything here. Pick based on where you
 
 <Chapters book="Pugh, Real Mathematical Analysis" core="4 Function spaces: uniform convergence, Arzelà–Ascoli, Stone–Weierstrass, the contraction principle and existence for ODEs · 5 Multivariable calculus: the derivative as a linear map, the inverse and implicit function theorems" later="The end of Chapter 5 on differential forms and Stokes' theorem: read it before differential geometry" />
 
-This is where ODEs from Level 2 get their existence theorem and where the derivative stops being a number. If several-variable analysis feels heavy here, Rudin's Chapter 9 is a good second explanation.
+This is where ODEs from Level 2 get their existence theorem and where the derivative stops being a number.
+
+![The functions x to the n on the unit interval converging to a discontinuous limit](/media/blog/self-study-mathematics/pointwise-limit.svg)
+
+*Continuous functions converging, point by point, to a function that jumps. Uniform convergence is the fix, and it's the first thing Chapter 4 is about.* If several-variable analysis feels heavy here, Rudin's Chapter 9 is a good second explanation.
 
 <Ready>
 
@@ -300,6 +328,10 @@ This is where ODEs from Level 2 get their existence theorem and where the deriva
 **Book:** Elias Stein and Rami Shakarchi, *Complex Analysis*. For intuition alongside it, Tristan Needham, *Visual Complex Analysis*.
 
 Stein and Shakarchi is dense but complete. Needham has no "required" chapters: open the matching part whenever a formula in Stein and Shakarchi makes no geometric sense to you.
+
+![An indented semicircular contour in the upper half plane avoiding a pole at the origin](/media/blog/self-study-mathematics/contour-sinc.svg)
+
+*The contour behind the integral of sin(x)/x: a big semicircle, a small detour around the pole, and the real line in between. Chapters 2 and 3 give you everything needed to show the big arc contributes nothing.*
 
 <Chapters book="Stein and Shakarchi, Complex Analysis" core="1 Preliminaries · 2 Cauchy's theorem and its applications · 3 Meromorphic functions and the logarithm" later="4 The Fourier transform (before PDEs) · 8 Conformal mappings · 7 The zeta function and the prime number theorem, just to see it done" skip="5, 6, 9, 10 on a first pass (entire functions, gamma, elliptic and theta functions)" />
 
@@ -320,7 +352,7 @@ Stein and Shakarchi is dense but complete. Needham has no "required" chapters: o
 
 Nine hundred pages and nobody reads it all. Treat it as a course, not a book.
 
-<Chapters book="Dummit and Foote, Abstract Algebra" core="1–4 Groups, quotients, group actions, Sylow · 5 Direct products and abelian groups, first sections · 7–9 Rings, Euclidean domains, PIDs, UFDs, polynomial rings · 13–14 Field theory and Galois theory" later="10–12 Modules (before algebraic topology or representation theory) · 18–19 Representations of finite groups" skip="6 · 15 onward (graduate material)" />
+<Chapters book="Dummit and Foote, Abstract Algebra" total="19" core="1–4 Groups, quotients, group actions, Sylow · 5 Direct products and abelian groups, first sections · 7–9 Rings, Euclidean domains, PIDs, UFDs, polynomial rings · 13–14 Field theory and Galois theory" later="10–12 Modules (before algebraic topology or representation theory) · 18–19 Representations of finite groups" skip="6 · 15 onward (graduate material)" />
 
 <Ready>
 
@@ -339,7 +371,7 @@ Nine hundred pages and nobody reads it all. Treat it as a course, not a book.
 
 After Pugh's Chapter 2, metric topology is familiar, so Munkres goes faster than people expect. The new part is topology without a metric.
 
-<Chapters book="Munkres, Topology" core="2 Topological spaces and continuous functions · 3 Connectedness and compactness · 4 Countability and separation axioms" later="7 Complete metric spaces and function spaces · 9 The fundamental group (this begins algebraic topology)" skip="1 Set theory (skim, you know it from Velleman) · 5, 6, 8 on a first pass" />
+<Chapters book="Munkres, Topology" total="14" core="2 Topological spaces and continuous functions · 3 Connectedness and compactness · 4 Countability and separation axioms" later="7 Complete metric spaces and function spaces · 9 The fundamental group (this begins algebraic topology)" skip="1 Set theory (skim, you know it from Velleman) · 5, 6, 8 on a first pass" />
 
 <Ready>
 
@@ -357,6 +389,10 @@ After Pugh's Chapter 2, metric topology is familiar, so Munkres goes faster than
 **Book:** Steven Strogatz, *Nonlinear Dynamics and Chaos*.
 
 Strogatz reads like a great lecture course, and you can do most of it. It's also the most fun book on this page.
+
+![Bifurcation diagram of the logistic map](/media/blog/self-study-mathematics/logistic-bifurcation.png)
+
+*The logistic map x → rx(1 − x). One stable value, then two, four, eight, then chaos with windows of order. Chapter 10 explains all of it.*
 
 <Chapters book="Strogatz, Nonlinear Dynamics and Chaos" core="2–4 Flows on the line and circle, bifurcations · 5–8 Linear systems, the phase plane, limit cycles, bifurcations in two dimensions" later="9 Lorenz equations · 10 One-dimensional maps" skip="11–12 Fractals and strange attractors, unless you got hooked" />
 
@@ -434,6 +470,10 @@ Each subject here is the first course of a whole field. You won't do them all. P
 
 This is where uniform convergence stops being abstract: Fourier series are the reason it was invented.
 
+![Partial Fourier sums of a square wave showing the Gibbs overshoot](/media/blog/self-study-mathematics/gibbs-phenomenon.svg)
+
+*Fourier partial sums of a square wave. They converge everywhere except at the jump, where they always overshoot by about 9%.*
+
 <Ready>
 
 - solve the heat equation on an interval by separation of variables,
@@ -451,9 +491,13 @@ This is where uniform convergence stops being abstract: Fourier series are the r
 
 Do Carmo first, because curvature of a surface you can picture is much easier than curvature of an abstract manifold.
 
+![A torus colored by its Gaussian curvature](/media/blog/self-study-mathematics/torus-curvature.png)
+
+*Gaussian curvature on a torus. Positive outside, negative inside, and it integrates to zero, as Gauss–Bonnet says it must for a surface with a hole.*
+
 <Chapters book="do Carmo, Curves and Surfaces" core="1 Curves · 2 Regular surfaces · 3 The geometry of the Gauss map · 4 Intrinsic geometry, up to Gauss–Bonnet" later="5 Global differential geometry" />
 
-<Chapters book="Lee, Introduction to Smooth Manifolds" core="1 Smooth manifolds · 2 Smooth maps · 3 Tangent vectors · 4 Submersions, immersions, embeddings · 5 Submanifolds · 8 Vector fields · 11 The cotangent bundle · 14–16 Differential forms, orientations, integration and Stokes" later="7 Lie groups · 9 Flows · 12 Tensors · 13 Riemannian metrics · 17 de Rham cohomology" />
+<Chapters book="Lee, Introduction to Smooth Manifolds" total="22" core="1 Smooth manifolds · 2 Smooth maps · 3 Tangent vectors · 4 Submersions, immersions, embeddings · 5 Submanifolds · 8 Vector fields · 11 The cotangent bundle · 14–16 Differential forms, orientations, integration and Stokes" later="7 Lie groups · 9 Flows · 12 Tensors · 13 Riemannian metrics · 17 de Rham cohomology" />
 
 <Ready>
 
@@ -469,6 +513,10 @@ Do Carmo first, because curvature of a surface you can picture is much easier th
 <Stage id="algebraic-topology" level="Level 4" track="geometry" hours="150" needs="Topology, Abstract algebra II (groups, modules)" parallel="Differential geometry" unlocks="Homological algebra, topological data analysis, category theory" />
 
 **Books:** Munkres, Chapters 9 to 12, as a gentle start. Then Allen Hatcher, *Algebraic Topology* (free PDF).
+
+![A square whose opposite edges are identified, glued into a torus](/media/blog/self-study-mathematics/torus-gluing.svg)
+
+*Glue the opposite edges of a square and you get a torus. Much of a first algebraic topology course is learning to compute with pictures like this one.*
 
 <Chapters book="Hatcher, Algebraic Topology" core="0 Some underlying geometric notions · 1 The fundamental group, van Kampen, covering spaces · 2 Homology, up to Mayer–Vietoris" later="3 Cohomology" skip="4 Homotopy theory, on a first pass" />
 
@@ -504,7 +552,7 @@ Do Carmo first, because curvature of a surface you can picture is much easier th
 
 The book is written as forty short lectures in five parts. It changes how you see Strang's material: the question is no longer what the answer is, but how much of it survives floating point.
 
-<Chapters book="Trefethen and Bau, Numerical Linear Algebra" core="I Fundamentals · II QR factorization and least squares · III Conditioning and stability · IV Systems of equations" later="V Eigenvalues · VI Iterative methods" />
+<Chapters book="Trefethen and Bau, Numerical Linear Algebra" roman="1" core="I Fundamentals · II QR factorization and least squares · III Conditioning and stability · IV Systems of equations" later="V Eigenvalues · VI Iterative methods" />
 
 <Ready>
 
@@ -534,7 +582,9 @@ For the practical side of logic, try a proof assistant at the same time. The Lea
 
 ## Choosing your route
 
-Nobody needs the whole map. Here are three routes, each a subset in order.
+Nobody needs the whole map. Here are three routes, each a subset of it, with a rough schedule. Switch between them to see how differently the same subjects are spread out.
+
+<Timeline />
 
 **Pure mathematics.** All of Levels 1 to 3 except the optional subjects you don't enjoy, then measure theory, functional analysis or algebraic topology, and differential geometry. This is close to a full undergraduate degree. At 10 hours a week, count about four years.
 

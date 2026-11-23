@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ZoomableImage } from './zoomable-image'
-import { Chapters, Ready, Roadmap, Stage } from './study-guide'
+import { Chapters, DependencyMap, Ready, Stage, Timeline } from './study-guide'
 
 const CodeBlock = ({ className = '', ...props }: React.HTMLAttributes<HTMLPreElement>) => {
   const preRef = React.useRef<HTMLPreElement | null>(null)
@@ -174,7 +174,8 @@ const HeadingAnchor = React.forwardRef<HTMLAnchorElement, React.AnchorHTMLAttrib
 HeadingAnchor.displayName = 'HeadingAnchor'
 
 export const mdxComponents = {
-  Roadmap,
+  DependencyMap,
+  Timeline,
   Stage,
   Chapters,
   Ready,

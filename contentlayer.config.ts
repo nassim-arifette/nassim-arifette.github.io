@@ -123,7 +123,7 @@ for (const tag of mathMLTags) {
 
 // rehype-sanitize drops every MDX JSX element. This keeps the components listed here
 // (see components/mdx/mdx-components.tsx) and still sanitizes the markdown inside them.
-const allowedComponents = new Set(['Roadmap', 'Stage', 'Chapters', 'Ready'])
+const allowedComponents = new Set(['DependencyMap', 'Timeline', 'Stage', 'Chapters', 'Ready'])
 
 function rehypeSanitizeKeepingComponents(schema: typeof defaultSchema) {
   const slotSchema = { ...schema, tagNames: [...(schema.tagNames ?? []), 'mdx-slot'] }
