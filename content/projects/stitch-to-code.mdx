@@ -1,0 +1,19 @@
+---
+priority: 8
+title: "Stitch to Code"
+date: "2026-08-31"
+description: "An agent skill that turns Google Stitch designs into one coherent application with Codex, Claude Code and other coding agents."
+category: project
+tags: ["Developer Tools", "AI Agents", "Design to Code", "Agent Skills"]
+links: {"github":"https://github.com/nassim-arifette/stitch-to-code","website":"https://skills.sh/nassim-arifette/stitch-to-code"}
+---
+
+## The problem
+
+Google Stitch generates good individual screens, but an application is more than a set of screens. Across a project, navigation drifts, shared components diverge, and coding agents substitute fonts, icons or behaviour the design never intended.
+
+## What I built
+
+Stitch to Code ships as two skills: `stitch`, a short entry point for `implement`, `sync` and `audit`, and `stitch-to-code`, the workflow that does the work. It reconciles the screens before implementation: it keeps deliberate design choices, normalises accidental drift, reuses shared patterns, grounds interactions in the real product, and checks the rendered result in the browser.
+
+It is framework-agnostic and installs in one command with `npx skills add`.

@@ -22,7 +22,7 @@ export default function Header() {
   const pathname = usePathname()
 
   return (
-    <header className="no-print mx-auto w-full max-w-2xl px-5 pt-6 sm:pt-8">
+    <header className="no-print mx-auto w-full max-w-3xl px-5 pt-6 sm:pt-8">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
         <Link href="/" className="text-base font-semibold tracking-tight">
           {site.name}

@@ -80,10 +80,13 @@ title: "Project title"
 date: "2025-01-01"
 description: "Short summary"
 tags: ["domain", "method"]
-featured: false
+priority: 5
 links: { github: "https://github.com/...", pdf: "/project-report.pdf" }
+preview: { type: "image", src: "/media/project.jpg", alt: "...", caption: "..." }
 ---
 ```
+
+`priority` sets the order on the Projects and Research pages (1 comes first; entries without it follow, newest first). The four highest-ranked entries with a `preview` image are shown as cards, on those pages and on the homepage; the rest are listed below them.
 
 Place public reports at `public/<descriptive-kebab-case-name>.pdf` and reference them with root-relative URLs. Avoid placeholder links: omit unavailable fields until the real destination exists.
 

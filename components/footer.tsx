@@ -2,7 +2,7 @@ import { site } from '@/lib/site'
 
 export default function Footer() {
   return (
-    <footer className="no-print mx-auto w-full max-w-2xl px-5 pb-8">
+    <footer className="no-print mx-auto w-full max-w-3xl px-5 pb-8">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-border pt-5 text-xs text-muted-foreground">
         <span>© {new Date().getFullYear()} {site.name}</span>
         <nav aria-label="Footer" className="flex gap-4">

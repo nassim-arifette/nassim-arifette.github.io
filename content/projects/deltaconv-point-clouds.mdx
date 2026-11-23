@@ -1,0 +1,24 @@
+---
+preview: {"type": "image", "src": "/media/deltaconv-hero.jpg", "width": 1280, "height": 800, "alt": "A sphere of points whose tangent frames spin while the gradient arrows stay still", "caption": "Tangent frames spin; with the invariant variant, the gradient stays still."}
+priority: 7
+title: "Spin the frames, keep the gradient: auditing DeltaConv"
+date: "2026-11-02"
+description: "A numerical audit of whether DeltaConv's moving-least-squares gradient on point clouds really ignores the choice of tangent basis, with a fix and an interactive article."
+category: research
+tags: ["Geometric Deep Learning", "Point Clouds", "Numerical Analysis", "Interactive Article"]
+links: {"github":"https://github.com/nassim-arifette/deltaconv-point-clouds","website":"https://nassim-arifette.github.io/deltaconv-point-clouds/"}
+---
+
+## The question
+
+DeltaConv (Wiersma et al., SIGGRAPH 2022) learns on point clouds with gradients in each point's tangent plane. In theory the result should not depend on which tangent basis is picked at each point. Does the discrete implementation hold to that?
+
+## What I found
+
+Not quite. Two numerical choices in the official MLS gradient, the ridge penalty and the gradient normaliser, bring the basis back. Over 72 synthetic conditions, rotating every tangent frame moves the normalised gradient by 2.08% on average and up to 10.2%.
+
+A Frobenius penalty and a rotation-invariant normaliser bring that drift down to about 10⁻¹⁵, floating-point noise. They do not make the gradient more accurate (16.39% against 16.33% error), and no trained network was evaluated.
+
+## The interactive article
+
+The figures run a TypeScript port of the audit's MLS gradient in the browser, tested against the NumPy reference to within 10⁻¹¹. The full audit runs in about nine seconds on a laptop CPU.

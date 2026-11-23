@@ -195,6 +195,8 @@ const Project = defineDocumentType(() => ({
     language: { type: 'string', default: 'en' },
     category: { type: 'enum', options: ['project', 'research'], default: 'project' },
     featured: { type: 'boolean', default: false },
+    // Lower comes first in project and research lists; unranked entries follow, newest first.
+    priority: { type: 'number', required: false },
     placement: { type: 'string', required: false }, // e.g., "1st place"
     contribution: { type: 'string', required: false },
     githubStars: { type: 'number', required: false },

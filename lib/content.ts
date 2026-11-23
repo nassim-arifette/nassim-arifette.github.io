@@ -14,10 +14,16 @@ function sortByDateDesc<T extends { date: string }>(items: T[]) {
   return [...items].sort((a, b) => +new Date(b.date) - +new Date(a.date))
 }
 
+// Projects are listed by importance (the `priority` field), then newest first.
+export function sortByPriority<T extends { date: string; priority?: number }>(items: T[]) {
+  const rank = (item: T) => item.priority ?? Number.POSITIVE_INFINITY
+  return [...items].sort((a, b) => rank(a) - rank(b) || +new Date(b.date) - +new Date(a.date))
+}
+
 function buildIndex(): ContentIndex {
   const posts = sortByDateDesc(allPosts)
   const publishedPosts = posts.filter((post) => post.published !== false)
-  const projects = sortByDateDesc(allProjects)
+  const projects = sortByPriority(allProjects)
 
   const postsBySlug = new Map(posts.map((post) => [post.slug, post] as const))
   const projectsBySlug = new Map(projects.map((project) => [project.slug, project] as const))

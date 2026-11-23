@@ -1,0 +1,29 @@
+---
+preview: {"type": "image", "src": "/media/pulsar-dashboard.jpg", "width": 1366, "height": 633, "alt": "Pulsar dashboard on day 97 of the cruise to Mars: the controls on the left, the 3D body in the Orion cabin, and three things to look after today on the right", "caption": "Day 97 of the cruise to Mars: what needs looking after today, with markers on the 3D body. Crew records are made up for the demo."}
+priority: 2
+title: "Pulsar — Health Monitoring for Astronauts"
+date: "2026-11-14"
+description: "A browser app that shows an astronaut's body in 3D, says what needs looking after today, runs NASA-style self-tests with the webcam, and still works twenty minutes from Earth."
+category: project
+tags: ["NASA Space Apps", "Three.js", "Computer Vision", "Health", "TypeScript", "Hackathon"]
+links: {"github":"https://github.com/4woken/Health-Monitoring-Software","website":"https://pulsar-crew-health.vercel.app/","demo":"https://github.com/4woken/Health-Monitoring-Software/blob/main/docs/video/pulsar-film.mp4"}
+---
+
+## The problem
+
+On the way to Mars, a doctor on Earth answers up to twenty minutes late. The crew needs to see on board what their body is doing, what needs attention today, and what NASA would check, without waiting for the ground.
+
+We built Pulsar for the NASA Space Apps Challenge 2026, for the challenge *Create Health Monitoring Software for Astronauts on Space Missions*.
+
+## What it does
+
+- **The body, in 3D.** Every part Pulsar follows has a marker on the body: white when it's fine, amber or red when it isn't. Click one and a card opens with the value, its 30-day trend, what to do, and the exam NASA runs in flight for the same question. A depth control goes from the spacesuit down to the organs and the skeleton.
+- **Today's check-up.** A planner turns the signals into the day's tasks: exams due, NASA's tasks for that flight day, self-tests and follow-ups. Every task traces back to a value.
+- **Self-tests with the webcam.** Thirteen short tests modelled on NASA practice (reaction time, a cognition battery, vision, hearing, balance, dexterity, pulse recovery). The camera counts repetitions and reads pulse and breathing from the skin and chest. Results stay on the computer.
+- **A day on the mission.** A simulation plays a full day at each destination: a CO₂ scrubber failure on the station, a solar storm on the way to Mars. The dose turns red and the check-up rewrites itself.
+- **Through the helmet visor.** An AR view puts the vital signs on the rim of a spacewalk visor, and can be driven with the eyes through webcam gaze tracking.
+- **The report to Earth.** The day's report is encrypted and sent over a link with the destination's delay, from one second in orbit to twenty minutes from Mars.
+
+## Team and scope
+
+Built by Lucas Baurianne, Enzo Baurianne, Nassim Arifette and Youssef Mir. Pulsar runs entirely in the browser with no server. It is not affiliated with NASA and is not a medical device: the crew records are made up for the demo.

@@ -22,7 +22,7 @@ export const site = {
   bio: [
     'I started a PhD at École Polytechnique in November 2026, in the BIOC lab (Synthetic BioSystems Laboratory), advised by Philippe Nghe. I work on RNA–RNA interactions in the influenza A virus. I build coevolution (DCA) and generative (VAE) models, add physical constraints on how RNA segments pair, and train them on high-throughput data from the Flu-PREDICT consortium. The goal is to predict which mutations break or keep those interactions, including in strains that have not circulated yet.',
     'Before that I did the MVA master at ENS Paris-Saclay and four research internships: 3D CT-to-MRI translation (BioMaps, CEA / Université Paris-Saclay), neural network verification (LIX, École Polytechnique), knowledge graphs (LISN), and constrained learning for phylogenetics (CIRB, Collège de France).',
-    'I also write a fair amount of software. JevGrep, a code search tool for coding agents, has 110 stars on GitHub. PC Agent explains why a Windows PC is slow and backs every number with a measurement. Last summer I built most of the MVP of a fintech platform, backend and frontend.',
+    'I also write a fair amount of software. JevGrep, a code search tool for coding agents, has 115 stars on GitHub. Pulsar, built with three teammates for the NASA Space Apps Challenge, monitors an astronaut\'s health in 3D. PC Agent explains why a Windows PC is slow and backs every number with a measurement. Last summer I built most of the MVP of a fintech platform, backend and frontend.',
   ],
   interests: [
     'RNA–RNA interactions',
@@ -89,9 +89,3 @@ export const publications: Publication[] = [
     links: { pdf: '/voiced-unvoiced-classification-report.pdf' },
   },
 ]
-
-// Homepage highlights, ordered by significance rather than publication date.
-export const selectedWork = {
-  projects: ['jevgrep', 'pc-agent', 'ragots', 'predi-care'],
-  research: ['ct2mri', 'lidar-llm-spatial-reasoning', 'diffdock-geometric-diffusion-docking', 'm1-ter-verification'],
-} as const

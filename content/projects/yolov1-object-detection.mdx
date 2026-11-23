@@ -1,0 +1,24 @@
+---
+preview: {"type": "image", "src": "/media/yolov1-hero.jpg", "width": 1280, "height": 800, "alt": "A VOC image with the 7×7 YOLOv1 grid: a rider and her horse share a cell, so the rider gets no training target", "caption": "A rider and her horse share one grid cell, so the rider never becomes a training target."}
+priority: 6
+title: "One object per cell: what YOLOv1's grid costs"
+date: "2026-11-02"
+description: "A from-scratch YOLOv1 on Pascal VOC 2007: an audit of the objects its 7×7 grid can never learn, and a controlled ablation of the confidence target. Interactive article."
+category: research
+tags: ["Object Detection", "YOLO", "Pascal VOC", "Ablation", "Interactive Article"]
+links: {"github":"https://github.com/nassim-arifette/yolov1-object-detection","website":"https://nassim-arifette.github.io/yolov1-object-detection/"}
+---
+
+## The question
+
+YOLOv1 assigns each object to the grid cell containing its centre, and a cell describes at most one object. How many objects never become a training target, and what should the confidence score learn?
+
+## What I found
+
+Over the official VOC 2007 train, validation and test lists, 1,745 of 24,640 non-difficult objects (7.1%) lose their cell, in 1,141 of 9,963 images. The cost is uneven: 15.8% of bottles and 11.0% of people, against 0.1% of cats and no trains. This is an annotation audit, not an AP loss or a hard recall ceiling.
+
+For the confidence target, a frozen 2×2 protocol compares the paper's IoU target with a constant target, with and without augmentation, over three seeds. Training is still in progress, so no new mAP is reported yet.
+
+## The interactive article
+
+Readers can hover any cell of a real VOC image to see its exact training target, drag a predicted box against an annotation, and move the NMS threshold. The grid encoder, IoU and NMS on the site are TypeScript ports of the Python code, tested to drop exactly the same objects on all 4,952 test images.

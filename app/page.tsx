@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ProjectList } from '@/components/project-list'
+import { ProjectCards, splitFeatured } from '@/components/project-list'
 import { absoluteUrl } from '@/lib/seo'
 import { buildMetadata } from '@/lib/metadata'
 import { getOgImageUrl } from '@/lib/og'
 import { getAllProjects } from '@/lib/content'
-import { selectedWork, site } from '@/lib/site'
+import { site } from '@/lib/site'
 
 export const metadata: Metadata = buildMetadata({
   title: site.name,
@@ -16,8 +16,8 @@ export const metadata: Metadata = buildMetadata({
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="mt-14 scroll-mt-20">
-      <h2 id={`${id}-title`} className="section-title mb-2">
+    <section id={id} aria-labelledby={`${id}-title`} className="mt-16 scroll-mt-20">
+      <h2 id={`${id}-title`} className="section-title mb-6">
         {title}
       </h2>
       {children}
@@ -27,11 +27,9 @@ function Section({ id, title, children }: { id: string; title: string; children:
 
 export default function HomePage() {
   const allProjects = getAllProjects()
-  // Keep the editorial order instead of selecting the newest entries.
-  const select = (slugs: readonly string[]) =>
-    slugs.flatMap((slug) => allProjects.filter((project) => project.slug === slug))
-  const projects = select(selectedWork.projects)
-  const research = select(selectedWork.research)
+  // The four most important entries with a picture, ranked by each project's `priority`.
+  const projects = splitFeatured(allProjects.filter((project) => project.category !== 'research')).featured
+  const research = splitFeatured(allProjects.filter((project) => project.category === 'research')).featured
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -96,24 +94,15 @@ export default function HomePage() {
       </section>
 
       <Section id="projects" title="Selected projects">
-        <ProjectList projects={projects} />
-        <p className="mt-4 text-sm"><Link href="/projects" className="link">All projects →</Link></p>
+        <ProjectCards projects={projects} />
+        <p className="mt-8 text-sm"><Link href="/projects" className="link">All projects →</Link></p>
       </Section>
 
-      <Section id="research" title="Selected research & reports">
-        <ProjectList projects={research} />
-        <p className="mt-4 text-sm"><Link href="/research" className="link">Research work, papers & reports →</Link></p>
+      <Section id="research" title="Selected research">
+        <ProjectCards projects={research} />
+        <p className="mt-8 text-sm"><Link href="/research" className="link">All research and reports →</Link></p>
       </Section>
 
-      <Section id="contact" title="Contact">
-        <p className="leading-relaxed">
-          The best way to reach me is by email at{' '}
-          <a href={`mailto:${site.email}`} className="link">
-            {site.email}
-          </a>
-          .
-        </p>
-      </Section>
     </div>
   )
 }

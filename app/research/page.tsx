@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { ProjectList } from '@/components/project-list'
+import { ProjectCards, ProjectList, splitFeatured } from '@/components/project-list'
 import { buildMetadata } from '@/lib/metadata'
 import { getOgImageUrl } from '@/lib/og'
 import { getAllProjects } from '@/lib/content'
@@ -14,15 +14,23 @@ export const metadata: Metadata = buildMetadata({
 export default function ResearchPage() {
   const research = getAllProjects().filter((project) => project.category === 'research')
 
+  const { featured, rest } = splitFeatured(research)
+
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">Research</h1>
       <p className="mt-2 text-muted-foreground">
         Research work, methods, and results. Each entry links to its available manuscript, report, or code.
       </p>
-      <div className="mt-8">
-        <ProjectList projects={research} />
+      <div className="mt-10">
+        <ProjectCards projects={featured} />
       </div>
+      {rest.length ? (
+        <section aria-labelledby="more-title" className="mt-14">
+          <h2 id="more-title" className="section-title mb-3">More research</h2>
+          <ProjectList projects={rest} />
+        </section>
+      ) : null}
     </div>
   )
 }

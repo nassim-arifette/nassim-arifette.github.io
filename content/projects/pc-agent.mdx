@@ -1,28 +1,28 @@
 ---
-preview: {"type": "image", "src": "/media/pc-agent.png", "alt": "PC Agent desktop interface showing a diagnostic conversation and system metrics", "width": 1280, "height": 800, "caption": "Interface preview with synthetic demo data. Early prototype."}
+priority: 3
+preview: {"type": "image", "src": "/media/pc-agent-answer.jpg", "alt": "PC Agent answering why a PC is slow, with the cited measurement open in the Sources panel", "width": 1280, "height": 880, "caption": "A verified answer about a slow PC, with the measurement it cites open in the Sources panel."}
 title: "PC Agent"
 date: "2026-09-25"
-description: "A Windows desktop app and Rust CLI for investigating slowdowns through real system measurements and optional AI analysis."
+description: "Ask why your Windows PC is slow or full and get an answer you can check: an NVIDIA Nemotron model investigates with read-only tools, and every figure is verified against a measurement."
 category: project
-tags: ["Rust", "Tauri", "Windows", "AI Agents", "System Diagnostics"]
+tags: ["Rust", "Tauri", "Windows", "AI Agents", "NVIDIA Nemotron", "Hackathon"]
+links: {"github":"https://github.com/nassim-arifette/pc-agent","demo":"https://youtu.be/AghyEk9-4oY"}
 ---
 
 ## The problem
 
-Understanding why a PC is slow requires connecting observations about memory, CPU, graphics, storage, and individual processes. A useful explanation needs to distinguish a measured symptom from a possible cause.
+Task Manager shows numbers without explaining them. A chatbot explains without measuring, and readily invents a cause. Most people end up with a "PC cleaner" that deletes things at random, or a forum thread that may not apply to their machine.
 
 ## What I built
 
-PC Agent combines a Rust command-line interface with a Tauri desktop application, both using the same diagnostic core. It collects Windows system and process measurements, investigates storage usage, and presents answers with citations back to the observations.
+PC Agent is a Windows desktop app (Tauri, with a Rust diagnostic core). You describe what you notice, such as "my PC is slow when I open Chrome" or "what can I delete on C:?". An NVIDIA Nemotron model served by Nebius Token Factory then investigates with about two dozen read-only tools: memory, processor, disks, NVIDIA GPUs, programs grouped by application, services, startup programs, event logs, drivers, Windows Update and storage.
 
-The desktop interface includes saved local conversations, a live PC-status panel, measurement details, and progress for each investigation step.
+- **Every cited figure is verified.** A number in the answer must match the measurement it cites, or the model is asked to fix it. Anything that still does not match is marked as unverified.
+- **Read-only by default.** The model can only propose an action. It runs after your click, and its target is checked again just before.
+- **Privacy you can see.** Toggles decide what leaves the PC, and *See what leaves* shows the exact message before it is sent.
 
-## Optional AI investigation
+Beyond chat, the app keeps seven days of local history (so "why was it slow around 2 pm?" can be answered from data), watches with Windows notifications, a daily report that runs even when the app is closed, and a storage explorer that deletes nothing.
 
-Local analysis is the default. With explicit opt-in, an AI agent can request bounded inspection tools and explain the observations. The controller checks numeric claims and citations against the collected measurements; unavailable data and uncertain conclusions remain visible.
+## Context
 
-Actions require separate local approval, and the prototype distinguishes investigation from execution.
-
-## Status
-
-This is an early prototype, with source code currently in a private repository. It is not a finished optimizer; diagnostic accuracy and performance still need validation beyond the development machine.
+Built for the Nebius × NVIDIA Global AI Hackathon, *Best Apps and Agents* track. The repository also includes an experimental Nemotron Nano 4B fine-tuned on Nebius AI Cloud to choose the next measurement. A Windows installer is available from the releases page.
