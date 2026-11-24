@@ -76,7 +76,14 @@ export default function PostPage({ params }: PageProps) {
           {series ? (
             <>
               {' '}
-              · Part {series.current.index + 1} of {series.current.total} in “{series.current.series.title}”
+              · {series.current.label ?? `Part ${series.current.index + 1} of ${series.current.total}`},{' '}
+              {series.start?.post && series.start.post.slug !== post.slug ? (
+                <Link href={series.start.post.url} className="link">
+                  {series.current.series.title}
+                </Link>
+              ) : (
+                <>“{series.current.series.title}”</>
+              )}
             </>
           ) : null}
         </p>

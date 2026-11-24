@@ -123,7 +123,22 @@ for (const tag of mathMLTags) {
 
 // rehype-sanitize drops every MDX JSX element. This keeps the components listed here
 // (see components/mdx/mdx-components.tsx) and still sanitizes the markdown inside them.
-const allowedComponents = new Set(['DependencyMap', 'Timeline', 'Stage', 'Chapters', 'Ready'])
+const allowedComponents = new Set([
+  // self-study-mathematics
+  'DependencyMap',
+  'Timeline',
+  'Stage',
+  'Chapters',
+  'Ready',
+  // verifying-neural-networks
+  'NetworkDiagram',
+  'SamplingLab',
+  'ThreeShapes',
+  'ThreeCases',
+  'BoxPropagation',
+  'WrappingEffect',
+  'SplitBoxes',
+])
 
 function rehypeSanitizeKeepingComponents(schema: typeof defaultSchema) {
   const slotSchema = { ...schema, tagNames: [...(schema.tagNames ?? []), 'mdx-slot'] }
@@ -189,6 +204,8 @@ const SeriesPart = defineNestedType(() => ({
   fields: {
     slug: { type: 'string', required: true },
     title: { type: 'string' },
+    // Shown instead of "Part N of M" in the post header, e.g. "Preface" or "Chapter 1".
+    label: { type: 'string' },
     summary: { type: 'string' },
     comingSoon: { type: 'boolean', default: false },
     manualReadingMinutes: { type: 'number' },

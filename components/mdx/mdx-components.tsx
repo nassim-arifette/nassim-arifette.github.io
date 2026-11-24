@@ -6,6 +6,15 @@ import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ZoomableImage } from './zoomable-image'
 import { Chapters, DependencyMap, Ready, Stage, Timeline } from './study-guide'
+import {
+  BoxPropagation,
+  NetworkDiagram,
+  SamplingLab,
+  SplitBoxes,
+  ThreeCases,
+  ThreeShapes,
+  WrappingEffect,
+} from './verification'
 
 const CodeBlock = ({ className = '', ...props }: React.HTMLAttributes<HTMLPreElement>) => {
   const preRef = React.useRef<HTMLPreElement | null>(null)
@@ -178,6 +187,13 @@ export const mdxComponents = {
   Timeline,
   Stage,
   Chapters,
+  BoxPropagation,
+  NetworkDiagram,
+  SamplingLab,
+  SplitBoxes,
+  ThreeCases,
+  ThreeShapes,
+  WrappingEffect,
   Ready,
   h1: ({ className = '', ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h1 className={cn('group mt-2 scroll-m-20 text-3xl font-semibold tracking-tight', className)} {...props} />

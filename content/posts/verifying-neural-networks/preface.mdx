@@ -1,0 +1,62 @@
+---
+title: "Why prove anything about a neural network?"
+date: "2026-11-23"
+description: "The preface to a series on neural network verification: what we want to prove, what you need to follow along, and the two-neuron network that every chapter is tested on."
+tags: ["verification", "neural-networks", "abstract-interpretation"]
+---
+
+A trained neural network is a function, and not an exotic one. It multiplies a vector by a matrix, adds another vector, replaces the negative numbers by zero, and does that again a few dozen times. You could compute it by hand if you had the patience and a lot of paper.
+
+Ask a simple question about that function, though, and things get awkward. Does the answer change anywhere within 0.01 of this input? Almost nobody can tell you, including the people who trained the network. They can tell you what it did on the test set, which is a different question.
+
+This series is about answering the first kind of question with a proof.
+
+I got into the subject during my M1 internship at LIX, where I implemented zones (bounds on the differences between variables) in Julia and pushed them through ReLU layers. Later I took INF641, the course on neural network verification that Eric Goubault and Sylvie Putot teach at École Polytechnique, and found out where those zones sit in a much larger picture. Most of the mathematics in these chapters comes from that course and from the papers behind it. The order, the examples, the figures and the mistakes are mine.
+
+## Why a proof, and not more tests
+
+Testing tells you what a network does on the inputs you tried. Dijkstra made the point about programs in 1970: tests can show that a bug is there, never that it is absent. With neural networks this stops being a slogan, because the failures are hard to imagine in advance.
+
+The standard example comes from Goodfellow, Shlens and Szegedy in 2014. They took a photo of a panda that a network labelled "panda" with 57.7% confidence and added a perturbation so small that no pixel moved by more than one step of an 8-bit image. To us the two photos look the same. The network said "gibbon", with 99.3% confidence.
+
+Random noise of that size almost never does this. The perturbation was built on purpose, by following the gradient of the network in the worst direction, so testing more random inputs would not have found it. What you want instead is a guarantee that no such perturbation exists, before someone goes looking for one.
+
+With pandas this is a curiosity. Some networks make decisions that matter more. ACAS Xu is a collision avoidance system for unmanned aircraft. Its advisories (clear of conflict, weak left, strong right, and so on) were first stored in a lookup table of about 2 GB, which was then compressed into 45 neural networks taking about 3 MB. Before something like that flies, you want statements such as "if another aircraft is straight ahead and coming towards us, the network never answers clear of conflict", and you want them for every geometry, not for the few thousand you simulated. In 2017, Katz and his coauthors proved several properties of this kind on the ACAS Xu networks and showed that others were violated. Chapter 7 explains how.
+
+## What you need to follow
+
+You need to know what a neural network computes: multiply by a matrix, add a bias, apply ReLU, repeat. Linear algebra at the level of "a matrix turns a square into a parallelogram". Some ease with sets and inequalities. That covers the first half.
+
+The later chapters use some probability, a little order theory and, at the very end, category theory. Each chapter introduces what it uses. You don't need to know anything about verification beforehand. You don't need category theory either, but if you already know some, the last chapter is where the rest of the series will look different.
+
+## One small network
+
+Every method in the series is tested on the same network: two inputs, two hidden ReLU neurons, two outputs. It is tiny on purpose. With two inputs, every set we care about fits on the page, so when a method fails you can see the failure instead of taking my word for it. Real networks have millions of neurons, but they fail for the same reasons, only in dimensions nobody can picture.
+
+Here is a preview of where we're going. The slider sets how far each input may move. The filled polygon is every output the network can actually produce, and in the hatched half the label changes. The two outlines are what two different methods believe the outputs could be. A method proves the network safe when its outline stays out of the hatched half.
+
+<ThreeShapes />
+
+Push the slider up and the box gives up first, at $\varepsilon = 0.06$. The zonotope holds until $0.15$, which is exactly where the network itself stops being safe. The next four chapters explain those two numbers.
+
+## How the series is organised
+
+Each chapter starts where the previous one breaks.
+
+| | Chapter | What it adds |
+|---|---|---|
+| 1 | [A question about infinitely many inputs](/blog/verifying-neural-networks/one-question) | What exactly we want to prove, and why trying inputs can't prove it |
+| 2 | [Boxes](/blog/verifying-neural-networks/boxes) | The cheapest method that sometimes works, and the two separate reasons it fails |
+| 3 | Abstract interpretation | What makes an approximation safe, and how to find the best one for a given shape |
+| 4 | Zonotopes | Shapes that remember which inputs each value depends on |
+| 5 | Polyhedra and DeepPoly | Tighter treatment of the ReLUs that can switch, and what it costs |
+| 6 | Tropical geometry | Max-plus algebra, in which ReLU networks become rational functions |
+| 7 | Solvers | Giving up on shapes and asking for an exact answer, at an exponential price |
+| 8 | Random inputs | Inputs drawn from a distribution you only partly know |
+| 9 | For all, there exists | Inner approximations, and properties like "whatever the wind does, some control keeps us safe" |
+| 10 | Networks in the loop | A network steering a physical system, checked over time |
+| 11 | Categories | Why chapters 2 to 10 are one construction seen from different sides |
+
+Chapter 6 is also where my own work on tropical precision comes in.
+
+When the series is finished I'll collect it into a single PDF, the way Bartosz Milewski did with *Category Theory for Programmers*.

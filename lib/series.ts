@@ -8,6 +8,7 @@ export interface SeriesPartResolved {
   total: number
   slug: string
   title: string
+  label?: string
   summary?: string
   isComingSoon: boolean
   readingMinutes?: number
@@ -99,6 +100,7 @@ function buildSeriesIndex(): SeriesIndex {
           total: 0,
           slug: resolvedSlug,
           title,
+          label: part.label,
           summary,
           isComingSoon,
           post: hasPublishedPost ? post : undefined,
@@ -178,13 +180,15 @@ export interface SeriesNavigation {
   current: SeriesPartResolved
   previous?: SeriesPartResolved
   next?: SeriesPartResolved
+  start?: SeriesPartResolved
 }
 
 export function getSeriesNavigation(slug: string): SeriesNavigation | undefined {
   const part = getSeriesPartForPostSlug(slug)
   if (!part) return undefined
 
-  const { parts } = getSeriesIndex().bySeriesSlug.get(part.series.slug) ?? {}
+  const resolved = getSeriesIndex().bySeriesSlug.get(part.series.slug)
+  const parts = resolved?.parts
   if (!parts) return undefined
 
   const prev = parts.slice(0, part.index).reverse().find((entry) => entry.post && !entry.isComingSoon)
@@ -194,6 +198,7 @@ export function getSeriesNavigation(slug: string): SeriesNavigation | undefined 
     current: part,
     previous: prev,
     next,
+    start: resolved?.startPart,
   }
   return navigation
 }

@@ -1,0 +1,112 @@
+---
+title: "Boxes, and what they forget"
+date: "2026-11-23"
+description: "Interval arithmetic pushed through a ReLU network by hand: where it proves robustness, the two separate reasons it stops, the wrapping effect, and what splitting the input costs."
+tags: ["verification", "neural-networks", "interval-arithmetic"]
+---
+
+The simplest set we could use for $Y$ is a box. Give every variable a lower bound and an upper bound, and forget everything else. In two dimensions that's a rectangle with sides parallel to the axes. In $n$ dimensions it's a product of $n$ intervals.
+
+Computing with intervals goes back to Ramon Moore's work in the 1960s, and it's still the first thing anyone tries. This chapter runs it on our network by hand, watches it prove robustness for small $\varepsilon$, and then takes apart the reasons it stops. There are two of them, and they're worth keeping apart, because later chapters fix them in different ways.
+
+## Arithmetic on intervals
+
+For every operation in the network we need a rule that takes intervals for the inputs and returns an interval for the result, with the guarantee that the true result is always inside. Three rules are enough for a ReLU network.
+
+Adding two intervals adds their ends: $[a, b] + [c, d] = [a + c,\ b + d]$.
+
+Multiplying by a number $w$ scales the ends, and swaps them when $w$ is negative: $w\,[a, b] = [wa,\ wb]$ if $w \geq 0$, and $[wb,\ wa]$ if $w \lt 0$.
+
+ReLU is increasing, so it can be applied to each end: $\operatorname{ReLU}[a, b] = [\max(0, a),\ \max(0, b)]$.
+
+For a whole linear layer $z = Wx + b$ these rules combine into one formula that is easier to remember. Describe the input box by its centre $m$ and its radius $r$, so that $x_j$ ranges over $[m_j - r_j,\ m_j + r_j]$. Then
+
+$$
+z \in \big[\, Wm + b - |W|\,r,\ \ Wm + b + |W|\,r \,\big],
+$$
+
+where $|W|$ is $W$ with every entry replaced by its absolute value. The centre goes through the matrix, and the radius goes through its absolute value. For a single linear layer this is the best box there is: every bound is reached by some input in the box.
+
+Each rule is sound on its own, and soundness survives composition. If the box going into a layer contains every value that can arrive there, the box coming out contains every value that can leave. By induction over the layers, the final box contains every possible output. Every method in this series is proved sound with this same induction, so it pays to notice it once.
+
+## Running the network on boxes
+
+Take $\varepsilon = 0.05$. The input box has centre $c = (0.6,\ 0.4)$ and radius $(0.05,\ 0.05)$.
+
+First layer. The centre gives $W_1 c = (1,\ 0.2)$ and the radius gives $|W_1|\,r = (0.1,\ 0.1)$, so $z_1 \in [0.9,\ 1.1]$ and $z_2 \in [0.1,\ 0.3]$. Both intervals are positive, so the ReLU changes nothing: $h_1 \in [0.9,\ 1.1]$ and $h_2 \in [0.1,\ 0.3]$.
+
+Second layer. The centre gives $W_2 (1,\ 0.2) = (1.8,\ 1.2)$, and the radius gives $|W_2|\,(0.1,\ 0.1) = (0.3,\ 0.2)$. So $o_1 \in [1.5,\ 2.1]$ and $o_2 \in [1.0,\ 1.4]$.
+
+Every possible $o_1$ is at least $1.5$ and every possible $o_2$ is at most $1.4$, so $o_1 \gt o_2$ on the whole square. The network is robust at $\varepsilon = 0.05$, and the proof took four products of a matrix with a vector.
+
+Now take $\varepsilon = 0.1$. Same computation: $z_1 \in [0.8,\ 1.2]$, $z_2 \in [0,\ 0.4]$, the ReLU still changes nothing, and
+
+$$
+o_1 \in [1.2,\ 2.4], \qquad o_2 \in [0.8,\ 1.6].
+$$
+
+The two intervals overlap on $[1.2,\ 1.6]$. As far as the boxes know, $o_1$ could be $1.2$ while $o_2$ is $1.6$, and the answer would flip. The method can't conclude.
+
+But we know from chapter 1 that the network is robust at $\varepsilon = 0.1$, with a margin of at least $0.2$ everywhere. Something was lost on the way, and the figure shows where.
+
+<BoxPropagation />
+
+In general the boxes give $o_1 \geq 1.8 - 6\varepsilon$ and $o_2 \leq 1.2 + 4\varepsilon$, so they prove robustness when $1.8 - 6\varepsilon \gt 1.2 + 4\varepsilon$, which means $\varepsilon \lt 0.06$. The truth is $\varepsilon \lt 0.15$. Between the two, the boxes fail for two different reasons.
+
+## First loss: the box forgets that the hidden values are related
+
+Look at the middle panel at $\varepsilon = 0.1$. The true hidden values fill a diamond: the first layer turns the input square by 45° and stretches it. The box around the diamond has twice its area, and the extra corners are values no input produces.
+
+Take the corner $(h_1, h_2) = (0.8,\ 0.4)$. It's the one that gives the smallest $o_1$, since $2 \times 0.8 - 0.4 = 1.2$. To get $h_1 = 0.8$ we need $x_1 + x_2 = 0.8$, so both inputs at their minimum, $x = (0.5,\ 0.3)$. But then $h_2 = x_1 - x_2 = 0.2$, not $0.4$. The two hidden values come from the same two inputs and can't be extreme in those directions at the same time. The box doesn't know that, because it records each variable on its own. That's what people mean when they say boxes are non relational.
+
+A one-line version of the same problem: if $x \in [0, 1]$, interval arithmetic computes $x - x \in [-1, 1]$, because it treats the two copies of $x$ as unrelated. This is called the dependency problem, and our network has it in disguise, since the margin $h_1 - 2h_2$ subtracts two quantities that share their inputs.
+
+Notice that this loss doesn't come from a careless rule. After the first layer the box is the best possible box. The trouble is that the second layer starts from the box and not from the diamond.
+
+## Second loss: even a perfect box is not enough
+
+Suppose an oracle handed us the tightest box around the true outputs, drawn dotted in the right panel. Where both hidden neurons are on, the outputs are
+
+$$
+o_1 = 2(x_1 + x_2) - (x_1 - x_2) = x_1 + 3x_2, \qquad o_2 = (x_1 + x_2) + (x_1 - x_2) = 2x_1 .
+$$
+
+At $\varepsilon = 0.1$, $o_1$ ranges over $[1.4,\ 2.2]$ and $o_2$ over $[1.0,\ 1.4]$. The smallest $o_1$ is $1.4$, at the input $(0.5,\ 0.3)$. The largest $o_2$ is also $1.4$, at any input with $x_1 = 0.7$. These are different inputs, but a box only keeps the two numbers, and $1.4 \gt 1.4$ is false. In general the perfect box gives $o_1 \geq 1.8 - 4\varepsilon$ and $o_2 \leq 1.2 + 2\varepsilon$, so it proves robustness for $\varepsilon \lt 0.1$ and no further.
+
+So we have three numbers:
+
+| | Proves robustness for |
+|---|---|
+| Boxes, computed layer by layer | $\varepsilon \lt 0.06$ |
+| The tightest box around the true outputs | $\varepsilon \lt 0.10$ |
+| The network itself | $\varepsilon \lt 0.15$ |
+
+The first gap is the price of computing one layer at a time. The second is the price of the shape. The property $o_1 \gt o_2$ is a relation between two outputs, and a box can't express any relation between its coordinates. No single box gets past $0.1$, however cleverly it is computed.
+
+Chapter 3 makes this distinction precise. There is a best approximation of each step, and there is a best approximation of the whole computation, and in general they are not the same thing.
+
+## Deeper networks: the wrapping effect
+
+The first loss gets worse with depth. Picture a layer that only rotates its input by 45°. The true set stays a square of the same size, turning. A box can't turn, so after each layer it wraps the rotated box in a new box with sides parallel to the axes, $\sqrt 2$ times wider.
+
+<WrappingEffect />
+
+After four layers the box is 4 times wider and 16 times larger in area than the set it describes, even though nothing in the network made anything bigger. Moore called this the wrapping effect. The matrices of a real network are not rotations, but they mix coordinates in the same way, and over dozens of layers the boxes on a normally trained network usually grow so wide that they prove nothing at all.
+
+There is a way around this from the other side: train the network so that boxes work on it. Interval bound propagation training, proposed by Gowal and coauthors in 2018, puts the box bounds into the loss function, so training pushes towards networks on which interval arithmetic stays tight. It works much better than you would expect from such a crude analysis, and variants of it are still standard for training networks that can be certified. There's something odd about it, though: instead of finding a better proof method, you change the network until the crude one works.
+
+## Cutting the square into pieces
+
+One more trick before giving up on boxes. Smaller boxes lose less, so cut the input square into pieces, run interval arithmetic on each piece, and declare victory if every piece is proved. If the property holds on each piece, it holds on their union.
+
+<SplitBoxes />
+
+At $\varepsilon = 0.10$, $4 \times 4 = 16$ pieces are enough. At $\varepsilon = 0.12$ you need $8 \times 8 = 64$. At $\varepsilon = 0.14$ you need $32 \times 32 = 1{,}024$. At $\varepsilon = 0.15$ no number of pieces works, because the margin is exactly zero at one corner and the property itself fails there. As $\varepsilon$ approaches the true limit, the number of pieces explodes.
+
+And this is with two inputs. With $d$ inputs, $k$ pieces per coordinate means $k^d$ boxes. For a 28 × 28 image, cutting the range of each pixel in two gives $2^{784}$ boxes, a number with 237 digits. Splitting is useful in practice, but only on the few coordinates or neurons that matter most, chosen with care, and never on all of them.
+
+## What boxes are good for
+
+They are cheap. A layer costs two matrix products, one with $W$ for the centre and one with $|W|$ for the radius, so a whole network costs about two forward passes, even with millions of neurons. That makes them a good first pass. In particular they tell you which ReLUs are stable, meaning that their input interval doesn't contain 0. In our network $h_1$ is stable for every $\varepsilon$ in the figures, and $h_2$ becomes unstable once $\varepsilon$ goes past $0.1$. Every more expensive method in this series starts by asking that question, because a stable ReLU is just a linear function.
+
+What boxes can't do is remember that two neurons share a cause. The next shape, the zonotope, is built for exactly that: it keeps every value as an affine function of the inputs, so $h_1$ and $h_2$ never forget where they came from. Before building it, though, chapter 3 steps back and asks what we have been doing all along. What does it mean for a shape to approximate a set, what makes a rule for ReLU sound, and is there always a best rule?

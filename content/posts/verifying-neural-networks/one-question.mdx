@@ -1,0 +1,131 @@
+---
+title: "A question about infinitely many inputs"
+date: "2026-11-23"
+description: "The toy network used throughout the series, the robustness property we want to prove about it, why testing can't prove it, and the trade every method makes instead."
+tags: ["verification", "neural-networks", "robustness"]
+---
+
+Before looking at any method, we need a network to try it on and a precise statement of what we want to prove. For this one network we can even work out the exact answer. For networks in general we can't, and the end of the chapter explains why.
+
+## The network
+
+<NetworkDiagram values="center" />
+
+It has two inputs, $x_1$ and $x_2$. The hidden layer computes
+
+$$
+h_1 = \max(0,\ x_1 + x_2), \qquad h_2 = \max(0,\ x_1 - x_2),
+$$
+
+and the outputs are
+
+$$
+o_1 = 2h_1 - h_2, \qquad o_2 = h_1 + h_2 .
+$$
+
+The network answers A when $o_1 \gt o_2$, and B otherwise. In matrix form, $o = W_2 \operatorname{ReLU}(W_1 x)$ with
+
+$$
+W_1 = \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}, \qquad
+W_2 = \begin{pmatrix} 2 & -1 \\ 1 & 1 \end{pmatrix}.
+$$
+
+There are no biases, to keep the arithmetic light. Nobody trained this network. I chose the weights so that the numbers come out round and so that every method in the series has something to get wrong.
+
+Take the input $c = (0.6,\ 0.4)$. Then $h = (1,\ 0.2)$, $o = (1.8,\ 1.2)$, and the answer is A. The gap $o_1 - o_2 = 0.6$ will come up constantly, so it deserves a name: the margin. A positive margin means A.
+
+## The question
+
+Suppose the two inputs are measurements, and measurements are noisy: each one might be off by up to some $\varepsilon$. Does the network still answer A? Written out, we want
+
+$$
+\text{for all } x \text{ with } |x_1 - 0.6| \leq \varepsilon \text{ and } |x_2 - 0.4| \leq \varepsilon, \qquad o_1(x) \gt o_2(x).
+$$
+
+The allowed inputs form a square of side $2\varepsilon$ centred at $c$. With more inputs it becomes a cube, and for images it is the usual setting where every pixel may change by at most $\varepsilon$. This property is called local robustness. There are other ways to measure how far an input moved, but the square is the one the first methods handle best, so we'll keep it.
+
+The question looks innocent. The difficulty is the "for all": the square contains infinitely many inputs.
+
+## First attempt: try inputs
+
+The obvious move is to test a lot of inputs. You can do it yourself here. The slider sets $\varepsilon$, each button tests random inputs from the square, and inputs where the answer stopped being A are circled.
+
+<SamplingLab />
+
+At $\varepsilon = 0.16$ the network is not robust. There is a thin triangle in the bottom right corner of the square where the answer flips, and it covers 0.26% of the square. A batch of 100 random tests misses it about three times out of four. Even 1,000 tests miss it 7% of the time.
+
+In two dimensions you could cover the square with a fine grid and be done. That stops working fast. A grid with ten points per coordinate has $10^d$ points in dimension $d$, and a small 28 × 28 greyscale image already has $d = 784$. There is a second problem. When a property only just fails, it tends to fail near a corner of the cube, because a linear function takes its smallest value on a cube at a corner. In high dimensions, random samples almost never land near a corner.
+
+Attacks do better than random tests. They follow the gradient of the margin towards the worst input they can find, which is how the panda in the preface became a gibbon. When an attack finds a flip, you have a real counterexample. When it finds nothing, you've learned that this attack found nothing.
+
+## Second attempt: think in sets
+
+Instead of pushing points through the network, push the whole square. Call the square $X$ and the network $N$, and write
+
+$$
+N(X) = \{\, N(x) \mid x \in X \,\}
+$$
+
+for the set of every output the network can produce on it. The answer is A exactly on the safe set
+
+$$
+S = \{\, o \mid o_1 \gt o_2 \,\},
+$$
+
+and the property becomes a statement about two sets:
+
+$$
+N(X) \subseteq S .
+$$
+
+That inclusion is what we'll be trying to prove for the rest of the series.
+
+For our network we can compute $N(X)$ exactly. The two ReLUs cut the input plane into regions where the network is linear. Where both hidden neurons are on, the margin is
+
+$$
+o_1 - o_2 = h_1 - 2h_2 = (x_1 + x_2) - 2(x_1 - x_2) = 3x_2 - x_1 .
+$$
+
+Where $h_2$ is off, that is when $x_1 \lt x_2$, the margin is just $h_1 = x_1 + x_2$, which is positive for every input we look at. So the worst input is the corner where $x_1$ is largest and $x_2$ smallest, $(0.6 + \varepsilon,\ 0.4 - \varepsilon)$, and there the margin is
+
+$$
+3(0.4 - \varepsilon) - (0.6 + \varepsilon) = 0.6 - 4\varepsilon .
+$$
+
+The network is robust exactly when $\varepsilon \lt 0.15$. Every method in the series will be chasing that number.
+
+Here is $N(X)$ itself. It's a polygon, and the slider shows it touching the diagonal at $\varepsilon = 0.15$.
+
+<ThreeShapes shapes="exact" initial="0.12" />
+
+## Why this doesn't scale
+
+Our network has two ReLUs, so the input plane splits into at most four linear regions, and we can handle each one by hand. A network with $n$ ReLUs has up to $2^n$ on/off patterns, and every pattern that actually occurs gives a region where the network is linear. Each ACAS Xu network has 300 ReLUs, and $2^{300}$ is larger than the number of atoms in the observable universe. Most of those patterns never occur, but nobody knows in advance which ones do.
+
+Katz and his coauthors showed in 2017 that checking properties like ours on ReLU networks is NP-complete. So some instances will be expensive whatever we do. The methods in chapters 2 to 6 deal with this by changing the question slightly.
+
+## The trade: a bigger set
+
+Instead of $N(X)$, compute a set $Y$ that contains it, is easy to compute, and is easy to compare with $S$. Then
+
+$$
+N(X) \subseteq Y \ \text{ and } \ Y \subseteq S \quad\Longrightarrow\quad N(X) \subseteq S .
+$$
+
+If the big set is safe, so is the true one. If the big set is not inside $S$, we learn nothing: maybe the network is unsafe, maybe $Y$ was too fat.
+
+<ThreeCases />
+
+A method that works like this is sound: when it says "proved", it is right. It is not complete, because it sometimes says "I don't know" about a network that is fine. The middle panel is the price we pay for soundness. Most of this series is about making that case rarer without paying too much for it.
+
+The other two outcomes need other tools. Real counterexamples come from attacks, and from the exact solvers of chapter 7. Chapter 9 turns the picture inside out and computes sets that are guaranteed to lie inside $N(X)$, which is how you prove that bad outputs really happen.
+
+## Beyond robustness
+
+Robustness is one case of a general pattern: when the input is in some set $P$, the output should be in some set $Q$. For ACAS Xu, $P$ describes a geometry, say "the intruder is far away and much slower than us", and $Q$ a constraint on the scores, say "the score of clear of conflict stays below a threshold". The question is always whether $N(P) \subseteq Q$, and everything in the series applies to it.
+
+When the network steers a car or a drone, the property is about time instead: the set of states goes through the network, then through the physics, then through the network again, over and over. That's chapter 10.
+
+## Next
+
+The cheapest $Y$ anyone has come up with is a box, one interval per variable. In chapter 2 boxes prove our network robust up to $\varepsilon = 0.06$. The truth is $0.15$, and the gap has two separate causes.
