@@ -1,7 +1,7 @@
 ---
 title: "A question about infinitely many inputs"
 date: "2026-11-23"
-description: "The toy network used throughout the series, the robustness property we want to prove about it, why testing can't prove it, and the trade every method makes instead."
+description: "The toy network used throughout the series, the robustness property we want to prove about it, why random tests and attacks can't prove it, and the trade every method makes instead."
 tags: ["verification", "neural-networks", "robustness"]
 ---
 
@@ -34,6 +34,32 @@ There are no biases, to keep the arithmetic light. Nobody trained this network. 
 
 Take the input $c = (0.6,\ 0.4)$. Then $h = (1,\ 0.2)$, $o = (1.8,\ 1.2)$, and the answer is A. The gap $o_1 - o_2 = 0.6$ will come up constantly, so it deserves a name: the margin. A positive margin means A.
 
+Here is the same network in Python. Every chapter adds a few lines to this code, and together they make a small verifier.
+
+```python
+import numpy as np
+
+W1 = np.array([[1.0, 1.0],
+               [1.0, -1.0]])
+W2 = np.array([[2.0, -1.0],
+               [1.0, 1.0]])
+c = np.array([0.6, 0.4])
+
+def relu(v):
+    return v.relu() if hasattr(v, "relu") else np.maximum(0, v)
+
+def net(v):
+    return W2 @ relu(W1 @ v)
+
+def margin(x):
+    o = net(x)
+    return o[0] - o[1]
+
+print(net(c), round(margin(c), 3))   # [1.8 1.2] 0.6
+```
+
+The odd-looking `relu` is there for chapter 2, where `v` will be something other than an array. For now it is just `np.maximum(0, v)`.
+
 ## The question
 
 Suppose the two inputs are measurements, and measurements are noisy: each one might be off by up to some $\varepsilon$. Does the network still answer A? Written out, we want
@@ -44,6 +70,16 @@ $$
 
 The allowed inputs form a square of side $2\varepsilon$ centred at $c$. With more inputs it becomes a cube, and for images it is the usual setting where every pixel may change by at most $\varepsilon$. This property is called local robustness. There are other ways to measure how far an input moved, but the square is the one the first methods handle best, so we'll keep it.
 
+People in verification like to write such a property as a triple, with an assumption on the left, the program in the middle and a promise on the right:
+
+$$
+\big\{\ \|x - c\|_\infty \leq \varepsilon\ \big\} \qquad o \leftarrow N(x) \qquad \big\{\ o_1 \gt o_2\ \big\} .
+$$
+
+Here $\|x - c\|_\infty$ is the larger of $|x_1 - 0.6|$ and $|x_2 - 0.4|$. The left part is the precondition, the right part the postcondition, and the triple says that every input satisfying the first gives an output satisfying the second. The rest of the series is about proving triples like this one.
+
+Writing the right triple is harder than it looks. A natural first try at robustness drops the reference point: "any two inputs closer than $\varepsilon$ get the same label". It sounds reasonable and it's a disaster. Chain enough small steps and you can walk from any input to any other, so the only networks that satisfy it give every input the same label. Anchoring the property at one input $c$ avoids this, at the price of proving it one input at a time.
+
 The question looks innocent. The difficulty is the "for all": the square contains infinitely many inputs.
 
 ## First attempt: try inputs
@@ -52,13 +88,44 @@ The obvious move is to test a lot of inputs. You can do it yourself here. The sl
 
 <SamplingLab />
 
-At $\varepsilon = 0.16$ the network is not robust. There is a thin triangle in the bottom right corner of the square where the answer flips, and it covers 0.26% of the square. A batch of 100 random tests misses it about three times out of four. Even 1,000 tests miss it 7% of the time.
+At $\varepsilon = 0.16$ the network is not robust. There is a thin triangle in the bottom right corner of the square where the answer flips, and it covers 0.26% of the square. A batch of 100 random tests misses it about three times out of four. Even 1,000 tests miss it 7% of the time. In code:
+
+```python
+rng = np.random.default_rng(0)
+eps = 0.16
+xs = c + rng.uniform(-eps, eps, size=(100, 2))
+print(round(min(margin(x) for x in xs), 3))   # 0.022: still positive, nothing found
+```
 
 In two dimensions you could cover the square with a fine grid and be done. That stops working fast. A grid with ten points per coordinate has $10^d$ points in dimension $d$, and a small 28 × 28 greyscale image already has $d = 784$. There is a second problem. When a property only just fails, it tends to fail near a corner of the cube, because a linear function takes its smallest value on a cube at a corner. In high dimensions, random samples almost never land near a corner.
 
-Attacks do better than random tests. They follow the gradient of the margin towards the worst input they can find, which is how the panda in the preface became a gibbon. When an attack finds a flip, you have a real counterexample. When it finds nothing, you've learned that this attack found nothing.
+## Second attempt: search on purpose
 
-## Second attempt: think in sets
+Random tests ignore what they learn. An attack uses it. The margin is a function of the input, so it has a gradient, and walking downhill along the gradient leads to the worst input nearby. The panda in the preface became a gibbon this way. For our network it takes a few lines:
+
+```python
+def margin_grad(x):
+    on = W1 @ x > 0                     # which hidden neurons are active
+    return (W2[0] - W2[1]) @ (on[:, None] * W1)
+
+x = c.copy()
+for step in range(30):
+    x = x - 0.01 * np.sign(margin_grad(x))   # a small step downhill
+    x = np.clip(x, c - eps, c + eps)         # without leaving the square
+print(x, round(margin(x), 3))   # [0.76 0.24] -0.04
+```
+
+Taking the sign of the gradient moves every coordinate by the same small step, which suits a square, since its corners are where linear functions are smallest. The attack walks straight to the bad corner $(0.76,\ 0.24)$ in 16 steps, where 100 random tests usually see nothing. The attacks used on real networks, such as projected gradient descent (PGD), are this loop with more care about step sizes, plus random restarts.
+
+So attacks are much better than random tests at finding problems. They can't show that there are none, though. Run the same loop at $\varepsilon = 0.14$ and it stops at $(0.74,\ 0.26)$ with margin $0.04$. Is $0.04$ the smallest margin in the square, or did the attack miss a deeper valley? On this network it is the smallest, but nothing in the attack tells you so.
+
+It helps to think of the smallest margin over the square as an unknown number $m^\ast$. Every input you try, by luck or by gradient, gives an upper bound: $m^\ast$ is at most the margin you just saw. A proof gives a lower bound. If the lower bound is positive, the network is robust. If some input has a negative margin, it is not. In between, all you can say is that you don't know yet.
+
+<TwoSides />
+
+Verification is the business of pushing that lower bound up. That needs a different way of looking at the network.
+
+## Third attempt: think in sets
 
 Instead of pushing points through the network, push the whole square. Call the square $X$ and the network $N$, and write
 
@@ -94,7 +161,7 @@ $$
 
 The network is robust exactly when $\varepsilon \lt 0.15$. Every method in the series will be chasing that number.
 
-Here is $N(X)$ itself. It's a polygon, and the slider shows it touching the diagonal at $\varepsilon = 0.15$.
+This is $N(X)$ itself. It's a polygon, and the slider shows it touching the diagonal at $\varepsilon = 0.15$.
 
 <ThreeShapes shapes="exact" initial="0.12" />
 
@@ -118,13 +185,13 @@ If the big set is safe, so is the true one. If the big set is not inside $S$, we
 
 A method that works like this is sound: when it says "proved", it is right. It is not complete, because it sometimes says "I don't know" about a network that is fine. The middle panel is the price we pay for soundness. Most of this series is about making that case rarer without paying too much for it.
 
-The other two outcomes need other tools. Real counterexamples come from attacks, and from the exact solvers of chapter 7. Chapter 9 turns the picture inside out and computes sets that are guaranteed to lie inside $N(X)$, which is how you prove that bad outputs really happen.
+The other two outcomes need other tools. Real counterexamples come from attacks, and from the exact solvers of chapter 7. Chapter 11 turns the picture inside out and computes sets that are guaranteed to lie inside $N(X)$, which is how you prove that bad outputs really happen.
 
 ## Beyond robustness
 
 Robustness is one case of a general pattern: when the input is in some set $P$, the output should be in some set $Q$. For ACAS Xu, $P$ describes a geometry, say "the intruder is far away and much slower than us", and $Q$ a constraint on the scores, say "the score of clear of conflict stays below a threshold". The question is always whether $N(P) \subseteq Q$, and everything in the series applies to it.
 
-When the network steers a car or a drone, the property is about time instead: the set of states goes through the network, then through the physics, then through the network again, over and over. That's chapter 10.
+When the network steers a car or a drone, the property is about time instead: the set of states goes through the network, then through the physics, then through the network again, over and over. That's chapter 12.
 
 ## Next
 

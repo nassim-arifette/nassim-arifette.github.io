@@ -1,0 +1,221 @@
+---
+title: "Abstract interpretation: being wrong in the safe direction"
+date: "2026-11-24"
+description: "What it means for a shape to approximate a set, the best rule for each layer, why the best rules don't compose into the best analysis, and a free fix for one of the two losses of chapter 2."
+tags: ["verification", "neural-networks", "abstract-interpretation"]
+---
+
+Chapter 2 ended with three questions. What does it mean for a shape to approximate a set? What makes a rule for ReLU sound? Is there always a best rule?
+
+Patrick and Radhia Cousot worked out the general answers in the late 1970s, for computer programs, and called the theory abstract interpretation. It is the theory behind static analyzers such as Astrée, which was used to prove that the flight control software of the Airbus A340 and A380 is free of run-time errors like overflows and divisions by zero. The theory has a reputation for being hard. As far as I can tell, most of that reputation comes from loops. A loop can run any number of times, so an analyzer has to find a description that survives one more iteration, and computing those fixpoints is where the heavy lattice theory comes in. A feedforward network has no loops. Each layer runs once, and what's left of the theory is short. You already used most of it in chapter 2 without the names.
+
+The names are worth learning anyway. With them, the two losses of chapter 2 become two precise statements, and one of them turns out to cost nothing to fix.
+
+## Two worlds
+
+Every method in this series works in two worlds at once.
+
+The concrete world is made of sets of points: the inputs within $\varepsilon$ of $c$, and everything the network makes of them, layer after layer. These sets are what we want to know about. They are exact, but we can't compute with them directly, because most of them are infinite and their shapes get complicated after a layer or two.
+
+The abstract world is made of descriptions we can compute with. For now that means boxes. A box in $\mathbb R^n$ is stored as $2n$ numbers, and chapter 2 gave a rule to push one through each layer.
+
+Two maps go between the worlds. The first one says what a box means:
+
+$$
+\gamma(B) = \text{the set of points inside the box } B .
+$$
+
+The second one finds the best description of a set:
+
+$$
+\alpha(V) = \text{the smallest box that contains the set } V .
+$$
+
+Its interval in coordinate $i$ runs from the smallest to the largest value of $p_i$ over the points $p$ of $V$. The letters are traditional: $\alpha$ for abstraction, $\gamma$ for concretization.
+
+A box $B$ is a sound description of $V$ when $V \subseteq \gamma(B)$. That inclusion is what the title means by being wrong in the safe direction. The box is allowed to contain points that the network never produces. It must never miss one.
+
+## Precision is an order
+
+Boxes can be compared. Write $B \sqsubseteq B'$ when $B$ sits inside $B'$, one interval inside the other in every coordinate. If two boxes both describe the same set soundly, the smaller one rules out more outputs, so it can prove more. Inclusion is an order of precision, and lower is better.
+
+Two boxes don't always compare, since one can be wider and the other taller. But any two boxes have a smallest box above both, their join $B \sqcup B'$, and a largest box below both, their meet $B \sqcap B'$, which is their intersection. An order in which every pair has a join and a meet is called a lattice. Sets of points form a lattice too, ordered by inclusion, with union as the join and intersection as the meet.
+
+The two joins differ, and the difference matters. The union of two boxes is rarely a box, so the join of two boxes has to add points that are in neither. A program analyzer pays this every time the two branches of an `if` meet again. A network pays it if you treat each ReLU as a branch, negative input on one side and positive input on the other, analyse both and merge the results. Chapters 7 and 8 are about not merging.
+
+## The Galois connection
+
+Here is the definition the whole theory rests on. The pair $(\alpha, \gamma)$ is a Galois connection when, for every set $V$ and every box $B$,
+
+$$
+\alpha(V) \sqsubseteq B \iff V \subseteq \gamma(B) .
+$$
+
+Read it as: a box contains $V$ exactly when it contains the best box of $V$. For boxes this is almost obvious, because a box contains $V$ exactly when each of its intervals covers the range of the matching coordinate over $V$, and those ranges are the intervals of $\alpha(V)$. You can still try to break it. In the figure, $V$ is the set of hidden values at $\varepsilon = 0.1$, the diamond from chapter 2.
+
+<BestBox />
+
+Short as it is, the equivalence carries a lot. Put $B = \alpha(V)$: the left side holds trivially, so the right side holds too, and $V \subseteq \gamma(\alpha(V))$. The best box is sound. Put $V = \gamma(B)$: now the right side holds trivially, so $\alpha(\gamma(B)) \sqsubseteq B$, and describing a box by a box gives nothing worse back (for boxes, you get $B$ itself). Finally, every box that contains $V$ contains $\alpha(V)$, so the best box is the most precise sound description, not merely a good one.
+
+There is also a formula for $\alpha$ hiding in the definition. The boxes that contain $V$ are exactly the boxes above $\alpha(V)$, so $\alpha(V)$ is their intersection:
+
+$$
+\alpha(V) = \bigcap\, \{\, B \mid V \subseteq \gamma(B) \,\} .
+$$
+
+This only works because an intersection of boxes, even of infinitely many of them, is again a box. Keep that in mind for the end of the chapter.
+
+The general theory replaces boxes with any lattice of descriptions, called an abstract domain, and asks for the same equivalence. Boxes are known as the interval domain.
+
+## The best rule for one layer
+
+Take one step of the network, a function $f$: a linear layer, or ReLU. It sends a set $V$ to the set $f(V)$ of all the $f(p)$ with $p \in V$. We want a rule $f^\sharp$ on boxes that is sound, which means
+
+$$
+f(\gamma(B)) \subseteq \gamma(f^\sharp(B)) \quad \text{for every box } B .
+$$
+
+The Galois connection gives the best such rule directly: take the points of the box, apply $f$ to all of them, and take the best box of the result.
+
+$$
+f^\sharp = \alpha \circ f \circ \gamma .
+$$
+
+It is sound, because $\gamma(\alpha(T))$ contains $T$ for every set $T$, in particular for $T = f(\gamma(B))$. And no sound rule does better. If $g$ is another sound rule, then $f(\gamma(B)) \subseteq \gamma(g(B))$, and the Galois connection turns that into $\alpha(f(\gamma(B))) \sqsubseteq g(B)$, which says $f^\sharp(B) \sqsubseteq g(B)$. Two lines, and they hold for any $f$ at all.
+
+The formula says what the best rule is, not how to compute it. For the two kinds of layers in our network, computing it is easy.
+
+For a linear layer $x \mapsto Wx$, take one output coordinate, $z_i = \sum_j W_{ij} x_j$. Over a box it is smallest when each $x_j$ sits at its lower end if $W_{ij} \geq 0$ and at its upper end if $W_{ij} \lt 0$, and largest at the opposite corner. Doing this for each $i$ gives the centre and radius rule of chapter 2, so that rule was already the best one. The corner depends on $i$, though. For our $W_1$, the smallest $z_1 = x_1 + x_2$ comes from the bottom left corner of the input square, and the smallest $z_2 = x_1 - x_2$ from the top left corner. That's why a linear map turns a box into a slanted box (a parallelogram, in the plane), and why the best box around the result is bigger than the result.
+
+For ReLU there's even less to do. It acts on each coordinate separately and it's increasing, so it sends the interval $[l, u]$ onto $[\max(0, l),\ \max(0, u)]$, and a box onto a box. The rule from chapter 2 is the best one again, and it's better than best: it's exact. $\operatorname{ReLU}^\sharp(B)$ describes $\operatorname{ReLU}(\gamma(B))$ without a single extra point.
+
+<LayerShapes />
+
+I find this asymmetry the most useful thing in the chapter. With boxes, ReLU costs nothing. The cost is in mixing: a linear layer that combines coordinates turns a box into a slanted shape, and the box around that shape contains points that no input produces.
+
+You can see those points in code. Take the hidden box at $\varepsilon = 0.1$ and ask, for each corner, which input would produce it. Both hidden neurons are on there, so the answer is the solution of $W_1 x = h$:
+
+```python
+H = relu(W1 @ square(0.1))
+print(H)                                 # Box(lo=[0.8 0. ], hi=[1.2 0.4])
+for h in [(0.8, 0.0), (1.2, 0.0), (0.8, 0.4), (1.2, 0.4)]:
+    x = np.linalg.solve(W1, h)           # the input that would give h
+    print(h, x, bool(np.all(np.abs(x - c) <= 0.1)))
+# (0.8, 0.0) [0.4 0.4] False
+# (1.2, 0.0) [0.6 0.6] False
+# (0.8, 0.4) [0.6 0.2] False
+# (1.2, 0.4) [0.8 0.4] False
+```
+
+None of the four corners comes from the input square. The second layer will treat them as possible hidden values anyway.
+
+## Best layers, worse network
+
+We have the best rule for every layer. Is the composition of those rules the best rule for the network?
+
+Our network is $N = W_2 \circ \operatorname{ReLU} \circ W_1$. Interval arithmetic computes
+
+$$
+W_2^\sharp \circ \operatorname{ReLU}^\sharp \circ W_1^\sharp \;=\; \alpha\, W_2\, \gamma\, \alpha\, \operatorname{ReLU}\, \gamma\, \alpha\, W_1\, \gamma ,
+$$
+
+while the best rule for the whole network is
+
+$$
+N^\sharp \;=\; \alpha\, W_2\, \operatorname{ReLU}\, W_1\, \gamma .
+$$
+
+The only difference is the $\gamma\alpha$ between consecutive layers. Each one replaces a set by all the points of its best box, which is a bigger set, and every step after it is monotone. So the composition is still sound, but it can only lose: $N^\sharp(B) \sqsubseteq W_2^\sharp(\operatorname{ReLU}^\sharp(W_1^\sharp(B)))$ for every box $B$.
+
+To see where it actually loses, draw both computations, with sets of points on top and boxes underneath. $\mathcal P$ stands for sets of points in the plane and $\mathbb B$ for boxes.
+
+$$
+\begin{array}{ccccccc}
+\mathcal P & \xrightarrow{\;W_1\;} & \mathcal P & \xrightarrow{\operatorname{ReLU}} & \mathcal P & \xrightarrow{\;W_2\;} & \mathcal P \\[6pt]
+\big\downarrow \mathrlap{\,\scriptstyle\alpha} & \sqsubseteq & \big\downarrow \mathrlap{\,\scriptstyle\alpha} & = & \big\downarrow \mathrlap{\,\scriptstyle\alpha} & \sqsubseteq & \big\downarrow \mathrlap{\,\scriptstyle\alpha} \\[6pt]
+\mathbb B & \xrightarrow{\;W_1^\sharp\;} & \mathbb B & \xrightarrow{\operatorname{ReLU}^\sharp} & \mathbb B & \xrightarrow{\;W_2^\sharp\;} & \mathbb B
+\end{array}
+$$
+
+Each square compares two routes from a set in its top left corner to a box in its bottom right corner: apply the layer and then take the best box, or take the best box first and then apply the box rule. The symbol in the middle says how they compare. In general $\alpha(f(V)) \sqsubseteq f^\sharp(\alpha(V))$, because the second route went through $\gamma(\alpha(V))$, which contains $V$. For ReLU the two routes always agree, by the previous section.
+
+Now follow the input square through the diagram. In the first square both routes agree, because the input square is already a box. In the ReLU square they agree because they always do. In the last square they split: $W_2^\sharp$ receives the box around the hidden values, phantom corners included, instead of the hidden values themselves. That is the first loss of chapter 2, now with an exact address. It happens at the junction between the ReLU and $W_2$, where a layer that mixes coordinates is fed a box. A deeper network has one such junction per layer, and the losses compound into the wrapping effect.
+
+This picture, with squares that only commute up to $\sqsubseteq$, comes back in chapter 14, where category theory has a name for it.
+
+## Asking about the margin
+
+Now the second loss. Chapter 2 showed that even the best box around the true outputs stops proving robustness at $\varepsilon = 0.1$, and I wrote that no box gets past $0.1$, however cleverly it is computed. That's true for boxes on $o_1$ and $o_2$. But the property doesn't care about $o_1$ and $o_2$ separately. It's about the margin $m = o_1 - o_2$, which is a single number, and in one dimension a box is an interval, which describes the range of a number with nothing to spare.
+
+So add one more linear layer at the end of the network that computes $m$, and ask whether $m \gt 0$. Since
+
+$$
+m = (2h_1 - h_2) - (h_1 + h_2) = h_1 - 2h_2 ,
+$$
+
+the last two linear maps merge into a single row, $(1,\ -2)$. Interval arithmetic on this network uses the same hidden box as before and gives
+
+$$
+m \;\geq\; \min h_1 - 2\max h_2 \;=\; (1 - 2\varepsilon) - 2(0.2 + 2\varepsilon) \;=\; 0.6 - 6\varepsilon ,
+$$
+
+so it proves robustness up to $\varepsilon = 0.1$, from the same hidden box that gave only $0.06$ before. In code the change is one matrix product:
+
+```python
+spec = np.array([[1.0, -1.0]])    # the property: o1 - o2 > 0
+W_margin = spec @ W2              # [[ 1. -2.]]
+
+def margin_net(v):
+    return W_margin @ relu(W1 @ v)
+
+out = net(square(0.08))
+print(round(out.lo[0] - out.hi[1], 3))   # -0.2: boxes on o1 and o2 can't tell
+print(margin_net(square(0.08)).lo)       # [0.12]: the margin is positive, proved
+```
+
+This is the dependency problem of chapter 2 again. Computing $o_1$ and $o_2$ as two separate intervals and then subtracting treats the $h_1$ inside $o_1$ and the $h_1$ inside $o_2$ as unrelated. Merging the layers first lets them cancel before any interval is taken. Verification tools do this routinely, and from now on every method in the series gets the margin as its output.
+
+The best interval for $m$, the exact range of the margin over the input square, starts at $0.6 - 4\varepsilon$, as chapter 1 computed. It's positive exactly when $\varepsilon \lt 0.15$, the true limit. The four numbers fit in a table.
+
+| | Best rule for each layer, composed | Best rule for the whole network |
+|---|---|---|
+| Boxes on $o_1$ and $o_2$ | $\varepsilon \lt 0.06$ | $\varepsilon \lt 0.10$ |
+| An interval on the margin | $\varepsilon \lt 0.10$ | $\varepsilon \lt 0.15$ |
+
+Chapter 2 went along the top row and then down the right column, and called the two steps the price of composing and the price of the shape. You can also go down first. Going down costs nothing, one extra row in the last matrix. Going right is the expensive direction. The bottom right cell is the exact answer, and that's no accident: for a property about a single number, the best interval for the whole network is the verification problem itself, which chapter 1 called NP-complete.
+
+So the right column is out of reach, and the left column is what we can compute. The rest of the series is about closing the gap between them with shapes that lose less at each junction.
+
+## Testing a verifier
+
+One practical point before moving on. A verifier is itself a program, and programs have bugs. A wrong rule for ReLU would quietly turn every "proved" into a lie. Testing can't show that a rule is sound, but it can catch rules that aren't, exactly like attacks in chapter 1: push random points through the real network and check that every output lands inside the computed box.
+
+```python
+rng = np.random.default_rng(0)
+
+def looks_sound(eps, n=10_000):
+    box = net(square(eps))
+    xs = c + rng.uniform(-eps, eps, size=(n, 2))
+    outs = np.array([net(x) for x in xs])
+    return bool(np.all(outs >= box.lo) and np.all(outs <= box.hi))
+
+print([looks_sound(e) for e in (0.05, 0.1, 0.2)])   # [True, True, True]
+```
+
+A `False` here would be a bug in the verifier, never in the network. It's the cheapest test there is, and every new kind of value in this series gets it.
+
+## When there is no best
+
+All of this leaned on $\alpha$, the best box of a set, which always exists. For other shapes it may not.
+
+Try describing a disk with polygons (in more dimensions, convex polyhedra). The best box around a disk is the square that touches it on four sides. A polygon can do better: cut off a corner of the square with a line tangent to the disk, and you get a smaller polygon that still contains the disk. Then cut a corner of that one.
+
+<CutCorners />
+
+The cutting never stops, so no polygon around the disk is the smallest, and $\alpha$ doesn't exist. The formula from earlier fails at its last step: intersect all the polygons that contain the disk and you get the disk itself, which is not a polygon. Boxes have a best description of every set precisely because intersections of boxes are boxes. Polygons are more expressive than boxes, and the price is that nothing is ever the best. Zonotopes, the shapes of the next chapter, are in the same position.
+
+The theory survives without $\alpha$. We keep $\gamma$, which still says what each shape means, and ask every rule to be sound, $f(\gamma(a)) \subseteq \gamma(f^\sharp(a))$, and nothing more. Soundness still composes by the induction of chapter 2, so analysing the whole network is still a proof. We lose the notion of a best rule. A layer can have many sound rules, none of them better than all the others, and choosing one becomes a design decision that trades cost against precision. Chapters 4 and 5 are mostly about such decisions for ReLU.
+
+## Next
+
+We now know what to look for: shapes that lose less at the junctions between layers. With boxes, ReLU was free and mixing was expensive. Zonotopes swap the two. A linear layer maps a zonotope to a zonotope exactly, so mixing costs nothing, and all the loss moves into the ReLUs that can switch. Our network has only one of those, and [chapter 4](/blog/verifying-neural-networks/zonotopes) shows that zonotopes reach the true limit, $\varepsilon = 0.15$, with the same `net` function and a new kind of value.

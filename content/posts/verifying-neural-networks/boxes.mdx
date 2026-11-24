@@ -7,7 +7,7 @@ tags: ["verification", "neural-networks", "interval-arithmetic"]
 
 The simplest set we could use for $Y$ is a box. Give every variable a lower bound and an upper bound, and forget everything else. In two dimensions that's a rectangle with sides parallel to the axes. In $n$ dimensions it's a product of $n$ intervals.
 
-Computing with intervals goes back to Ramon Moore's work in the 1960s, and it's still the first thing anyone tries. This chapter runs it on our network by hand, watches it prove robustness for small $\varepsilon$, and then takes apart the reasons it stops. There are two of them, and they're worth keeping apart, because later chapters fix them in different ways.
+Computing with intervals goes back to Ramon Moore's work in the 1960s, and it's still the first thing anyone tries. This chapter runs it on our network by hand and then takes apart the reasons it stops working. There are two of them, and they're worth keeping apart, because later chapters fix them in different ways.
 
 ## Arithmetic on intervals
 
@@ -47,7 +47,43 @@ $$
 
 The two intervals overlap on $[1.2,\ 1.6]$. As far as the boxes know, $o_1$ could be $1.2$ while $o_2$ is $1.6$, and the answer would flip. The method can't conclude.
 
-But we know from chapter 1 that the network is robust at $\varepsilon = 0.1$, with a margin of at least $0.2$ everywhere. Something was lost on the way, and the figure shows where.
+## The same computation in code
+
+In code a box is a small class. It stores its two ends, and it knows how to go through a matrix and through a ReLU:
+
+```python
+class Box:
+    __array_ufunc__ = None        # makes NumPy hand  W @ box  over to Box
+
+    def __init__(self, lo, hi):
+        self.lo = np.asarray(lo, dtype=float)
+        self.hi = np.asarray(hi, dtype=float)
+
+    def __rmatmul__(self, W):     # W @ box: the centre-radius rule
+        mid = (self.lo + self.hi) / 2
+        rad = (self.hi - self.lo) / 2
+        return Box(W @ mid - np.abs(W) @ rad, W @ mid + np.abs(W) @ rad)
+
+    def relu(self):               # ReLU is increasing: apply it to both ends
+        return Box(np.maximum(0, self.lo), np.maximum(0, self.hi))
+
+    def __repr__(self):
+        return f"Box(lo={self.lo.round(3)}, hi={self.hi.round(3)})"
+
+def square(eps):
+    return Box(c - eps, c + eps)
+
+out = net(square(0.05))
+print(out, out.lo[0] > out.hi[1])   # Box(lo=[1.5 1. ], hi=[2.1 1.4]) True
+out = net(square(0.1))
+print(out, out.lo[0] > out.hi[1])   # Box(lo=[1.2 0.8], hi=[2.4 1.6]) False
+```
+
+The function `net` is the one from chapter 1, unchanged. When it computes `W1 @ v` and `v` is a box, the first line of the class tells NumPy to step aside, so Python asks the box instead and the box applies the centre-radius rule. The `relu` from chapter 1 sees that the box has its own ReLU and calls it. The same line that computes the network on a point now computes a box containing every output, and that is the whole verifier for this chapter.
+
+## Where the precision goes
+
+We know from chapter 1 that the network is robust at $\varepsilon = 0.1$, with a margin of at least $0.2$ everywhere. Something was lost on the way, and the figure shows where.
 
 <BoxPropagation />
 
@@ -61,7 +97,7 @@ Take the corner $(h_1, h_2) = (0.8,\ 0.4)$. It's the one that gives the smallest
 
 A one-line version of the same problem: if $x \in [0, 1]$, interval arithmetic computes $x - x \in [-1, 1]$, because it treats the two copies of $x$ as unrelated. This is called the dependency problem, and our network has it in disguise, since the margin $h_1 - 2h_2$ subtracts two quantities that share their inputs.
 
-Notice that this loss doesn't come from a careless rule. After the first layer the box is the best possible box. The trouble is that the second layer starts from the box and not from the diamond.
+This loss doesn't come from a careless rule. After the first layer the box is the best possible box. The trouble is that the second layer starts from the box and not from the diamond.
 
 ## Second loss: even a perfect box is not enough
 
@@ -103,10 +139,26 @@ One more trick before giving up on boxes. Smaller boxes lose less, so cut the in
 
 At $\varepsilon = 0.10$, $4 \times 4 = 16$ pieces are enough. At $\varepsilon = 0.12$ you need $8 \times 8 = 64$. At $\varepsilon = 0.14$ you need $32 \times 32 = 1{,}024$. At $\varepsilon = 0.15$ no number of pieces works, because the margin is exactly zero at one corner and the property itself fails there. As $\varepsilon$ approaches the true limit, the number of pieces explodes.
 
+The code is a loop over the pieces:
+
+```python
+def proved(box):
+    out = net(box)
+    return out.lo[0] > out.hi[1]
+
+def proved_by_splitting(eps, k):
+    edges = np.linspace(-eps, eps, k + 1)
+    return all(proved(Box(c + [a1, b1], c + [a2, b2]))
+               for a1, a2 in zip(edges, edges[1:])
+               for b1, b2 in zip(edges, edges[1:]))
+
+print(proved_by_splitting(0.12, 4), proved_by_splitting(0.12, 8))   # False True
+```
+
 And this is with two inputs. With $d$ inputs, $k$ pieces per coordinate means $k^d$ boxes. For a 28 × 28 image, cutting the range of each pixel in two gives $2^{784}$ boxes, a number with 237 digits. Splitting is useful in practice, but only on the few coordinates or neurons that matter most, chosen with care, and never on all of them.
 
 ## What boxes are good for
 
 They are cheap. A layer costs two matrix products, one with $W$ for the centre and one with $|W|$ for the radius, so a whole network costs about two forward passes, even with millions of neurons. That makes them a good first pass. In particular they tell you which ReLUs are stable, meaning that their input interval doesn't contain 0. In our network $h_1$ is stable for every $\varepsilon$ in the figures, and $h_2$ becomes unstable once $\varepsilon$ goes past $0.1$. Every more expensive method in this series starts by asking that question, because a stable ReLU is just a linear function.
 
-What boxes can't do is remember that two neurons share a cause. The next shape, the zonotope, is built for exactly that: it keeps every value as an affine function of the inputs, so $h_1$ and $h_2$ never forget where they came from. Before building it, though, chapter 3 steps back and asks what we have been doing all along. What does it mean for a shape to approximate a set, what makes a rule for ReLU sound, and is there always a best rule?
+Boxes can't remember that two neurons share a cause. The next shape, the zonotope, is built for exactly that: it keeps every value as an affine function of the inputs, so $h_1$ and $h_2$ never forget where they came from. Before building it, though, [chapter 3](/blog/verifying-neural-networks/abstract-interpretation) steps back and asks what we have been doing all along. What does it mean for a shape to approximate a set, what makes a rule for ReLU sound, and is there always a best rule?

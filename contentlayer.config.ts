@@ -138,6 +138,14 @@ const allowedComponents = new Set([
   'BoxPropagation',
   'WrappingEffect',
   'SplitBoxes',
+  'BestBox',
+  'LayerShapes',
+  'CutCorners',
+  'TwoSides',
+  'MethodMap',
+  'NoiseLink',
+  'ZonotopeSum',
+  'ReluRelax',
 ])
 
 function rehypeSanitizeKeepingComponents(schema: typeof defaultSchema) {

@@ -1,7 +1,7 @@
 ---
 title: "Why prove anything about a neural network?"
 date: "2026-11-23"
-description: "The preface to a series on neural network verification: what we want to prove, what you need to follow along, and the two-neuron network that every chapter is tested on."
+description: "The preface to a series on neural network verification: what we want to prove, what you need to follow along, the two-neuron network that every chapter is tested on, and the small verifier we write along the way."
 tags: ["verification", "neural-networks", "abstract-interpretation"]
 ---
 
@@ -11,7 +11,7 @@ Ask a simple question about that function, though, and things get awkward. Does 
 
 This series is about answering the first kind of question with a proof.
 
-I got into the subject during my M1 internship at LIX, where I implemented zones (bounds on the differences between variables) in Julia and pushed them through ReLU layers. Later I took INF641, the course on neural network verification that Eric Goubault and Sylvie Putot teach at École Polytechnique, and found out where those zones sit in a much larger picture. Most of the mathematics in these chapters comes from that course and from the papers behind it. The order, the examples, the figures and the mistakes are mine.
+I got into the subject during my M1 internship at LIX, where I implemented zones (bounds on the differences between variables) in Julia and pushed them through ReLU layers. Later I took INF641, the course on neural network verification that Eric Goubault and Sylvie Putot teach at École Polytechnique, and found out where those zones sit in a much larger picture. Most of the mathematics in these chapters comes from that course, from the papers behind it, and from a few other courses and books listed at the end of this preface. The examples, the figures, the code and the mistakes are mine.
 
 ## Why a proof, and not more tests
 
@@ -19,7 +19,7 @@ Testing tells you what a network does on the inputs you tried. Dijkstra made the
 
 The standard example comes from Goodfellow, Shlens and Szegedy in 2014. They took a photo of a panda that a network labelled "panda" with 57.7% confidence and added a perturbation so small that no pixel moved by more than one step of an 8-bit image. To us the two photos look the same. The network said "gibbon", with 99.3% confidence.
 
-Random noise of that size almost never does this. The perturbation was built on purpose, by following the gradient of the network in the worst direction, so testing more random inputs would not have found it. What you want instead is a guarantee that no such perturbation exists, before someone goes looking for one.
+Random noise of that size almost never does this. The perturbation was built on purpose, by following the gradient of the network in the worst direction, so testing more random inputs would not have found it. You want a guarantee instead: that no such perturbation exists, before someone goes looking for one.
 
 With pandas this is a curiosity. Some networks make decisions that matter more. ACAS Xu is a collision avoidance system for unmanned aircraft. Its advisories (clear of conflict, weak left, strong right, and so on) were first stored in a lookup table of about 2 GB, which was then compressed into 45 neural networks taking about 3 MB. Before something like that flies, you want statements such as "if another aircraft is straight ahead and coming towards us, the network never answers clear of conflict", and you want them for every geometry, not for the few thousand you simulated. In 2017, Katz and his coauthors proved several properties of this kind on the ACAS Xu networks and showed that others were violated. Chapter 7 explains how.
 
@@ -29,34 +29,76 @@ You need to know what a neural network computes: multiply by a matrix, add a bia
 
 The later chapters use some probability, a little order theory and, at the very end, category theory. Each chapter introduces what it uses. You don't need to know anything about verification beforehand. You don't need category theory either, but if you already know some, the last chapter is where the rest of the series will look different.
 
+To run the code you need Python and NumPy. The solver chapters add SciPy for linear programming, and that's all.
+
 ## One small network
 
 Every method in the series is tested on the same network: two inputs, two hidden ReLU neurons, two outputs. It is tiny on purpose. With two inputs, every set we care about fits on the page, so when a method fails you can see the failure instead of taking my word for it. Real networks have millions of neurons, but they fail for the same reasons, only in dimensions nobody can picture.
 
-Here is a preview of where we're going. The slider sets how far each input may move. The filled polygon is every output the network can actually produce, and in the hatched half the label changes. The two outlines are what two different methods believe the outputs could be. A method proves the network safe when its outline stays out of the hatched half.
+The figure below is a preview of where we're going. The slider sets how far each input may move. The filled polygon is every output the network can actually produce, and in the hatched half the label changes. The two outlines are what two different methods believe the outputs could be. A method proves the network safe when its outline stays out of the hatched half.
 
 <ThreeShapes />
 
-Push the slider up and the box gives up first, at $\varepsilon = 0.06$. The zonotope holds until $0.15$, which is exactly where the network itself stops being safe. The next four chapters explain those two numbers.
+Push the slider up and the box gives up first, at $\varepsilon = 0.06$. The zonotope holds until $0.15$, which is exactly where the network itself stops being safe. Chapters 2 to 4 explain those two numbers.
+
+## A verifier in a few lines
+
+Every chapter also has some code, and the pieces add up to a small verifier for the toy network. It stays small thanks to one trick, and that trick is the main idea of the whole field. Here is the network as a Python function:
+
+```python
+import numpy as np
+
+W1 = np.array([[1.0, 1.0],
+               [1.0, -1.0]])
+W2 = np.array([[2.0, -1.0],
+               [1.0, 1.0]])
+
+def relu(v):
+    return v.relu() if hasattr(v, "relu") else np.maximum(0, v)
+
+def net(v):
+    return W2 @ relu(W1 @ v)
+```
+
+Give `net` a point and it returns the two outputs. Chapter 2 gives it a box instead: a new kind of value that knows how to be multiplied by a matrix and how to go through a ReLU. The same function then returns a box that contains every output the network can produce. Chapter 4 does it again with zonotopes, chapter 5 with linear bounds. The network code never changes, only the kind of value we run it on. Running a program on descriptions of sets instead of on numbers is what the name abstract interpretation refers to, and chapter 3 explains why the answers it gives are proofs.
 
 ## How the series is organised
 
-Each chapter starts where the previous one breaks.
+Each chapter starts where the previous one breaks, and the chapters fall into four groups. Chapters 2 to 6 compute shapes that contain every output the network can produce. They are fast, and they are allowed to answer "I don't know". Chapters 7 and 8 give exact answers, first by brute force and then by spending the effort only where the cheap shapes failed. Chapters 9 to 13 change the question: train the network so that proofs become easy, let the inputs be random, ask "there exists" instead of "for all", put the network in a feedback loop, look at other architectures. Chapter 14 shows that every method in the series is the same construction.
 
 | | Chapter | What it adds |
 |---|---|---|
-| 1 | [A question about infinitely many inputs](/blog/verifying-neural-networks/one-question) | What exactly we want to prove, and why trying inputs can't prove it |
+| 1 | [A question about infinitely many inputs](/blog/verifying-neural-networks/one-question) | What exactly we want to prove, why testing can't prove it, and what attacks can do instead |
 | 2 | [Boxes](/blog/verifying-neural-networks/boxes) | The cheapest method that sometimes works, and the two separate reasons it fails |
-| 3 | Abstract interpretation | What makes an approximation safe, and how to find the best one for a given shape |
-| 4 | Zonotopes | Shapes that remember which inputs each value depends on |
-| 5 | Polyhedra and DeepPoly | Tighter treatment of the ReLUs that can switch, and what it costs |
-| 6 | Tropical geometry | Max-plus algebra, in which ReLU networks become rational functions |
-| 7 | Solvers | Giving up on shapes and asking for an exact answer, at an exponential price |
-| 8 | Random inputs | Inputs drawn from a distribution you only partly know |
-| 9 | For all, there exists | Inner approximations, and properties like "whatever the wind does, some control keeps us safe" |
-| 10 | Networks in the loop | A network steering a physical system, checked over time |
-| 11 | Categories | Why chapters 2 to 10 are one construction seen from different sides |
+| 3 | [Abstract interpretation](/blog/verifying-neural-networks/abstract-interpretation) | What makes an approximation safe, what the best one is, and why the best steps don't add up to the best answer |
+| 4 | [Zonotopes](/blog/verifying-neural-networks/zonotopes) | Shapes that remember which inputs each value depends on |
+| 5 | Linear bounds | DeepPoly and CROWN: one linear bound above and one below every neuron, pulled back to the inputs |
+| 6 | Tropical geometry | Max-plus algebra, in which ReLU is linear and a network is a rational function |
+| 7 | Exact answers | SMT and mixed integer programming: no approximation, and an exponential worst case |
+| 8 | Branch and bound | Splitting the problem only where the bounds are too loose, which is how today's best verifiers work |
+| 9 | Training | Networks trained so that cheap methods can prove them robust |
+| 10 | Probabilities | Inputs drawn from a distribution you only partly know, and classifiers that add noise on purpose |
+| 11 | For all, there exists | Inner approximations, and properties like "whatever the wind does, some control keeps us safe" |
+| 12 | Networks in the loop | A network steering a physical system, checked over time |
+| 13 | Beyond feedforward | Recurrent networks and transformers, and the questions no algorithm can answer |
+| 14 | Categories | Why chapters 2 to 13 are one construction seen from different sides |
 
 Chapter 6 is also where my own work on tropical precision comes in.
 
+The map below places the methods of the first eight chapters. It's worth coming back to when the names start piling up.
+
+<MethodMap />
+
 When the series is finished I'll collect it into a single PDF, the way Bartosz Milewski did with *Category Theory for Programmers*.
+
+## Further reading
+
+These are the sources I keep going back to. Each explains some of the same material from a different angle, and it often helps to read the same idea twice.
+
+- *Introduction to Neural Network Verification* by Aws Albarghouthi, a free book at [verifieddeeplearning.com](https://verifieddeeplearning.com/). It starts with constraint solving and then covers intervals, zonotopes, polyhedra and training, roughly chapters 2 to 9 here.
+- INF641 at École Polytechnique, by Eric Goubault and Sylvie Putot: abstract interpretation, zonotopes, tropical polyhedra, imprecise probabilities, quantified properties and controllers. Chapters 3, 4, 6 and 10 to 12 follow it closely.
+- Huan Zhang's [ECE 598 at UIUC](https://publish.illinois.edu/ece598hz-fall2024/course-schedule/), on SAT and SMT, mixed integer programming, bound propagation and branch and bound, taught by one of the authors of CROWN.
+- Martin Vechev's [Reliable and Trustworthy AI](https://www.sri.inf.ethz.ch/teaching/rtai26) at ETH Zürich, for DeepPoly, certified training and randomized smoothing.
+- Supratik Chakraborty's [CS 781 at IIT Bombay](https://www.cse.iitb.ac.in/~supratik/courses/cs781/aut24/index.html), which starts from writing specifications and from Galois connections.
+- Benedikt Bollig's [lecture notes](https://arxiv.org/abs/2604.25733), the theory side: what can and cannot be decided, recurrent networks and transformers.
+- [Categories for AI](https://cats.for.ai/), a lecture series on category theory for machine learning, which the last chapter builds on.

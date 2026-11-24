@@ -1,6 +1,6 @@
 ---
 title: "Verifying neural networks"
-description: "How to prove what a neural network does on infinitely many inputs. Boxes, zonotopes, polyhedra, tropical geometry and solvers, then random inputs and controllers, and finally the category theory that ties them together."
+description: "How to prove what a neural network does on infinitely many inputs. Boxes, zonotopes, linear bounds and tropical geometry, then solvers and branch and bound, then training, probabilities, controllers and other architectures, and finally the category theory that ties them together. With figures you can play with and a small verifier written along the way."
 heroNote: "Each chapter starts where the previous one breaks, so read them in order."
 parts:
   - slug: "preface"
@@ -15,39 +15,49 @@ parts:
   - slug: "abstract-interpretation"
     label: "Chapter 3"
     title: "Abstract interpretation: being wrong in the safe direction"
-    comingSoon: true
   - slug: "zonotopes"
     label: "Chapter 4"
     title: "Zonotopes: remembering where every value came from"
-    comingSoon: true
-  - slug: "polyhedra"
+  - slug: "linear-bounds"
     label: "Chapter 5"
-    title: "Polyhedra and DeepPoly: paying for tighter ReLUs"
+    title: "Linear bounds: DeepPoly and CROWN"
     comingSoon: true
   - slug: "tropical"
     label: "Chapter 6"
-    title: "Tropical geometry: the algebra ReLU networks are written in"
+    title: "Tropical geometry: the algebra in which ReLU is linear"
     comingSoon: true
   - slug: "solvers"
     label: "Chapter 7"
-    title: "Solvers: Reluplex and mixed integer programming"
+    title: "Exact answers: SMT, MILP and the price of completeness"
     comingSoon: true
-  - slug: "random-inputs"
+  - slug: "branch-and-bound"
     label: "Chapter 8"
-    title: "Random inputs: p-boxes and Dempster–Shafer structures"
+    title: "Branch and bound: splitting only where it helps"
+    comingSoon: true
+  - slug: "training"
+    label: "Chapter 9"
+    title: "Training networks that can be proved"
+    comingSoon: true
+  - slug: "probability"
+    label: "Chapter 10"
+    title: "Probabilities: random inputs and randomized smoothing"
     comingSoon: true
   - slug: "quantifiers"
-    label: "Chapter 9"
+    label: "Chapter 11"
     title: "For all, there exists: inner and outer approximations"
     comingSoon: true
   - slug: "control"
-    label: "Chapter 10"
+    label: "Chapter 12"
     title: "Networks in the loop: verifying controllers"
     comingSoon: true
+  - slug: "beyond-feedforward"
+    label: "Chapter 13"
+    title: "Beyond feedforward networks: recurrence, attention and undecidability"
+    comingSoon: true
   - slug: "categories"
-    label: "Chapter 11"
+    label: "Chapter 14"
     title: "Categories: one construction behind all the others"
     comingSoon: true
 ---
 
-A series on proving properties of neural networks, built around one small network that every method gets tested on.
+A series on proving properties of neural networks, built around one small network that every method gets tested on, and one small verifier that grows a few lines per chapter.

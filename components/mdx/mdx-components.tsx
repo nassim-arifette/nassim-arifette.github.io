@@ -7,13 +7,21 @@ import { cn } from '@/lib/utils'
 import { ZoomableImage } from './zoomable-image'
 import { Chapters, DependencyMap, Ready, Stage, Timeline } from './study-guide'
 import {
+  BestBox,
   BoxPropagation,
+  CutCorners,
+  LayerShapes,
+  MethodMap,
   NetworkDiagram,
+  NoiseLink,
+  ReluRelax,
   SamplingLab,
   SplitBoxes,
   ThreeCases,
   ThreeShapes,
+  TwoSides,
   WrappingEffect,
+  ZonotopeSum,
 } from './verification'
 
 const CodeBlock = ({ className = '', ...props }: React.HTMLAttributes<HTMLPreElement>) => {
@@ -187,9 +195,17 @@ export const mdxComponents = {
   Timeline,
   Stage,
   Chapters,
+  BestBox,
   BoxPropagation,
+  CutCorners,
+  LayerShapes,
+  MethodMap,
   NetworkDiagram,
+  NoiseLink,
+  ReluRelax,
   SamplingLab,
+  TwoSides,
+  ZonotopeSum,
   SplitBoxes,
   ThreeCases,
   ThreeShapes,

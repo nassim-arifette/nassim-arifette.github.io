@@ -173,12 +173,15 @@ const accent = (alpha = 1) => `oklch(var(--accent) / ${alpha})`
 type Scale = {
   sx: (v: number) => number
   sy: (v: number) => number
+  /** Inverse of sx and sy, from SVG user units back to data coordinates. */
+  ix: (px: number) => number
+  iy: (py: number) => number
   path: (poly: Poly) => string
   hatch: string
   frame: { x: [number, number]; y: [number, number] }
 }
 
-const PAD = { l: 36, r: 10, t: 10, b: 34 }
+const PAD = { l: 42, r: 10, t: 10, b: 34 }
 
 function useUid() {
   return React.useId().replace(/[^a-zA-Z0-9_-]/g, '')
@@ -211,9 +214,11 @@ function Plot({
   const top = PAD.t + (title ? 18 : 0)
   const sx = (v: number) => PAD.l + ((v - x[0]) / (x[1] - x[0])) * size
   const sy = (v: number) => top + ((y[1] - v) / (y[1] - y[0])) * size
+  const ix = (px: number) => x[0] + ((px - PAD.l) / size) * (x[1] - x[0])
+  const iy = (py: number) => y[1] - ((py - top) / size) * (y[1] - y[0])
   const path = (poly: Poly) =>
     poly.length ? `M${poly.map((p) => `${sx(p[0]).toFixed(2)},${sy(p[1]).toFixed(2)}`).join(' L')} Z` : ''
-  const scale: Scale = { sx, sy, path, hatch: `url(#${uid}-hatch)`, frame: { x, y } }
+  const scale: Scale = { sx, sy, ix, iy, path, hatch: `url(#${uid}-hatch)`, frame: { x, y } }
   const width = PAD.l + size + PAD.r
   const height = top + size + PAD.b
 
@@ -253,10 +258,10 @@ function Plot({
         {xLabel}
       </text>
       <text
-        x={10}
+        x={9}
         y={top + size / 2}
         textAnchor="middle"
-        transform={`rotate(-90 10 ${top + size / 2})`}
+        transform={`rotate(-90 9 ${top + size / 2})`}
         className="fill-foreground text-[12px] italic"
       >
         {yLabel}
@@ -886,6 +891,721 @@ export function SplitBoxes() {
       <figcaption className="mt-3 text-sm text-muted-foreground">
         Each piece goes through interval arithmetic on its own. Blue pieces are proved, grey ones are not. The small
         hatched corner at the bottom right is where the label really flips; at ε = 0.15 the square would touch it.
+      </figcaption>
+    </figure>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Chapter 3
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
+const inBox = (p: Vec, b: Box) =>
+  p[0] >= b.lo[0] - 1e-9 && p[0] <= b.hi[0] + 1e-9 && p[1] >= b.lo[1] - 1e-9 && p[1] <= b.hi[1] + 1e-9
+
+type Grip = 'move' | 'll' | 'lr' | 'ul' | 'ur'
+type Corner = Exclude<Grip, 'move'>
+
+const CORNER_NAMES: Record<Corner, string> = {
+  ll: 'Bottom left corner',
+  lr: 'Bottom right corner',
+  ul: 'Top left corner',
+  ur: 'Top right corner',
+}
+
+/** Moves a box by one of its grips, keeping it inside `limits` and at least `min` wide. */
+function dragBox(b: Box, grip: Grip, dx: number, dy: number, limits: Box, min = 0.04): Box {
+  let [x0, y0] = b.lo
+  let [x1, y1] = b.hi
+  if (grip === 'move') {
+    const w = x1 - x0
+    const h = y1 - y0
+    x0 = clamp(x0 + dx, limits.lo[0], limits.hi[0] - w)
+    y0 = clamp(y0 + dy, limits.lo[1], limits.hi[1] - h)
+    return { lo: [x0, y0], hi: [x0 + w, y0 + h] }
+  }
+  if (grip === 'll' || grip === 'ul') x0 = clamp(x0 + dx, limits.lo[0], x1 - min)
+  if (grip === 'lr' || grip === 'ur') x1 = clamp(x1 + dx, x0 + min, limits.hi[0])
+  if (grip === 'll' || grip === 'lr') y0 = clamp(y0 + dy, limits.lo[1], y1 - min)
+  if (grip === 'ul' || grip === 'ur') y1 = clamp(y1 + dy, y0 + min, limits.hi[1])
+  return { lo: [x0, y0], hi: [x1, y1] }
+}
+
+function Verdict({ ok }: { ok: boolean }) {
+  return <span className={ok ? 'font-medium text-accent' : 'text-muted-foreground'}>{ok ? 'yes' : 'no'}</span>
+}
+
+/** The Galois connection as a game: a box contains the set exactly when it contains the set's best box. */
+export function BestBox() {
+  const frame = { x: [0.5, 1.5] as [number, number], y: [-0.3, 0.7] as [number, number] }
+  const limits: Box = { lo: [0.52, -0.28], hi: [1.48, 0.68] }
+  const start: Box = { lo: [0.66, -0.1], hi: [1.36, 0.52] }
+  const set = square(C, 0.1).map((p) => mul(W1, p))
+  const best = boundsOf(set)
+  const [box, setBox] = React.useState<Box>(start)
+  const drag = React.useRef<{ grip: Grip; from: Vec; box: Box } | null>(null)
+  const containsSet = set.every((p) => inBox(p, box))
+  const containsBest = inBox(best.lo, box) && inBox(best.hi, box)
+
+  return (
+    <figure className="not-prose my-10">
+      <div className="mx-auto max-w-sm">
+        <Plot x={frame.x} y={frame.y} size={280} xLabel="h₁" yLabel="h₂" xTicks={[0.6, 0.8, 1, 1.2, 1.4]}
+          yTicks={[-0.2, 0, 0.2, 0.4, 0.6]} label="The hidden values at epsilon 0.1, their best box, and a box you can move">
+          {(s) => {
+            const toData = (e: React.PointerEvent<SVGElement>): Vec | null => {
+              const matrix = e.currentTarget.ownerSVGElement?.getScreenCTM()
+              if (!matrix) return null
+              const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(matrix.inverse())
+              return [s.ix(p.x), s.iy(p.y)]
+            }
+            const grip = (g: Grip) => ({
+              tabIndex: 0,
+              role: 'button' as const,
+              onPointerDown: (e: React.PointerEvent<SVGElement>) => {
+                const from = toData(e)
+                if (!from) return
+                e.preventDefault()
+                e.currentTarget.setPointerCapture(e.pointerId)
+                drag.current = { grip: g, from, box }
+              },
+              onPointerMove: (e: React.PointerEvent<SVGElement>) => {
+                const d = drag.current
+                const p = d && d.grip === g ? toData(e) : null
+                if (!d || !p) return
+                setBox(dragBox(d.box, g, p[0] - d.from[0], p[1] - d.from[1], limits))
+              },
+              onPointerUp: () => {
+                drag.current = null
+              },
+              onPointerCancel: () => {
+                drag.current = null
+              },
+              onKeyDown: (e: React.KeyboardEvent<SVGElement>) => {
+                const step = e.shiftKey ? 0.05 : 0.01
+                const moves: Record<string, Vec> = {
+                  ArrowLeft: [-step, 0],
+                  ArrowRight: [step, 0],
+                  ArrowUp: [0, step],
+                  ArrowDown: [0, -step],
+                }
+                const m = moves[e.key]
+                if (!m) return
+                e.preventDefault()
+                setBox((b) => dragBox(b, g, m[0], m[1], limits))
+              },
+              style: {
+                touchAction: 'none' as const,
+                cursor: g === 'move' ? 'move' : g === 'll' || g === 'ur' ? 'nesw-resize' : 'nwse-resize',
+              },
+            })
+            const body = grip('move')
+            return (
+              <>
+                <path d={s.path(set)} style={exactStyle} />
+                <path d={s.path(boxPoly(best))} style={tightStyle} />
+                <path d={s.path(boxPoly(box))} {...body} style={{ ...boxStyle, fill: ink(0.05), ...body.style }}
+                  aria-label="Your box. Drag it, or use the arrow keys, to move it." />
+                {(Object.keys(CORNER_NAMES) as Corner[]).map((g) => {
+                  const px = s.sx(g === 'll' || g === 'ul' ? box.lo[0] : box.hi[0])
+                  const py = s.sy(g === 'll' || g === 'lr' ? box.lo[1] : box.hi[1])
+                  return (
+                    <g key={g} {...grip(g)} aria-label={`${CORNER_NAMES[g]} of your box. Drag it, or use the arrow keys.`}>
+                      <circle cx={px} cy={py} r={14} style={{ fill: 'transparent' }} />
+                      <rect x={px - 4} y={py - 4} width={8} height={8}
+                        style={{ fill: 'oklch(var(--background))', stroke: ink(0.9), strokeWidth: 1.3 }} />
+                    </g>
+                  )
+                })}
+              </>
+            )
+          }}
+        </Plot>
+        <div className="mt-3 grid grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-sm" aria-live="polite">
+          <span>Your box contains every hidden value</span>
+          <Verdict ok={containsSet} />
+          <span>Your box contains the best box</span>
+          <Verdict ok={containsBest} />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" className={buttonClass} onClick={() => setBox(best)}>
+            Shrink to the best box
+          </button>
+          <button type="button" className={buttonClass} onClick={() => setBox(start)}>
+            Start over
+          </button>
+        </div>
+      </div>
+      <figcaption className="mt-3 text-sm text-muted-foreground">
+        Filled: the hidden values at ε = 0.1, the diamond from chapter 2. Dotted: their best box. Dashed: a box of your
+        own. Drag it to move it, drag its corners to resize it, or use the arrow keys after Tab. Wherever you put it,
+        the two answers agree.
+      </figcaption>
+    </figure>
+  )
+}
+
+/** A linear layer turns a box into a slanted shape; ReLU turns a box into a box. */
+export function LayerShapes() {
+  const [t, setT] = React.useState(1)
+  const [run, setRun] = React.useState(0)
+
+  React.useEffect(() => {
+    if (!run) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setT(1)
+      setRun(0)
+      return
+    }
+    let id = 0
+    const start = performance.now()
+    const tick = (now: number) => {
+      const v = Math.min(1, (now - start) / 1800)
+      setT(v)
+      if (v < 1) id = requestAnimationFrame(tick)
+      else setRun(0)
+    }
+    id = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(id)
+  }, [run])
+
+  const blend = (p: Vec, q: Vec): Vec => [(1 - t) * p[0] + t * q[0], (1 - t) * p[1] + t * q[1]]
+  const linear = (p: Vec) => blend(p, mul(W2, p))
+  const ramp = (p: Vec) => blend(p, relu(p))
+
+  // The box around the hidden values at eps = 0.1, and a box that straddles zero.
+  const hidden: Box = { lo: [0.8, 0], hi: [1.2, 0.4] }
+  const straddling: Box = { lo: [0.6, -0.4], hi: [1.4, 0.4] }
+  const linShape = boxPoly(hidden).map(linear)
+  const linHull = boundsOf(linShape)
+  const ratio = area(boxPoly(linHull)) / area(linShape)
+  const reluShape = boxPoly(straddling).map(ramp)
+
+  // Grid lines inside a box. Both maps send these segments to segments, so mapping the ends is enough.
+  const grid = (b: Box, xs: number[], ys: number[]): [Vec, Vec][] => [
+    ...xs.map((x) => [[x, b.lo[1]], [x, b.hi[1]]] as [Vec, Vec]),
+    ...ys.map((y) => [[b.lo[0], y], [b.hi[0], y]] as [Vec, Vec]),
+  ]
+  const lines = (s: Scale, segments: [Vec, Vec][], f: (p: Vec) => Vec) =>
+    segments.map(([p, q], i) => {
+      const a = f(p)
+      const b = f(q)
+      return (
+        <line key={i} x1={s.sx(a[0])} y1={s.sy(a[1])} x2={s.sx(b[0])} y2={s.sy(b[1])}
+          style={{ stroke: accent(0.45), strokeWidth: 0.7 }} />
+      )
+    })
+  const startStyle = { fill: 'none', stroke: ink(0.3), strokeWidth: 1 }
+
+  return (
+    <figure className="not-prose my-10">
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div>
+          <Plot x={[0.6, 2.6]} y={[-0.2, 1.8]} title="A linear layer: W₂" xLabel="first coordinate"
+            yLabel="second coordinate" xTicks={[1, 1.5, 2, 2.5]} yTicks={[0, 0.5, 1, 1.5]}
+            label="A box going through the linear map W2 becomes a parallelogram">
+            {(s) => (
+              <>
+                <path d={s.path(boxPoly(hidden))} style={startStyle} />
+                <path d={s.path(linShape)} style={exactStyle} />
+                {lines(s, grid(hidden, [0.9, 1, 1.1], [0.1, 0.2, 0.3]), linear)}
+                <path d={s.path(boxPoly(linHull))} style={boxStyle} />
+              </>
+            )}
+          </Plot>
+          <p className="mt-1 text-sm tabular-nums">The dashed box has {fmt(ratio)} times the area of the shape inside it.</p>
+        </div>
+        <div>
+          <Plot x={[0.4, 1.6]} y={[-0.6, 0.6]} title="A ReLU layer" xLabel="first coordinate" yLabel="second coordinate"
+            xTicks={[0.5, 1, 1.5]} yTicks={[-0.4, 0, 0.4]} label="A box going through ReLU stays a box">
+            {(s) => (
+              <>
+                <line x1={s.sx(0)} x2={s.sx(2)} y1={s.sy(0)} y2={s.sy(0)} style={{ stroke: ink(0.3) }} />
+                <path d={s.path(boxPoly(straddling))} style={startStyle} />
+                <path d={s.path(reluShape)} style={exactStyle} />
+                {lines(s, grid(straddling, [0.8, 1, 1.2], [-0.3, -0.2, -0.1, 0.1, 0.2, 0.3]), ramp)}
+                <path d={s.path(boxPoly(boundsOf(reluShape)))} style={boxStyle} />
+              </>
+            )}
+          </Plot>
+          <p className="mt-1 text-sm">The shape is still a box, so the dashed box is the shape itself.</p>
+        </div>
+      </div>
+      <div className="mx-auto mt-4 flex max-w-xl items-center gap-3">
+        <div className="flex-1">
+          <Slider label="t" value={t} min={0} max={1} step={0.01}
+            onChange={(v) => {
+              setRun(0)
+              setT(v)
+            }} />
+        </div>
+        <button type="button" className={buttonClass} onClick={() => setRun((r) => r + 1)}>
+          Play
+        </button>
+      </div>
+      <figcaption className="mt-3 text-sm text-muted-foreground">
+        Each layer is applied gradually, from t = 0 (before) to t = 1 (after). Thin outline: the starting box. Filled:
+        where its points go. Dashed: the best box around them. On the left, the box around the hidden values at
+        ε = 0.1 goes through the second layer of our network. On the right, a box whose second coordinate can be
+        negative goes through ReLU.
+      </figcaption>
+    </figure>
+  )
+}
+
+/** Cuts the corner of the polygon that lies between tangent angles i and i + 1. */
+function cutCorner(angles: number[], i: number): number[] {
+  const a = angles[i]
+  const b = i + 1 < angles.length ? angles[i + 1] : angles[0] + 2 * Math.PI
+  return [...angles, ((a + b) / 2) % (2 * Math.PI)].sort((p, q) => p - q)
+}
+
+/** No polygon around a disk is the smallest one: any corner can be cut by one more tangent line. */
+export function CutCorners() {
+  const square4 = [0, 0.5, 1, 1.5].map((k) => k * Math.PI)
+  const [angles, setAngles] = React.useState(() => cutCorner(square4, 0))
+  const R = 72
+  const max = 128
+  const n = angles.length
+  // Side i lies on the tangent line at angles[i]; corner i joins sides i and i + 1.
+  const gaps = angles.map((a, i) => (i + 1 < n ? angles[i + 1] : angles[0] + 2 * Math.PI) - a)
+  const corners: Vec[] = angles.map((a, i) => {
+    const mid = a + gaps[i] / 2
+    const d = R / Math.cos(gaps[i] / 2)
+    return [d * Math.cos(mid), -d * Math.sin(mid)]
+  })
+  const excess = gaps.reduce((sum, g) => sum + Math.tan(g / 2), 0) / Math.PI - 1
+  const biggest = gaps.indexOf(Math.max(...gaps))
+  const outline = `M${corners.map((p) => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' L')} Z`
+
+  return (
+    <figure className="not-prose my-10">
+      <div className="mx-auto max-w-xs">
+        <svg viewBox="-80 -80 160 160" className="w-full" role="img"
+          aria-label={`A disk inside its best box and inside a polygon with ${n} sides`}>
+          <rect x={-R} y={-R} width={2 * R} height={2 * R} style={tightStyle} />
+          <circle r={R} style={exactStyle} />
+          <path d={outline} style={zonoStyle} />
+          {corners.map((p, i) => (
+            <circle key={i} cx={p[0]} cy={p[1]} r={n <= 16 ? 10 : 5}
+              style={{ fill: 'transparent', cursor: n < max ? 'pointer' : 'default' }}
+              onClick={() => {
+                if (n < max) setAngles(cutCorner(angles, i))
+              }} />
+          ))}
+          {n <= 16
+            ? corners.map((p, i) => (
+                <circle key={`dot${i}`} cx={p[0]} cy={p[1]} r={2.2} style={{ fill: ink(0.85), pointerEvents: 'none' }} />
+              ))
+            : null}
+        </svg>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" className={`${buttonClass} disabled:opacity-40`} disabled={n >= max}
+            onClick={() => setAngles(cutCorner(angles, biggest))}>
+            Cut the biggest corner
+          </button>
+          <button type="button" className={buttonClass} onClick={() => setAngles(square4)}>
+            Start over
+          </button>
+        </div>
+        <Legend
+          items={[
+            { swatch: swatch.exact, text: 'The disk.' },
+            { swatch: swatch.tight, text: 'Its best box, the square that touches it on four sides.' },
+            {
+              swatch: swatch.zono,
+              text: (
+                <span className="tabular-nums">
+                  A polygon around the disk with {n} sides, {(100 * excess).toPrecision(2)}% larger than the disk.
+                </span>
+              ),
+            },
+          ]}
+        />
+      </div>
+      <figcaption className="mt-3 text-sm text-muted-foreground">
+        Every cut is a line tangent to the disk, so the polygon shrinks and still contains the disk. Click a corner to
+        cut it, or let the button pick the biggest one. However many sides the polygon has, another cut is possible.
+      </figcaption>
+    </figure>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Preface and chapter 1 additions
+
+/** Sign-gradient attack on the margin (the same loop as the Python in chapter 1). */
+function attackMargin(eps: number) {
+  let x: Vec = [C[0], C[1]]
+  const row = [W2[0][0] - W2[1][0], W2[0][1] - W2[1][1]] // d(o1 - o2)/dh = (1, -2)
+  for (let k = 0; k < 40; k++) {
+    const z = mul(W1, x)
+    const on = [z[0] > 0 ? 1 : 0, z[1] > 0 ? 1 : 0]
+    const g: Vec = [
+      row[0] * on[0] * W1[0][0] + row[1] * on[1] * W1[1][0],
+      row[0] * on[0] * W1[0][1] + row[1] * on[1] * W1[1][1],
+    ]
+    x = [
+      clamp(x[0] - 0.01 * Math.sign(g[0]), C[0] - eps, C[0] + eps),
+      clamp(x[1] - 0.01 * Math.sign(g[1]), C[1] - eps, C[1] + eps),
+    ]
+  }
+  return { x, m: marginAt(x) }
+}
+
+/** Chapter 1: attacks bound the smallest margin from above, verifiers from below. */
+export function TwoSides() {
+  const [eps, setEps] = React.useState(0.08)
+  const lower = 0.6 - 10 * eps // interval arithmetic, chapter 2
+  const found = attackMargin(eps)
+  const range: [number, number] = [-1.5, 0.8]
+  const L = 16
+  const R = 344
+  const sx = (v: number) => L + ((v - range[0]) / (range[1] - range[0])) * (R - L)
+  const y = 62
+  const uid = useUid()
+  const verdict =
+    lower > 1e-9
+      ? 'Proved: even the lower bound is positive, so no input in the square flips the label.'
+      : found.m < -1e-9
+        ? `Counterexample: the attack found x = (${fmt(found.x[0])}, ${fmt(found.x[1])}), where the margin is ${fmt(found.m)}.`
+        : 'Unknown: the lower bound is negative, and the attack found no input that flips the label.'
+
+  return (
+    <figure className="not-prose my-10">
+      <div className="mx-auto max-w-lg">
+        <svg viewBox="0 0 360 120" className="w-full" role="img"
+          aria-label="A number line for the smallest margin, with the lower bound from a verifier and the value found by an attack">
+          <defs>
+            <pattern id={`${uid}-h`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="6" style={{ stroke: ink(0.22), strokeWidth: 1.4 }} />
+            </pattern>
+          </defs>
+          <rect x={sx(range[0])} y={y - 22} width={sx(0) - sx(range[0])} height={44} style={{ fill: `url(#${uid}-h)` }} />
+          <line x1={L} x2={R} y1={y} y2={y} style={{ stroke: ink(0.5) }} />
+          {[-1.5, -1, -0.5, 0, 0.5].map((t) => (
+            <g key={t}>
+              <line x1={sx(t)} x2={sx(t)} y1={y - 3} y2={y + 3} style={{ stroke: ink(0.5) }} />
+              <text x={sx(t)} y={y + 36} textAnchor="middle" className="fill-muted-foreground text-[10px]">{t}</text>
+            </g>
+          ))}
+          <line x1={sx(0)} x2={sx(0)} y1={y - 22} y2={y + 22} style={{ stroke: ink(0.6) }} />
+          <rect x={sx(lower)} y={y - 7} width={Math.max(0, sx(found.m) - sx(lower))} height={14}
+            style={{ fill: accent(0.16), stroke: accent(0.6) }} />
+          <line x1={sx(lower)} x2={sx(lower)} y1={y - 16} y2={y + 16} style={{ stroke: ink(0.9), strokeWidth: 1.5, strokeDasharray: '3 2' }} />
+          <circle cx={sx(found.m)} cy={y} r={5} style={{ fill: 'oklch(var(--background))', stroke: accent(1), strokeWidth: 2 }} />
+          <text x={sx(lower)} y={y - 22} textAnchor="middle" className="fill-foreground text-[11px]">lower bound</text>
+          <text x={sx(found.m)} y={y + 24} textAnchor="middle" className="fill-foreground text-[11px]">attack</text>
+          <text x={sx(-0.75)} y={14} textAnchor="middle" className="fill-muted-foreground text-[11px]">margin ≤ 0: label flips</text>
+          <text x={sx(0.4)} y={14} textAnchor="middle" className="fill-muted-foreground text-[11px]">margin &gt; 0: label A</text>
+        </svg>
+        <div className="mt-2">
+          <Slider label="ε" value={eps} min={0.02} max={0.2} step={0.01} onChange={setEps} />
+        </div>
+        <p className="mt-2 text-sm tabular-nums">
+          Lower bound {fmt(lower)}, best attack {fmt(found.m)}. {verdict}
+        </p>
+      </div>
+      <figcaption className="mt-3 text-sm text-muted-foreground">
+        The smallest margin over the square is somewhere in the shaded bracket. A verifier (here the interval
+        arithmetic of chapter 2) pushes the left end up, an attack pushes the right end down. On this tiny network the
+        attack happens to land on the true worst input. On real networks it usually doesn't, and the bracket is wider.
+      </figcaption>
+    </figure>
+  )
+}
+
+/** Preface: a rough map of the methods, by cost and by what they can prove. */
+export function MethodMap() {
+  const X = (v: number) => 54 + v * 320
+  const Y = (v: number) => 236 - v * 200
+  const dots = [
+    { name: 'Boxes', ch: 2, x: 0.04, y: 0.12, dx: 8, dy: 4, anchor: 'start' },
+    { name: 'Zonotopes', ch: 4, x: 0.18, y: 0.38, dx: 8, dy: 4, anchor: 'start' },
+    { name: 'DeepPoly, CROWN', ch: 5, x: 0.27, y: 0.52, dx: 8, dy: 4, anchor: 'start' },
+    { name: 'α-CROWN', ch: 5, x: 0.38, y: 0.62, dx: -8, dy: -6, anchor: 'end' },
+    { name: 'Triangle LP', ch: 7, x: 0.56, y: 0.69, dx: 2, dy: 18, anchor: 'start' },
+    { name: 'Tropical polyhedra', ch: 6, x: 0.46, y: 0.42, dx: 8, dy: 4, anchor: 'start' },
+    { name: 'MILP, SMT', ch: 7, x: 0.94, y: 0.97, dx: 4, dy: 26, anchor: 'end' },
+  ]
+  const bab = `M${X(0.38)},${Y(0.62)} C${X(0.55)},${Y(0.86)} ${X(0.75)},${Y(0.95)} ${X(0.94)},${Y(0.97)}`
+
+  return (
+    <figure className="not-prose my-10">
+      <div className="mx-auto max-w-xl">
+        <svg viewBox="0 0 390 290" className="w-full" role="img"
+          aria-label="A rough map of verification methods: cheaper methods prove less, exact methods cost exponential time">
+          <defs>
+            <marker id="mm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 Z" style={{ fill: ink(0.7) }} />
+            </marker>
+          </defs>
+          <line x1={X(0)} x2={X(1)} y1={Y(0)} y2={Y(0)} style={{ stroke: ink(0.5) }} markerEnd="url(#mm-arrow)" />
+          <line x1={X(0)} x2={X(0)} y1={Y(0)} y2={Y(1.06)} style={{ stroke: ink(0.5) }} markerEnd="url(#mm-arrow)" />
+          <text x={X(0.5)} y={Y(0) + 34} textAnchor="middle" className="fill-foreground text-[12px] italic">cost</text>
+          <text x={X(0)} y={Y(0) + 16} textAnchor="start" className="fill-muted-foreground text-[10px]">two forward passes</text>
+          <text x={X(1)} y={Y(0) + 16} textAnchor="end" className="fill-muted-foreground text-[10px]">exponential</text>
+          <text x={16} y={Y(0.5)} textAnchor="middle" transform={`rotate(-90 16 ${Y(0.5)})`}
+            className="fill-foreground text-[12px] italic">what it can prove</text>
+          <line x1={X(0)} x2={X(1)} y1={Y(1)} y2={Y(1)} style={{ stroke: accent(0.7), strokeDasharray: '4 3' }} />
+          <text x={X(0.02)} y={Y(1) - 6} className="fill-muted-foreground text-[10px]">everything that is true</text>
+          <path d={bab} style={{ fill: 'none', stroke: accent(1), strokeWidth: 1.6, strokeDasharray: '5 3' }} markerEnd="url(#mm-arrow)" />
+          <text x={X(0.6)} y={Y(0.9) - 4} textAnchor="end" className="fill-foreground text-[11px]">branch and bound · 8</text>
+          <line x1={X(0.1)} x2={X(0.1)} y1={Y(0.2)} y2={Y(0.33)} style={{ stroke: ink(0.6), strokeWidth: 1.2 }} markerEnd="url(#mm-arrow)" />
+          <text x={X(0.1) - 4} y={Y(0.27)} textAnchor="end" className="fill-muted-foreground text-[10px]">training · 9</text>
+          {dots.map((d) => (
+            <g key={d.name}>
+              <circle cx={X(d.x)} cy={Y(d.y)} r={4} style={{ fill: d.ch === 6 ? 'oklch(var(--background))' : ink(0.85), stroke: ink(0.85), strokeWidth: 1.3 }} />
+              <text x={X(d.x) + d.dx} y={Y(d.y) + d.dy} textAnchor={d.anchor as 'start' | 'end'} className="fill-foreground text-[11px]">
+                {d.name} · {d.ch}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </div>
+      <figcaption className="mt-3 text-sm text-muted-foreground">
+        A rough map, not a measurement, with chapter numbers. Moving right costs time; moving up proves more. Branch and
+        bound trades one for the other until it reaches the exact answer. Tropical polyhedra (open dot) make a
+        different trade: they are not convex, so they are not simply better or worse than the shapes around them.
+        Training moves every point up for the networks it produces.
+      </figcaption>
+    </figure>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Chapter 4
+
+/** A zonotope is the image of the noise square: one choice of noise values is one point in every layer. */
+export function NoiseLink() {
+  const eps = 0.1
+  const [eta, setEta] = React.useState<Vec>([0.5, -0.5])
+  const dragging = React.useRef(false)
+  const x: Vec = [C[0] + eps * eta[0], C[1] + eps * eta[1]]
+  const z = mul(W1, x)
+  const o = mul(W2, relu(z))
+  const m = o[0] - o[1]
+  const diamond = square(C, eps).map((p) => mul(W1, p))
+  const outputs = diamond.map((p) => mul(W2, relu(p)))
+  const set = (p: Vec) => setEta([clamp(p[0], -1, 1), clamp(p[1], -1, 1)])
+  const dot = (s: Scale, p: Vec) => (
+    <circle cx={s.sx(p[0])} cy={s.sy(p[1])} r={5}
+      style={{ fill: accent(1), stroke: 'oklch(var(--background))', strokeWidth: 1.5, pointerEvents: 'none' }} />
+  )
+  const sign = (v: number) => (v < 0 ? '−' : '+')
+
+  return (
+    <figure className="not-prose my-10">
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Plot x={[-1.3, 1.3]} y={[-1.3, 1.3]} title="1. Noise symbols" xLabel="η₁" yLabel="η₂" xTicks={[-1, 0, 1]}
+          yTicks={[-1, 0, 1]} label="The noise square, with the chosen noise values">
+          {(s) => {
+            const toData = (e: React.PointerEvent<SVGElement>): Vec | null => {
+              const matrix = e.currentTarget.ownerSVGElement?.getScreenCTM()
+              if (!matrix) return null
+              const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(matrix.inverse())
+              return [s.ix(p.x), s.iy(p.y)]
+            }
+            return (
+              <>
+                <path d={s.path(square([0, 0], 1))} style={{ fill: accent(0.1), stroke: accent(0.8), strokeWidth: 1.3 }} />
+                <line x1={s.sx(-1.3)} x2={s.sx(1.3)} y1={s.sy(0)} y2={s.sy(0)} style={{ stroke: ink(0.15) }} />
+                <line x1={s.sx(0)} x2={s.sx(0)} y1={s.sy(-1.3)} y2={s.sy(1.3)} style={{ stroke: ink(0.15) }} />
+                <rect x={s.sx(-1.3)} y={s.sy(1.3)} width={s.sx(1.3) - s.sx(-1.3)} height={s.sy(-1.3) - s.sy(1.3)}
+                  style={{ fill: 'transparent', cursor: 'crosshair', touchAction: 'none' }}
+                  onPointerDown={(e) => {
+                    const p = toData(e)
+                    if (!p) return
+                    e.currentTarget.setPointerCapture(e.pointerId)
+                    dragging.current = true
+                    set(p)
+                  }}
+                  onPointerMove={(e) => {
+                    if (!dragging.current) return
+                    const p = toData(e)
+                    if (p) set(p)
+                  }}
+                  onPointerUp={() => {
+                    dragging.current = false
+                  }}
+                  onPointerCancel={() => {
+                    dragging.current = false
+                  }} />
+                <circle cx={s.sx(eta[0])} cy={s.sy(eta[1])} r={6} tabIndex={0} role="slider"
+                  aria-label="Noise values. Drag in the square, or use the arrow keys."
+                  aria-valuetext={`eta1 ${fmt(eta[0])}, eta2 ${fmt(eta[1])}`}
+                  style={{ fill: accent(1), stroke: 'oklch(var(--background))', strokeWidth: 1.5, pointerEvents: 'none' }}
+                  onKeyDown={(e) => {
+                    const d: Record<string, Vec> = { ArrowLeft: [-0.1, 0], ArrowRight: [0.1, 0], ArrowUp: [0, 0.1], ArrowDown: [0, -0.1] }
+                    const step = d[e.key]
+                    if (!step) return
+                    e.preventDefault()
+                    set([eta[0] + step[0], eta[1] + step[1]])
+                  }} />
+              </>
+            )
+          }}
+        </Plot>
+        <Plot x={[0.5, 1.5]} y={[-0.3, 0.7]} title="2. Hidden values" xLabel="h₁" yLabel="h₂" xTicks={[0.6, 1, 1.4]}
+          yTicks={[-0.2, 0.2, 0.6]} label="The hidden values, with the point produced by the chosen noise values">
+          {(s) => (
+            <>
+              <path d={s.path(diamond)} style={exactStyle} />
+              {dot(s, relu(z))}
+            </>
+          )}
+        </Plot>
+        <Plot x={[1.2, 2.4]} y={[0.6, 1.8]} title="3. Outputs" xLabel="o₁" yLabel="o₂" xTicks={[1.4, 1.8, 2.2]}
+          yTicks={[0.8, 1.2, 1.6]} label="The outputs, with the point produced by the chosen noise values">
+          {(s) => (
+            <>
+              <Unsafe s={s} a={[-1, 1]} b={0} />
+              <path d={s.path(outputs)} style={exactStyle} />
+              {dot(s, o)}
+            </>
+          )}
+        </Plot>
+      </div>
+      <div className="mx-auto mt-3 max-w-xl space-y-1 text-sm tabular-nums">
+        <p>
+          η = ({fmt(eta[0])}, {fmt(eta[1])}) gives x = ({fmt(x[0], 3)}, {fmt(x[1], 3)}), then h = ({fmt(z[0], 3)},{' '}
+          {fmt(z[1], 3)}) and o = ({fmt(o[0], 3)}, {fmt(o[1], 3)}).
+        </p>
+        <p>
+          Margin: 0.6 − 0.1·η₁ + 0.3·η₂ = 0.6 {sign(-0.1 * eta[0])} {fmt(Math.abs(0.1 * eta[0]), 3)}{' '}
+          {sign(0.3 * eta[1])} {fmt(Math.abs(0.3 * eta[1]), 3)} = {fmt(m, 3)}
+        </p>
+      </div>
+      <figcaption className="mt-3 text-sm text-muted-foreground">
+        At ε = 0.1. Drag the point in the left square, or click anywhere in it. The same two noise values decide the
+        input, the hidden values and the outputs, so the three points move together. The margin is smallest at the
+        corner η = (1, −1).
+      </figcaption>
+    </figure>
+  )
+}
+
+/** A zonotope is a sum of segments, one per noise symbol. */
+export function ZonotopeSum() {
+  const gens: Vec[] = [
+    [0.9, 0.25],
+    [0.2, 0.8],
+    [0.55, -0.45],
+    [-0.35, 0.4],
+  ]
+  const [k, setK] = React.useState(3)
+  const uid = useUid()
+  const shape = zonotopePolygon([0, 0], gens.slice(0, k))
+  const before = k > 1 ? zonotopePolygon([0, 0], gens.slice(0, k - 1)) : null
+  const names = ['g₁', 'g₂', 'g₃', 'g₄']
+
+  return (
+    <figure className="not-prose my-10">
+      <div className="mx-auto max-w-sm">
+        <Plot x={[-2.2, 2.2]} y={[-2.2, 2.2]} size={280} xLabel="first coordinate" yLabel="second coordinate"
+          xTicks={[-2, -1, 0, 1, 2]} yTicks={[-2, -1, 0, 1, 2]} label={`A zonotope built from ${k} segments`}>
+          {(s) => (
+            <>
+              <defs>
+                <marker id={`${uid}-arrow`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                  orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" style={{ fill: accent(1) }} />
+                </marker>
+              </defs>
+              {before ? <path d={s.path(before)} style={{ fill: 'none', stroke: ink(0.4), strokeDasharray: '1.5 3' }} /> : null}
+              <path d={s.path(shape)} style={{ ...zonoStyle, fill: ink(0.06) }} />
+              {gens.slice(0, k).map((g, i) => (
+                <g key={i}>
+                  <line x1={s.sx(0)} y1={s.sy(0)} x2={s.sx(g[0])} y2={s.sy(g[1])}
+                    style={{ stroke: accent(1), strokeWidth: 1.6 }} markerEnd={`url(#${uid}-arrow)`} />
+                  <text x={s.sx(g[0] * 1.18)} y={s.sy(g[1] * 1.18) + 4} textAnchor="middle"
+                    className="fill-foreground text-[11px]">{names[i]}</text>
+                </g>
+              ))}
+              <circle cx={s.sx(0)} cy={s.sy(0)} r={2.5} style={{ fill: ink(0.9) }} />
+            </>
+          )}
+        </Plot>
+        <div className="mt-3">
+          <Choice label="noise symbols" options={[1, 2, 3, 4]} value={k} onChange={setK} />
+        </div>
+        <p className="mt-2 text-sm">
+          {k === 1
+            ? 'One noise symbol: c + η₁g₁ with η₁ between −1 and 1 is a segment.'
+            : `${k} noise symbols: ${k} pairs of parallel sides, and the shape is symmetric around its centre.`}
+        </p>
+      </div>
+      <figcaption className="mt-3 text-sm text-muted-foreground">
+        The arrows are the generators, the columns of G. Each one sweeps the previous shape (dotted) along its own
+        direction, which adds one pair of parallel sides.
+      </figcaption>
+    </figure>
+  )
+}
+
+/** Three ways to cover the graph of ReLU over [l, u]: a box, the zonotope parallelogram, and the triangle. */
+export function ReluRelax() {
+  const [eps, setEps] = React.useState(0.2)
+  const l = 0.2 - 2 * eps
+  const u = 0.2 + 2 * eps
+  const lam = u / (u - l)
+  const mu = (-lam * l) / 2
+  const box = rect([l, u], [0, u])
+  const para: Poly = [
+    [l, lam * l],
+    [u, lam * u],
+    [u, u],
+    [l, 0],
+  ]
+  const tri: Poly = [
+    [l, 0],
+    [0, 0],
+    [u, u],
+  ]
+  const below = clip(para, [0, -1], 0)
+
+  return (
+    <figure className="not-prose my-10">
+      <div className="mx-auto max-w-sm">
+        <Plot x={[-0.35, 0.75]} y={[-0.25, 0.85]} size={280} xLabel="z₂ (input of the ReLU)" yLabel="h₂ (output)"
+          xTicks={[-0.2, 0, 0.2, 0.4, 0.6]} yTicks={[0, 0.2, 0.4, 0.6, 0.8]}
+          label="The graph of ReLU over an interval, covered by a box, a parallelogram and a triangle">
+          {(s) => (
+            <>
+              <line x1={s.sx(-1)} x2={s.sx(1)} y1={s.sy(0)} y2={s.sy(0)} style={{ stroke: ink(0.25) }} />
+              <line x1={s.sx(0)} x2={s.sx(0)} y1={s.sy(-1)} y2={s.sy(1)} style={{ stroke: ink(0.25) }} />
+              <path d={s.path(tri)} style={{ fill: accent(0.16), stroke: 'none' }} />
+              <path d={s.path(below)} style={{ fill: s.hatch }} />
+              <path d={s.path(box)} style={boxStyle} />
+              <path d={s.path(para)} style={zonoStyle} />
+              <path d={`M${s.sx(-0.35)},${s.sy(0)} L${s.sx(0)},${s.sy(0)} L${s.sx(0.75)},${s.sy(0.75)}`}
+                style={{ fill: 'none', stroke: accent(0.35), strokeWidth: 1 }} />
+              <path d={`M${s.sx(l)},${s.sy(0)} L${s.sx(0)},${s.sy(0)} L${s.sx(u)},${s.sy(u)}`}
+                style={{ fill: 'none', stroke: accent(1), strokeWidth: 2.2 }} />
+            </>
+          )}
+        </Plot>
+        <div className="mt-3">
+          <Slider label="ε" value={eps} min={0.11} max={0.25} step={0.01} onChange={setEps} />
+        </div>
+        <p className="mt-2 text-sm tabular-nums">
+          z₂ ranges over [{fmt(l)}, {fmt(u)}], slope λ = {fmt(lam, 3)}, half height μ = {fmt(mu, 3)}.
+        </p>
+        <Legend
+          items={[
+            { swatch: swatch.box, text: <span className="tabular-nums">Box: area {fmt((u - l) * u, 3)}</span> },
+            { swatch: swatch.zono, text: <span className="tabular-nums">Zonotope parallelogram: area {fmt(-l * u, 3)}</span> },
+            {
+              swatch: <rect x="1" y="1" width="20" height="10" style={{ fill: accent(0.16) }} />,
+              text: <span className="tabular-nums">Triangle, the smallest convex cover: area {fmt((-l * u) / 2, 3)}</span>,
+            },
+            { swatch: swatch.unsafe, text: 'Part of the parallelogram below zero, where no ReLU output can be' },
+          ]}
+        />
+      </div>
+      <figcaption className="mt-3 text-sm text-muted-foreground">
+        The thick line is ReLU over the range of z₂ in our network. Every shape has to contain it. The parallelogram
+        is always exactly twice the area of the triangle, and its lower side dips below zero.
       </figcaption>
     </figure>
   )

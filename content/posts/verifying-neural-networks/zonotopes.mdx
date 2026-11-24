@@ -1,0 +1,214 @@
+---
+title: "Zonotopes: remembering where every value came from"
+date: "2026-11-24"
+description: "Noise symbols and affine forms, why linear layers stop losing anything, the parallelogram that stands in for ReLU and why it is twice too big, and a zonotope verifier in thirty lines that reaches the true limit of our network."
+tags: ["verification", "neural-networks", "zonotopes", "abstract-interpretation"]
+---
+
+Chapter 3 found where boxes lose precision. Every time a layer mixes coordinates, the next layer receives a box instead of the true set, and the corners of that box are values that no input produces. The fix is to stop forgetting. Instead of storing each value as an interval, store a formula that says how it depends on the inputs, and let the formulas travel through the network.
+
+The idea is older than deep learning. Comba and Stolfi proposed it in 1993 under the name affine arithmetic, as a cure for the dependency problem of interval arithmetic. Eric Goubault and Sylvie Putot built their analyzer Fluctuat on it, to track rounding errors in floating-point programs. In 2018 two analyzers from Martin Vechev's group at ETH Zürich, AI2 and then DeepZ, brought it to neural networks. The sets it computes are called zonotopes.
+
+## Noise symbols
+
+Write each input as its centre plus a deviation:
+
+$$
+x_1 = 0.6 + \varepsilon\,\eta_1, \qquad x_2 = 0.4 + \varepsilon\,\eta_2, \qquad \eta_1, \eta_2 \in [-1, 1] .
+$$
+
+The $\eta$'s are called noise symbols, and they are the only unknowns. Every value the network computes is a function of $\eta_1$ and $\eta_2$, and as long as only linear layers are involved, it is an affine function:
+
+$$
+z_1 = x_1 + x_2 = 1 + \varepsilon\,\eta_1 + \varepsilon\,\eta_2, \qquad z_2 = x_1 - x_2 = 0.2 + \varepsilon\,\eta_1 - \varepsilon\,\eta_2 .
+$$
+
+An expression like this is an affine form: a centre, plus one coefficient per noise symbol. Its range is easy to read off. Push each symbol to whichever end makes the form smallest, then largest, and you find that $z_1$ ranges over $[1 - 2\varepsilon,\ 1 + 2\varepsilon]$, the same interval as with boxes. So far nothing has changed. The difference shows up in the next layer.
+
+At $\varepsilon = 0.1$ both hidden neurons are on, so $h = z$, and the margin is
+
+$$
+m = h_1 - 2h_2 = (1 + \varepsilon\eta_1 + \varepsilon\eta_2) - 2(0.2 + \varepsilon\eta_1 - \varepsilon\eta_2) = 0.6 - \varepsilon\,\eta_1 + 3\varepsilon\,\eta_2 .
+$$
+
+The $+\varepsilon\eta_1$ that comes from $h_1$ and the $-2\varepsilon\eta_1$ that comes from $h_2$ partly cancel, because they are the same symbol. The smallest value of $m$ is at $\eta = (1, -1)$, and it is $0.6 - 4\varepsilon$, the exact answer from chapter 1. Boxes on $o_1$ and $o_2$ gave $0.6 - 10\varepsilon$ because they kept the two $\eta_1$'s apart. The affine forms know they are the same one.
+
+The dependency problem from chapter 2 goes away for the same reason. If $x = 0.5 + 0.5\,\eta$, then $x - x = 0$ exactly, because both copies carry the same $\eta$, where interval arithmetic said $[-1, 1]$.
+
+It helps to see what the forms mean. A choice of noise values is one point in the square on the left of the next figure. It fixes the input, which fixes the hidden values and the outputs, so one point of the noise square gives one point in every layer.
+
+<NoiseLink />
+
+## What a zonotope is
+
+Stack the affine forms of a layer into a vector and you get $c + G\eta$, where $c$ holds the centres and $G$ has one column per noise symbol. The columns are called generators. The set of all values of $c + G\eta$, as $\eta$ ranges over the cube $[-1, 1]^p$, is a zonotope. Put differently, a zonotope is the image of a cube by an affine map.
+
+In two dimensions a zonotope is a polygon whose opposite sides are parallel, symmetric about its centre. Each generator contributes one pair of parallel sides: one generator gives a segment, two give a parallelogram, three a hexagon.
+
+<ZonotopeSum />
+
+Boxes lacked one property that zonotopes have. A linear layer sends $c + G\eta$ to $Wc + (WG)\eta$. Multiply the centre and the generators by $W$ and you have the image of the zonotope, with nothing added. The junctions between layers, where chapter 3 found all the losses of boxes, cost nothing anymore.
+
+## ReLU, where the loss moves to
+
+A ReLU whose input range $[l, u]$ doesn't contain zero is easy. If $l \geq 0$ the neuron is always on, and ReLU changes nothing. If $u \leq 0$ it is always off, and the output is the constant 0. Both cases are affine, so both are exact.
+
+The trouble is an unstable neuron, with $l \lt 0 \lt u$. Its output is not an affine function of the noise symbols, so it has to be covered by one, and the cover must contain the whole graph of ReLU between $l$ and $u$. In our network this happens to $h_2$ as soon as $\varepsilon \gt 0.1$, since $z_2$ ranges over $[0.2 - 2\varepsilon,\ 0.2 + 2\varepsilon]$.
+
+The crude cover forgets the input and says that $h_2$ is somewhere in $[0, u]$. That's the box of chapter 2. A zonotope can do better, because it can tilt. Take two parallel lines with slope $\lambda$, one under the graph and one over it, and keep everything between them:
+
+$$
+\lambda z \;\leq\; h \;\leq\; \lambda z - \lambda l .
+$$
+
+Any slope between 0 and 1 keeps the lower line under the graph. The upper line starts at $(l, 0)$ and has to pass over $(u, u)$, which needs $\lambda \geq u / (u - l)$. The area between the lines grows with $\lambda$, so the best choice is the smallest slope allowed,
+
+$$
+\lambda = \frac{u}{u - l},
+$$
+
+for which the upper line goes through both ends of the graph. As an affine form, the parallelogram is
+
+$$
+h = \lambda z + \mu + \mu\,\eta_{\text{new}}, \qquad \mu = -\frac{\lambda l}{2} ,
+$$
+
+where $\eta_{\text{new}}$ is a fresh noise symbol that accounts for the thickness of the parallelogram, $2\mu$. Every unstable neuron adds one noise symbol, so the zonotope gains one pair of sides per unstable neuron.
+
+<ReluRelax />
+
+The three covers in the figure have areas that follow a simple pattern. The box has area $(u - l)\,u$. The parallelogram has area $-l\,u$. The smallest convex set that contains the graph, the triangle with corners $(l, 0)$, $(0, 0)$ and $(u, u)$, has area $-l\,u/2$. Whatever $l$ and $u$ are, the parallelogram is exactly twice the triangle. It's one of my favourite small facts in this series.
+
+So why not use the triangle? Because its sides don't come in parallel pairs, and the sides of a zonotope always do. A zonotope is symmetric about its centre, the graph of ReLU isn't, and the parallelogram is the price of that symmetry. It also explains the hatched corner: to stay symmetric, the lower side has to dip below zero, so the zonotope allows ReLU outputs that are negative. A box never does that.
+
+## Running it on our network
+
+Take $\varepsilon = 0.12$. Then $z_2$ ranges over $[-0.04,\ 0.44]$, so $h_2$ is unstable, with $\lambda = 0.44 / 0.48 \approx 0.917$ and $\mu \approx 0.018$. A new symbol $\eta_3$ appears:
+
+$$
+h_2 = \lambda z_2 + \mu + \mu\,\eta_3 \approx 0.202 + 0.11\,\eta_1 - 0.11\,\eta_2 + 0.018\,\eta_3 .
+$$
+
+The neuron $h_1$ is still always on, so $h_1 = 1 + 0.12\,\eta_1 + 0.12\,\eta_2$, and the margin is
+
+$$
+m = h_1 - 2h_2 \approx 0.597 - 0.1\,\eta_1 + 0.34\,\eta_2 - 0.037\,\eta_3 .
+$$
+
+Its smallest value is $0.597 - 0.1 - 0.34 - 0.037 = 0.12$, which is $0.6 - 4 \times 0.12$, the exact answer again. The same computation works for every $\varepsilon$: zonotopes prove robustness all the way up to $0.15$, the true limit, where boxes stopped at $0.06$, or at $0.10$ with the margin trick of chapter 3.
+
+That looks too good, given how loose the parallelogram is. Here is why the looseness doesn't matter. The margin subtracts $2h_2$, so its smallest value needs the largest $h_2$, which comes from the upper side of the parallelogram. That side touches the graph at $(u, u)$. And the worst input, $(0.6 + \varepsilon,\ 0.4 - \varepsilon)$, is exactly where $z_2 = u$. The cover is loose in the middle and tight at the one end that this property cares about.
+
+<ThreeShapes initial="0.14" />
+
+## In code
+
+A zonotope is a centre and a generator matrix, and the class follows the box of chapter 2 almost line for line:
+
+```python
+class Zonotope:
+    __array_ufunc__ = None
+
+    def __init__(self, center, gens):
+        self.c = np.asarray(center, dtype=float)   # the centres, one per neuron
+        self.G = np.asarray(gens, dtype=float)     # one column per noise symbol
+
+    def __rmatmul__(self, W):                      # linear layers are exact
+        return Zonotope(W @ self.c, W @ self.G)
+
+    def bounds(self):
+        r = np.abs(self.G).sum(axis=1)
+        return self.c - r, self.c + r
+
+    def relu(self):
+        lo, hi = self.bounds()
+        c, G, fresh = self.c.copy(), self.G.copy(), []
+        for i in range(len(c)):
+            if lo[i] >= 0:                         # always on: nothing to do
+                continue
+            if hi[i] <= 0:                         # always off: the output is 0
+                c[i], G[i] = 0.0, 0.0
+                continue
+            lam = hi[i] / (hi[i] - lo[i])          # slope of the parallelogram
+            mu = -lam * lo[i] / 2                  # half of its height
+            c[i], G[i] = lam * c[i] + mu, lam * G[i]
+            new = np.zeros(len(c))
+            new[i] = mu                            # a new noise symbol
+            fresh.append(new)
+        return Zonotope(c, np.column_stack([G] + fresh))
+
+    def __repr__(self):
+        lo, hi = self.bounds()
+        return f"Zonotope(lo={lo.round(3)}, hi={hi.round(3)}, symbols={self.G.shape[1]})"
+
+def zsquare(eps):
+    return Zonotope(c, eps * np.eye(2))            # x = c + eps * eta
+
+print(margin_net(zsquare(0.12)))   # Zonotope(lo=[0.12], hi=[1.073], symbols=3)
+for eps in (0.14, 0.149, 0.151):
+    print(eps, margin_net(zsquare(eps)).bounds()[0].round(3))
+# 0.14 [0.04]
+# 0.149 [0.004]
+# 0.151 [-0.004]
+```
+
+The `margin_net` function is the one from chapter 3, and `net` is the one from chapter 1. Neither changed. The verifier is still the same line of code, running on a new kind of value. Two more checks take a few lines each: the dependency problem is gone, and the soundness test from chapter 3 still passes.
+
+```python
+x = Zonotope([0.5], [[0.5]])                       # x in [0, 1]
+print(np.array([[1.0, -1.0]]) @ (np.array([[1.0], [1.0]]) @ x))
+# Zonotope(lo=[0.], hi=[0.], symbols=1)
+
+def zonotope_looks_sound(eps, n=10_000):
+    lo, hi = margin_net(zsquare(eps)).bounds()
+    xs = c + rng.uniform(-eps, eps, size=(n, 2))
+    ms = np.array([margin(x) for x in xs])
+    return bool(np.all(ms >= lo) and np.all(ms <= hi))
+
+print([zonotope_looks_sound(e) for e in (0.05, 0.12, 0.2)])   # [True, True, True]
+```
+
+## Where zonotopes lose
+
+Robustness came out exact, but that was the property being kind to us. Look at the hidden values themselves at $\varepsilon = 0.12$:
+
+```python
+print(relu(W1 @ zsquare(0.12)))   # Zonotope(lo=[ 0.76  -0.037], hi=[1.24 0.44], symbols=3)
+print(relu(W1 @ square(0.12)))    # Box(lo=[0.76 0.  ], hi=[1.24 0.44])
+```
+
+The zonotope says that $h_2$ might be $-0.037$. That's the hatched corner of the parallelogram: a value no ReLU can output, and one the box rules out. Neither shape wins here. The zonotope knows how $h_1$ and $h_2$ move together, and the box knows that $h_2 \geq 0$. One cheap fix is to run both analyses and keep, for each neuron, the tighter of the two bounds. Combining domains this way is called a reduced product.
+
+The dip matters as soon as a property needs a lower bound. Suppose that, besides the label, we want to know how low the score $o_2 = h_1 + h_2$ can go at $\varepsilon = 0.2$. Since $o_2 = \max(x_1 + x_2,\ 2x_1) \geq 2x_1$, the true minimum is $0.8$, reached at $x_1 = 0.4$.
+
+```python
+o2_row = W2[1:]                              # the row of W2 that computes o2
+print(o2_row @ relu(W1 @ square(0.2)))       # Box(lo=[0.6], hi=[2.])
+print(o2_row @ relu(W1 @ zsquare(0.2)))      # Zonotope(lo=[0.75], hi=[1.7], symbols=3)
+```
+
+The zonotope gets closer than the box, but it stops at $0.75$. The minimum of $o_2$ needs the smallest $h_2$, which comes from the lower side of the parallelogram, and that side runs under the graph of ReLU. At the input $(0.4,\ 0.2)$, for example, $z_2 = 0.2$, so the true $h_2$ is $0.2$, but the parallelogram allows anything down to $0.75 \times 0.2 = 0.15$.
+
+The triangle wouldn't lose anything there. ReLU is a convex function, so the lower edge of the triangle is the graph of ReLU itself: from below, the best convex cover is exact. A zonotope can't have that edge, because its sides must come in parallel pairs.
+
+## Adding constraints
+
+There is a way to get the triangle while keeping most of the machinery: allow linear constraints on the noise symbols. A constrained zonotope is a set of the form
+
+$$
+\{\, c + G\eta \;\mid\; \eta \in [-1, 1]^p,\ H\eta \leq d \,\} .
+$$
+
+For an unstable ReLU, keep the parallelogram and add the two constraints it is missing, $h \geq 0$ and $h \geq z$, written in terms of the $\eta$'s. That cuts the parallelogram down to the triangle. Linear layers are still exact, since they only touch $c$ and $G$, and with enough constraints a constrained zonotope can describe any bounded polyhedron.
+
+The catch is in the bounds. The range of a coordinate is no longer a sum of absolute values. It's the solution of a linear program, one for each bound. For our two neurons that costs nothing. For a network with thousands of unstable neurons it means thousands of linear programs per layer.
+
+## A word about rounding
+
+Every number in this code is a floating-point number, and almost every operation rounds. Print the lower bound of $o_1$ that boxes computed at $\varepsilon = 0.05$ with all its digits, and you get $1.4999999999999998$, not $1.5$. Here the rounding went the safe way, slightly down for a lower bound. Nothing guarantees that it always will, and on a property that holds by a margin of $10^{-17}$, rounding in the wrong direction would turn "I don't know" into "proved".
+
+This is not paranoia. In 2021 Jia and Rinard showed that floating-point error can make a verifier certify a network as robust when an adversarial input exists inside the certified region. A careful verifier rounds every lower bound down and every upper bound up. Interval libraries do this with the rounding modes of the processor (IntervalArithmetic.jl, in Julia, is a good example). On our network the margins are far too large for any of this to matter, but every bound a real tool reports should come with outward rounding.
+
+## Next
+
+Chapter 5 looks for a middle ground between the zonotope and the triangle. DeepPoly and CROWN keep, for every neuron, one linear function below it and one above it, written in terms of the neurons of the previous layer. That is enough to use the triangle's lower edge, $h \geq 0$ or $h \geq z$, without solving any linear program, and it finds exactly $0.8$ on the bound where zonotopes stopped at $0.75$. The new difficulty is the direction: to get good bounds, those linear functions have to be carried back through the layers until they reach the inputs.
